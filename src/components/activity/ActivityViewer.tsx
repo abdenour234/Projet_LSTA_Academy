@@ -1,5 +1,10 @@
+import { useState } from 'react';
 import { ActivityElement } from '@/types/activity';
 import { PDFViewer } from './PDFViewer';
+import { VideoViewer } from './VideoViewer';
+import { FullscreenViewer } from './FullscreenViewer';
+import { Button } from '@/components/ui/button';
+import { Maximize2 } from 'lucide-react';
 
 interface ActivityViewerProps {
   title: string;
@@ -8,8 +13,17 @@ interface ActivityViewerProps {
 }
 
 export const ActivityViewer = ({ title, description, elements }: ActivityViewerProps) => {
+  const [fullscreenElement, setFullscreenElement] = useState<{ type: 'pdf' | 'video', url: string } | null>(null);
+
   return (
     <div className="space-y-6">
+      {fullscreenElement && (
+        <FullscreenViewer
+          type={fullscreenElement.type}
+          fileUrl={fullscreenElement.url}
+          onClose={() => setFullscreenElement(null)}
+        />
+      )}
       <div>
         <h1 className="text-3xl font-bold">{title}</h1>
         {description && (
@@ -45,19 +59,29 @@ export const ActivityViewer = ({ title, description, elements }: ActivityViewerP
             )}
             
             {element.type === 'pdf' && element.content && (
-              <PDFViewer 
-                fileUrl={element.content} 
-                width={`${element.size.width}px`}
-                height={`${element.size.height}px`}
-              />
+              <div className="relative w-full h-full">
+                <PDFViewer 
+                  fileUrl={element.content} 
+                  width={`${element.size.width}px`}
+                  height={`${element.size.height}px`}
+                />
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="absolute top-2 right-2 z-10"
+                  onClick={() => setFullscreenElement({ type: 'pdf', url: element.content })}
+                >
+                  <Maximize2 className="h-4 w-4" />
+                </Button>
+              </div>
             )}
             
             {element.type === 'video' && element.content && (
-              <video 
-                src={element.content} 
-                controls 
-                controlsList="nodownload"
-                className="w-full h-full rounded"
+              <VideoViewer 
+                fileUrl={element.content}
+                width={`${element.size.width}px`}
+                height={`${element.size.height}px`}
+                onFullscreen={() => setFullscreenElement({ type: 'video', url: element.content })}
               />
             )}
           </div>
