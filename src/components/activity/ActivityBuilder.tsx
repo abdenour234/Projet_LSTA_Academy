@@ -4,10 +4,11 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Type, Image, FileText, Video, Save, Eye } from 'lucide-react';
+import { Upload, Type, Image, FileText, Video, Save, Eye, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ActivityElement, ActivityElementType } from '@/types/activity';
+import { uploadActivityFile } from '@/lib/uploadToStorage';
 
 interface ActivityBuilderProps {
   activityId?: string;
@@ -31,6 +32,7 @@ export const ActivityBuilder = ({ activityId, initialData, schoolId, onSave }: A
   const [elements, setElements] = useState<ActivityElement[]>(initialData?.elements || []);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const addElement = (elementType: ActivityElementType) => {
     const newElement: ActivityElement = {
@@ -60,29 +62,33 @@ export const ActivityBuilder = ({ activityId, initialData, schoolId, onSave }: A
   };
 
   const handleFileUpload = async (elementId: string, file: File) => {
+    setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${schoolId}/${Date.now()}.${fileExt}`;
+      // Créer un ID d'activité temporaire si on est en création
+      const tempActivityId = activityId || `temp-${Date.now()}`;
+      
+      const result = await uploadActivityFile(file, tempActivityId);
 
-      const { error: uploadError } = await supabase.storage
-        .from('activity-files')
-        .upload(filePath, file);
+      if (!result.success) {
+        throw new Error(result.error || 'Erreur lors de l\'upload');
+      }
 
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('activity-files')
-        .getPublicUrl(filePath);
-
-      updateElement(elementId, { content: publicUrl });
-      toast({ title: 'Fichier uploadé avec succès' });
+      // Utiliser le chemin du fichier pour le stockage
+      updateElement(elementId, { content: result.url || result.path || '' });
+      
+      toast({ 
+        title: 'Fichier uploadé avec succès',
+        description: 'Le fichier a été ajouté à l\'activité'
+      });
     } catch (error) {
       console.error('Upload error:', error);
       toast({ 
         title: 'Erreur lors de l\'upload',
-        description: 'Impossible d\'uploader le fichier',
+        description: error instanceof Error ? error.message : 'Impossible d\'uploader le fichier',
         variant: 'destructive'
       });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -209,18 +215,32 @@ export const ActivityBuilder = ({ activityId, initialData, schoolId, onSave }: A
               {['image', 'pdf', 'video'].includes(selected.type) && (
                 <div>
                   <Label>Fichier</Label>
-                  <Input
-                    type="file"
-                    accept={
-                      selected.type === 'image' ? 'image/*' :
-                      selected.type === 'pdf' ? 'application/pdf' :
-                      'video/*'
-                    }
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileUpload(selected.id, file);
-                    }}
-                  />
+                  <div className="space-y-2">
+                    <Input
+                      type="file"
+                      accept={
+                        selected.type === 'image' ? 'image/*' :
+                        selected.type === 'pdf' ? 'application/pdf' :
+                        'video/*'
+                      }
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(selected.id, file);
+                      }}
+                      disabled={uploading}
+                    />
+                    {uploading && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Upload en cours...</span>
+                      </div>
+                    )}
+                    {selected.content && (
+                      <p className="text-xs text-muted-foreground">
+                        Fichier chargé
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
 
