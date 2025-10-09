@@ -14,16 +14,326 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activities: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_published: boolean | null
+          layout_data: Json | null
+          level: string
+          school_id: string
+          title: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_published?: boolean | null
+          layout_data?: Json | null
+          level: string
+          school_id: string
+          title: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_published?: boolean | null
+          layout_data?: Json | null
+          level?: string
+          school_id?: string
+          title?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnostic_results: {
+        Row: {
+          created_at: string | null
+          criteria_data: Json
+          final_result: string
+          id: string
+          session_id: string
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          criteria_data: Json
+          final_result: string
+          id?: string
+          session_id: string
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          criteria_data?: Json
+          final_result?: string
+          id?: string
+          session_id?: string
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_results_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diagnostic_results_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnostic_sessions: {
+        Row: {
+          class_name: string | null
+          created_at: string | null
+          diagnostic_type: Database["public"]["Enums"]["diagnostic_type"]
+          grade_level: string
+          id: string
+          school_id: string
+          session_date: string
+          teacher_id: string
+          total_students: number
+          updated_at: string | null
+        }
+        Insert: {
+          class_name?: string | null
+          created_at?: string | null
+          diagnostic_type: Database["public"]["Enums"]["diagnostic_type"]
+          grade_level: string
+          id?: string
+          school_id: string
+          session_date?: string
+          teacher_id: string
+          total_students?: number
+          updated_at?: string | null
+        }
+        Update: {
+          class_name?: string | null
+          created_at?: string | null
+          diagnostic_type?: Database["public"]["Enums"]["diagnostic_type"]
+          grade_level?: string
+          id?: string
+          school_id?: string
+          session_date?: string
+          teacher_id?: string
+          total_students?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      diagnostic_students: {
+        Row: {
+          created_at: string | null
+          id: string
+          session_id: string
+          student_name: string
+          student_order: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          session_id: string
+          student_name: string
+          student_order: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          session_id?: string
+          student_name?: string
+          student_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_students_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnostics: {
+        Row: {
+          created_at: string | null
+          id: string
+          level: string
+          result: number | null
+          school_id: string
+          subject: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          level: string
+          result?: number | null
+          school_id: string
+          subject: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          level?: string
+          result?: number | null
+          school_id?: string
+          subject?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostics_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          school_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          school_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          school_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schools: {
+        Row: {
+          address: string
+          city: string
+          created_at: string | null
+          id: string
+          last_diagnostic: string | null
+          level: string
+          logo_url: string | null
+          name: string
+          region: string
+          status: string
+          students: number
+        }
+        Insert: {
+          address: string
+          city: string
+          created_at?: string | null
+          id: string
+          last_diagnostic?: string | null
+          level: string
+          logo_url?: string | null
+          name: string
+          region: string
+          status: string
+          students: number
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string | null
+          id?: string
+          last_diagnostic?: string | null
+          level?: string
+          logo_url?: string | null
+          name?: string
+          region?: string
+          status?: string
+          students?: number
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "teacher"
+      diagnostic_type:
+        | "learning_pace"
+        | "learning_style"
+        | "multiple_intelligences"
+        | "family_support"
+        | "participation_motivation"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +460,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "teacher"],
+      diagnostic_type: [
+        "learning_pace",
+        "learning_style",
+        "multiple_intelligences",
+        "family_support",
+        "participation_motivation",
+      ],
+    },
   },
 } as const
