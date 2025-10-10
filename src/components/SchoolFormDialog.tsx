@@ -35,7 +35,7 @@ export const SchoolFormDialog = ({ open, onOpenChange, onSuccess }: SchoolFormDi
     region: 'Casablanca-Settat',
     level: 'Primaire',
     students: 0,
-    status: 'Actif',
+    status: 'Public',
   });
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,7 +111,7 @@ export const SchoolFormDialog = ({ open, onOpenChange, onSuccess }: SchoolFormDi
         region: 'Casablanca-Settat',
         level: 'Primaire',
         students: 0,
-        status: 'Actif',
+        status: 'Public',
       });
       setLogoFile(null);
       setLogoPreview('');
@@ -258,9 +258,8 @@ export const SchoolFormDialog = ({ open, onOpenChange, onSuccess }: SchoolFormDi
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Actif">Actif</SelectItem>
-                <SelectItem value="En attente">En attente</SelectItem>
-                <SelectItem value="Inactif">Inactif</SelectItem>
+                <SelectItem value="Public">Public</SelectItem>
+                <SelectItem value="Privé">Privé</SelectItem>
               </SelectContent>
             </Select>
           </div>
