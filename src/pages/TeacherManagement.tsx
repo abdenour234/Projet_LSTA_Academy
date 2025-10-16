@@ -206,6 +206,18 @@ export default function TeacherManagement() {
     const password = generatePassword();
 
     try {
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (existingUser) {
+        toast.error("Un enseignant avec cet email existe déjà");
+        return;
+      }
+
       // Create auth user with ALL data in metadata for atomic save
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -225,7 +237,7 @@ export default function TeacherManagement() {
 
       setGeneratedCredentials({ email, password });
       toast.success("Enseignant créé avec succès");
-      loadData();
+      await loadData();
       setNewTeacher({ full_name: "", matiere: "", phone: "" });
     } catch (error: any) {
       toast.error(error.message);

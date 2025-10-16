@@ -166,7 +166,7 @@ export default function ClassManagement() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button>
               <Plus className="w-4 h-4 mr-2" />
               Nouvelle Classe
             </Button>

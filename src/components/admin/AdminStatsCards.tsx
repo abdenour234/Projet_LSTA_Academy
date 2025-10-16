@@ -25,39 +25,40 @@ export const AdminStatsCards = ({ schoolId }: AdminStatsCardsProps) => {
     try {
       // Total classes
       const { count: classCount } = await supabase
-        .from('classes' as any)
+        .from('classes')
         .select('*', { count: 'exact', head: true })
         .eq('school_id', schoolId);
 
-      // Total teachers
-      const { data: teachers } = await supabase
-        .from('profiles' as any)
+      // Total teachers - get all profiles for this school
+      const { data: profiles } = await supabase
+        .from('profiles')
         .select('id')
         .eq('school_id', schoolId);
 
-      const teacherIds = teachers?.map((t: any) => t.id) || [];
+      // Then filter only teachers by checking their roles
+      const profileIds = profiles?.map(p => p.id) || [];
       
       const { data: teacherRoles } = await supabase
-        .from('user_roles' as any)
+        .from('user_roles')
         .select('user_id')
         .eq('role', 'teacher')
-        .in('user_id', teacherIds);
+        .in('user_id', profileIds);
 
       // Total activities
       const { count: activityCount } = await supabase
-        .from('activities' as any)
+        .from('activities')
         .select('*', { count: 'exact', head: true })
         .eq('school_id', schoolId);
 
       // Total sessions
       const { count: sessionCount } = await supabase
-        .from('teaching_sessions' as any)
+        .from('teaching_sessions')
         .select('*', { count: 'exact', head: true })
         .eq('school_id', schoolId);
 
       // Average progress
       const { data: sessions } = await supabase
-        .from('teaching_sessions' as any)
+        .from('teaching_sessions')
         .select('percentage_acquired')
         .eq('school_id', schoolId);
 
@@ -70,8 +71,8 @@ export const AdminStatsCards = ({ schoolId }: AdminStatsCardsProps) => {
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
       const { count: activeCount } = await supabase
-        .from('user_activity_logs' as any)
-        .select('*', { count: 'exact', head: true })
+        .from('user_activity_logs')
+        .select('user_id', { count: 'exact', head: true })
         .eq('school_id', schoolId)
         .gte('activity_date', sevenDaysAgo.toISOString().split('T')[0]);
 
