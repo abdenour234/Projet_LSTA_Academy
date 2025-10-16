@@ -1,6 +1,6 @@
 package com.schoolmanagement.repository;
 
-import com.schoolmanagement.model.UserRole;
+import com.schoolmanagement.entity.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,7 +1,7 @@
 package com.schoolmanagement.service;
 
-import com.schoolmanagement.model.Profile;
-import com.schoolmanagement.model.UserRole;
+import com.schoolmanagement.entity.Profile;
+import com.schoolmanagement.entity.UserRole;
 import com.schoolmanagement.repository.ProfileRepository;
 import com.schoolmanagement.repository.UserRoleRepository;
 import lombok.RequiredArgsConstructor;

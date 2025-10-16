@@ -1,4 +1,4 @@
-package com.schoolmanagement.model;
+package com.schoolmanagement.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "user_roles")
+@Table(name = "user_roles", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"user_id", "role"})
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
