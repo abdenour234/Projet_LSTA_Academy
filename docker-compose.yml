@@ -43,7 +43,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend-docker
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: school-management-frontend
     ports:
