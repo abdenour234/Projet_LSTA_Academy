@@ -206,7 +206,7 @@ export default function TeacherManagement() {
     const password = generatePassword();
 
     try {
-      // Create auth user
+      // Create auth user with ALL data in metadata for atomic save
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -215,24 +215,13 @@ export default function TeacherManagement() {
             full_name: newTeacher.full_name,
             school_id: schoolId,
             role: "teacher",
+            matiere: newTeacher.matiere,
+            phone: newTeacher.phone || null,
           },
         },
       });
 
       if (authError) throw authError;
-
-      // Update profile with additional info
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({
-            matiere: newTeacher.matiere,
-            phone: newTeacher.phone,
-          })
-          .eq("id", authData.user.id);
-
-        if (profileError) throw profileError;
-      }
 
       setGeneratedCredentials({ email, password });
       toast.success("Enseignant créé avec succès");
