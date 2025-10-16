@@ -32,11 +32,9 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRole().name().toUpperCase()))
                 .collect(Collectors.toList());
 
-        // Note: In production, you would have a password field in your database
-        // For now, using a placeholder password
         return User.builder()
                 .username(profile.getEmail())
-                .password("") // Password will be handled separately
+                .password(profile.getPassword() != null ? profile.getPassword() : "")
                 .authorities(authorities)
                 .build();
     }

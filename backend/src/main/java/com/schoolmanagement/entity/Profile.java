@@ -22,6 +22,9 @@ public class Profile {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(name = "password_hash")
+    private String password;
+
     @Column(name = "full_name")
     private String fullName;
 
