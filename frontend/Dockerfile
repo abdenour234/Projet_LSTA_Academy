@@ -12,8 +12,15 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# Set environment variable for Vite build
-ENV VITE_API_URL=http://localhost:8080
+# Set environment variables for Vite build
+# These can be overridden at build time using --build-arg
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_PUBLISHABLE_KEY
+ARG VITE_API_URL=http://localhost:8080
+
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_PUBLISHABLE_KEY=$VITE_SUPABASE_PUBLISHABLE_KEY
+ENV VITE_API_URL=$VITE_API_URL
 
 # Build the application
 RUN npm run build
