@@ -33,6 +33,7 @@ export default function TeacherSessions() {
   const navigate = useNavigate();
   const [classes, setClasses] = useState<Class[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [userId, setUserId] = useState<string>("");
   const [formData, setFormData] = useState({
@@ -87,6 +88,17 @@ export default function TeacherSessions() {
 
       if (actError) throw actError;
       setActivities(activitiesData || []);
+
+      // Load sessions
+      const { data: sessionsData, error: sessionsError } = await supabase
+        .from("teaching_sessions")
+        .select("*, classes(name)")
+        .eq("teacher_id", user.id)
+        .eq("school_id", schoolId)
+        .order("session_date", { ascending: false });
+
+      if (sessionsError) throw sessionsError;
+      setSessions(sessionsData || []);
     } catch (error: any) {
       toast.error("Erreur lors du chargement");
       console.error(error);
@@ -117,6 +129,7 @@ export default function TeacherSessions() {
       toast.success("Séance validée avec succès ✅");
       setIsDialogOpen(false);
       resetForm();
+      await loadData();
     } catch (error: any) {
       toast.error(error.message);
       console.error(error);
@@ -315,11 +328,61 @@ export default function TeacherSessions() {
         </Dialog>
       </div>
 
-      <Card className="p-6">
-        <p className="text-muted-foreground text-center">
-          Cliquez sur "Nouvelle Séance" pour enregistrer votre travail
-        </p>
-      </Card>
+      {sessions.length === 0 ? (
+        <Card className="p-6">
+          <p className="text-muted-foreground text-center">
+            Cliquez sur "Nouvelle Séance" pour enregistrer votre travail
+          </p>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {sessions.map((session) => (
+            <Card key={session.id} className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold">{session.classes?.name}</h3>
+                  <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                    <Calendar className="w-4 h-4" />
+                    {new Date(session.session_date).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric'
+                    })}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-accent">
+                    {session.percentage_acquired}%
+                  </div>
+                  <div className="text-xs text-muted-foreground">Progression</div>
+                </div>
+              </div>
+              
+              {session.activities_realized && session.activities_realized.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm font-medium mb-2">Activités réalisées:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {session.activities_realized.map((activity: string, idx: number) => (
+                      <span
+                        key={idx}
+                        className="text-xs px-3 py-1 bg-primary/10 text-primary rounded-full"
+                      >
+                        {activity}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {session.remarks && (
+                <div className="mt-4 p-3 bg-muted/30 rounded-lg">
+                  <p className="text-sm text-muted-foreground">{session.remarks}</p>
+                </div>
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
