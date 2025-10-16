@@ -1,0 +1,19 @@
+# Development Dockerfile with Spring Boot DevTools for hot-reload
+FROM maven:3.9-eclipse-temurin-17
+
+WORKDIR /app
+
+# Copy pom.xml and download dependencies
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copy source code (will be overridden by volume mount)
+COPY src ./src
+
+# Expose application and debug ports
+EXPOSE 8080 5005
+
+# Run with Spring DevTools enabled and debug mode
+# -Dspring-boot.run.jvmArguments enables remote debugging
+CMD ["mvn", "spring-boot:run", \
+     "-Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"]

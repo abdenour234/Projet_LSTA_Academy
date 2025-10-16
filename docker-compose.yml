@@ -24,10 +24,11 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: school-management-backend
     ports:
       - "8080:8080"
+      - "5005:5005"  # Debug port
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/school_management
       SPRING_DATASOURCE_USERNAME: admin
@@ -38,6 +39,14 @@ services:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin123
       MINIO_BUCKET: school-management
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_LIVERELOAD_ENABLED: "true"
+    volumes:
+      # Mount source code for live reload
+      - ./backend/src:/app/src
+      - ./backend/pom.xml:/app/pom.xml
+      # Cache Maven dependencies (don't sync these)
+      - backend_maven_cache:/root/.m2
     depends_on:
       postgres:
         condition: service_healthy
@@ -50,16 +59,25 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
       args:
-        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
-        VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY}
         VITE_API_URL: http://localhost:8080
     container_name: school-management-frontend
     ports:
       - "5173:5173"
     environment:
-      VITE_API_URL: http://localhost:8080
+      VITE_API_URL: http://localhost:8080/api
+    volumes:
+      # Mount source code for live reload
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/vite.config.ts:/app/vite.config.ts
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      - ./frontend/tailwind.config.ts:/app/tailwind.config.ts
+      - ./frontend/postcss.config.js:/app/postcss.config.js
+      # Don't sync node_modules (use container's version)
+      - /app/node_modules
     depends_on:
       - backend
     networks:
@@ -93,6 +111,8 @@ volumes:
   postgres_data:
     driver: local
   minio_data:
+    driver: local
+  backend_maven_cache:
     driver: local
 
 networks:
