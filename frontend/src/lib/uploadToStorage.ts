@@ -1,78 +1,68 @@
-import { supabase } from '@/integrations/supabase/client';
+import api from './api';
 
 export interface UploadResult {
   success: boolean;
   path?: string;
   url?: string;
+  fileName?: string;
   error?: string;
 }
 
 export const uploadActivityFile = async (
   file: File,
-  activityId: string
+  activityId?: string
 ): Promise<UploadResult> => {
   try {
-    // Générer un nom de fichier unique
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${activityId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const formData = new FormData();
+    formData.append('file', file);
 
-    // Upload le fichier
-    const { data, error } = await supabase.storage
-      .from('activity-files')
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
+    const response = await api.post<{
+      fileName: string;
+      downloadUrl: string;
+      originalName: string;
+      contentType: string;
+      size: string;
+    }>('/files/upload', formData);
 
-    if (error) {
-      console.error('Erreur lors de l\'upload:', error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-
-    // Retourner le chemin du fichier
     return {
       success: true,
-      path: data.path,
-      url: `activity-files/${data.path}`
+      path: response.fileName,
+      url: response.downloadUrl,
+      fileName: response.fileName
     };
   } catch (err) {
-    console.error('Erreur lors de l\'upload du fichier:', err);
+    console.error('Error uploading file:', err);
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'Erreur inconnue'
+      error: err instanceof Error ? err.message : 'Unknown error'
     };
   }
 };
 
-export const deleteActivityFile = async (filePath: string): Promise<boolean> => {
+export const deleteActivityFile = async (fileName: string): Promise<boolean> => {
   try {
-    // Nettoyer le chemin si nécessaire
-    const cleanPath = filePath.replace('activity-files/', '');
-    
-    const { error } = await supabase.storage
-      .from('activity-files')
-      .remove([cleanPath]);
-
-    if (error) {
-      console.error('Erreur lors de la suppression:', error);
-      return false;
-    }
-
+    await api.delete(`/files/${fileName}`);
     return true;
   } catch (err) {
-    console.error('Erreur lors de la suppression du fichier:', err);
+    console.error('Error deleting file:', err);
     return false;
   }
 };
 
-export const getPublicUrl = (filePath: string): string => {
-  const cleanPath = filePath.replace('activity-files/', '');
-  const { data } = supabase.storage
-    .from('activity-files')
-    .getPublicUrl(cleanPath);
-  
-  return data.publicUrl;
+export const getPublicUrl = async (fileName: string, expiryMinutes: number = 60): Promise<string> => {
+  try {
+    const response = await api.get<{ downloadUrl: string; fileName: string }>(
+      `/files/download-url/${fileName}?expiryMinutes=${expiryMinutes}`
+    );
+    return response.downloadUrl;
+  } catch (err) {
+    console.error('Error getting public URL:', err);
+    return '';
+  }
+};
+
+// Legacy compatibility - keep the old signature
+export const uploadToStorage = async (file: File): Promise<string> => {
+  const result = await uploadActivityFile(file);
+  return result.url || '';
 };

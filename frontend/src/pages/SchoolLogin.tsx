@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import api from '@/lib/api';
 import { SetupDemo } from '@/components/SetupDemo';
 
 const SchoolLogin = () => {
@@ -20,14 +20,13 @@ const SchoolLogin = () => {
 
   useEffect(() => {
     const fetchSchool = async () => {
-      const { data } = await supabase
-        .from('schools')
-        .select('name')
-        .eq('id', id)
-        .single();
-      
-      if (data) {
-        setSchoolName(data.name);
+      try {
+        const data = await api.get<{ name: string }>(`/schools/${id}`);
+        if (data) {
+          setSchoolName(data.name);
+        }
+      } catch (error) {
+        console.error('Error fetching school:', error);
       }
     };
 
@@ -41,49 +40,47 @@ const SchoolLogin = () => {
     setLoading(true);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      // Login with Spring Boot API
+      const authData = await api.post<{ token: string; email: string }>('/auth/login', {
         email,
         password,
       });
 
-      if (authError) throw authError;
+      // Store JWT token
+      localStorage.setItem('token', authData.token);
 
-      if (authData.user) {
-        // Get user profile and role
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('school_id')
-          .eq('id', authData.user.id)
-          .single();
+      // Get current user profile
+      const userData = await api.get<{
+        id: string;
+        email: string;
+        fullName: string;
+        schoolId: string;
+        roles: string[];
+      }>('/auth/me');
 
-        if (!profile || profile.school_id !== id) {
-          await supabase.auth.signOut();
-          toast({
-            title: 'Erreur',
-            description: 'Vous n\'êtes pas autorisé à accéder à cette école.',
-            variant: 'destructive',
-          });
-          setLoading(false);
-          return;
-        }
-
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', authData.user.id)
-          .single();
-
-        if (roleData?.role === 'admin') {
-          navigate(`/school/${id}/admin/dashboard`);
-        } else {
-          navigate(`/school/${id}/teacher/dashboard`);
-        }
-
+      // Verify school access
+      if (userData.schoolId !== id) {
+        localStorage.removeItem('token');
         toast({
-          title: 'Connexion réussie',
-          description: `Bienvenue sur ${schoolName}`,
+          title: 'Erreur',
+          description: 'Vous n\'êtes pas autorisé à accéder à cette école.',
+          variant: 'destructive',
         });
+        setLoading(false);
+        return;
       }
+
+      // Navigate based on role
+      if (userData.roles.includes('ADMIN')) {
+        navigate(`/school/${id}/admin/dashboard`);
+      } else {
+        navigate(`/school/${id}/teacher/dashboard`);
+      }
+
+      toast({
+        title: 'Connexion réussie',
+        description: `Bienvenue sur ${schoolName}`,
+      });
     } catch (error: any) {
       toast({
         title: 'Erreur de connexion',
