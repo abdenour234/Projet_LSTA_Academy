@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { getPublicUrl } from '@/lib/uploadToStorage';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -31,34 +31,16 @@ export const PDFViewer = ({ fileUrl, width = '100%', height = '600px' }: PDFView
       setLoading(true);
       setError(null);
 
-      // Vérifier si c'est une URL Supabase Storage
-      if (fileUrl.includes('supabase') || fileUrl.startsWith('activity-files/')) {
-        // Extraire le chemin du fichier
-        let filePath = fileUrl;
-        if (fileUrl.includes('activity-files/')) {
-          filePath = fileUrl.split('activity-files/')[1] || fileUrl;
-        }
-
-        // Générer une URL signée valide pour 1 heure
-        const { data, error: urlError } = await supabase.storage
-          .from('activity-files')
-          .createSignedUrl(filePath, 3600);
-
-        if (urlError) {
-          console.error('Erreur lors de la génération de l\'URL signée:', urlError);
-          setError('Fichier introuvable ou non encore disponible');
-          setLoading(false);
-          return;
-        }
-
-        if (data?.signedUrl) {
-          setSignedUrl(data.signedUrl);
-        } else {
-          setError('Impossible de charger le fichier PDF');
-        }
+      // Extract filename from path if needed
+      const fileName = fileUrl.includes('/') ? fileUrl.split('/').pop() || fileUrl : fileUrl;
+      
+      // Get download URL from Spring Boot backend (1 hour expiry)
+      const url = await getPublicUrl(fileName, 60);
+      
+      if (url) {
+        setSignedUrl(url);
       } else {
-        // URL directe
-        setSignedUrl(fileUrl);
+        setError('Impossible de charger le fichier PDF');
       }
     } catch (err) {
       console.error('Erreur lors du chargement du PDF:', err);
@@ -78,6 +60,14 @@ export const PDFViewer = ({ fileUrl, width = '100%', height = '600px' }: PDFView
     console.error('Erreur lors du chargement du document PDF:', error);
     setError('Impossible de charger le document PDF');
     setLoading(false);
+  };
+
+  const goToPrevPage = () => {
+    setPageNumber(prev => Math.max(prev - 1, 1));
+  };
+
+  const goToNextPage = () => {
+    setPageNumber(prev => Math.min(prev + 1, numPages));
   };
 
   if (error) {

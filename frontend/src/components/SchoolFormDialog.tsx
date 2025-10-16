@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
+import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Loader2 } from 'lucide-react';
 
@@ -69,30 +69,25 @@ export const SchoolFormDialog = ({ open, onOpenChange, onSuccess }: SchoolFormDi
       // Upload logo if provided
       if (logoFile) {
         const fileExt = logoFile.name.split('.').pop();
-        const filePath = `${formData.id}.${fileExt}`;
+        const fileName = `${formData.id}.${fileExt}`;
+        
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', logoFile);
+        uploadFormData.append('fileName', fileName);
 
-        const { error: uploadError } = await supabase.storage
-          .from('school-logos')
-          .upload(filePath, logoFile, { upsert: true });
+        const uploadResult = await api.post<{ fileName: string; downloadUrl: string }>(
+          '/files/upload',
+          uploadFormData
+        );
 
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('school-logos')
-          .getPublicUrl(filePath);
-
-        logoUrl = publicUrl;
+        logoUrl = uploadResult.downloadUrl;
       }
 
-      // Insert school
-      const { error } = await supabase
-        .from('schools')
-        .insert([{
-          ...formData,
-          logo_url: logoUrl,
-        }]);
-
-      if (error) throw error;
+      // Create school
+      await api.post('/schools', {
+        ...formData,
+        logoUrl,
+      });
 
       toast({
         title: 'École ajoutée',

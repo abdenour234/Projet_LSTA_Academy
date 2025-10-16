@@ -7,7 +7,7 @@ import { SetupDemo } from '@/components/SetupDemo';
 import { SchoolFormDialog } from '@/components/SchoolFormDialog';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import api from '@/lib/api';
 import LoadingState from '@/components/LoadingState';
 
 const Index = () => {
@@ -28,11 +28,7 @@ const Index = () => {
   const loadSchools = async () => {
     setLoading(true);
     try {
-      const { data } = await supabase
-        .from('schools')
-        .select('*')
-        .order('name');
-      
+      const data = await api.get<any[]>('/schools?sort=name,asc');
       if (data) {
         setSchools(data);
       }
