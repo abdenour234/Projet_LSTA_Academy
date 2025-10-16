@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { ActivityViewer } from '@/components/activity/ActivityViewer';
+import { AutoActivityViewer } from '@/components/activity/AutoActivityViewer';
 import LoadingState from '@/components/LoadingState';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -61,7 +61,7 @@ const ActivityView = () => {
           Retour aux activités
         </Button>
 
-        <ActivityViewer
+        <AutoActivityViewer
           title={activity.title}
           description={activity.description || ''}
           elements={activity.layout_data?.elements || []}

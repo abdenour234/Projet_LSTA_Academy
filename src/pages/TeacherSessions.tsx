@@ -43,6 +43,7 @@ export default function TeacherSessions() {
     percentage_acquired: 50,
     remarks: "",
   });
+  const [selectedActivities, setSelectedActivities] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     checkAuth();
@@ -95,10 +96,17 @@ export default function TeacherSessions() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!formData.class_id) {
+      toast.error("Veuillez sélectionner une classe");
+      return;
+    }
+
     try {
+      const activitiesList = Array.from(selectedActivities);
       const { error } = await supabase.from("teaching_sessions").insert([
         {
           ...formData,
+          activities_realized: activitiesList,
           teacher_id: userId,
           school_id: schoolId,
         },
@@ -106,13 +114,25 @@ export default function TeacherSessions() {
 
       if (error) throw error;
 
-      toast.success("Séance enregistrée avec succès");
+      toast.success("Séance validée avec succès ✅");
       setIsDialogOpen(false);
       resetForm();
     } catch (error: any) {
       toast.error(error.message);
       console.error(error);
     }
+  };
+
+  const toggleActivity = (activityTitle: string) => {
+    setSelectedActivities((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(activityTitle)) {
+        newSet.delete(activityTitle);
+      } else {
+        newSet.add(activityTitle);
+      }
+      return newSet;
+    });
   };
 
   const resetForm = () => {
@@ -124,6 +144,7 @@ export default function TeacherSessions() {
       percentage_acquired: 50,
       remarks: "",
     });
+    setSelectedActivities(new Set());
   };
 
   return (
@@ -142,35 +163,34 @@ export default function TeacherSessions() {
               Nouvelle Séance
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Enregistrer une séance</DialogTitle>
+              <DialogTitle className="text-2xl">📝 Enregistrement rapide de séance</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="class">Classe</Label>
-                <Select
-                  value={formData.class_id}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, class_id: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une classe" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {classes.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="date">Date</Label>
+                  <Label htmlFor="class">Classe *</Label>
+                  <Select
+                    value={formData.class_id}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, class_id: value })
+                    }
+                  >
+                    <SelectTrigger className="bg-card">
+                      <SelectValue placeholder="Sélectionner une classe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classes.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="date">Date (auto-détectée)</Label>
                   <Input
                     id="date"
                     type="date"
@@ -178,103 +198,89 @@ export default function TeacherSessions() {
                     onChange={(e) =>
                       setFormData({ ...formData, session_date: e.target.value })
                     }
+                    className="bg-card"
                     required
                   />
                 </div>
-                <div>
-                  <Label htmlFor="duration">Durée (minutes)</Label>
+              </div>
+
+              <div>
+                <Label className="text-lg mb-3 block">✅ Activités réalisées (cochez)</Label>
+                <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto p-4 bg-muted/30 rounded-lg">
+                  {activities.map((activity) => (
+                    <div
+                      key={activity.id}
+                      className={`flex items-center space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-smooth ${
+                        selectedActivities.has(activity.title)
+                          ? "border-primary bg-primary/10"
+                          : "border-border bg-card hover:border-primary/50"
+                      }`}
+                      onClick={() => toggleActivity(activity.title)}
+                    >
+                      <div
+                        className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                          selectedActivities.has(activity.title)
+                            ? "bg-primary border-primary"
+                            : "border-border"
+                        }`}
+                      >
+                        {selectedActivities.has(activity.title) && (
+                          <span className="text-primary-foreground text-xs">✓</span>
+                        )}
+                      </div>
+                      <span className="text-sm font-medium flex-1">
+                        {activity.title}
+                      </span>
+                      <span
+                        className={`text-xs px-2 py-1 rounded ${
+                          activity.type === "Orale"
+                            ? "bg-orale/10 text-orale"
+                            : activity.type === "Lecture"
+                            ? "bg-lecture/10 text-lecture"
+                            : "bg-ecriture/10 text-ecriture"
+                        }`}
+                      >
+                        {activity.type}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {selectedActivities.size > 0 && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {selectedActivities.size} activité(s) sélectionnée(s)
+                  </p>
+                )}
+              </div>
+
+              <div className="p-4 bg-accent/5 rounded-lg">
+                <Label htmlFor="percentage" className="text-base mb-3 block">
+                  📊 Progression des élèves: <span className="font-bold text-accent">{formData.percentage_acquired}%</span>
+                </Label>
+                <div className="relative">
                   <Input
-                    id="duration"
-                    type="number"
-                    min="1"
-                    value={formData.duration_minutes}
+                    id="percentage"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={formData.percentage_acquired}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        duration_minutes: parseInt(e.target.value),
+                        percentage_acquired: parseInt(e.target.value),
                       })
                     }
-                    required
+                    className="w-full h-2 cursor-pointer"
                   />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>0%</span>
+                    <span>50%</span>
+                    <span>100%</span>
+                  </div>
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="activities">Activités réalisées</Label>
-                <Select
-                  value=""
-                  onValueChange={(value) => {
-                    if (!formData.activities_realized.includes(value)) {
-                      setFormData({
-                        ...formData,
-                        activities_realized: [
-                          ...formData.activities_realized,
-                          value,
-                        ],
-                      });
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Ajouter une activité" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activities.map((a) => (
-                      <SelectItem key={a.id} value={a.title}>
-                        {a.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {formData.activities_realized.map((activity, index) => (
-                    <span
-                      key={index}
-                      className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm flex items-center gap-2"
-                    >
-                      {activity}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setFormData({
-                            ...formData,
-                            activities_realized:
-                              formData.activities_realized.filter(
-                                (_, i) => i !== index
-                              ),
-                          })
-                        }
-                        className="text-primary hover:text-primary/80"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="percentage">
-                  Pourcentage d'élèves ayant acquis: {formData.percentage_acquired}%
-                </Label>
-                <Input
-                  id="percentage"
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={formData.percentage_acquired}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      percentage_acquired: parseInt(e.target.value),
-                    })
-                  }
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="remarks">Remarques pédagogiques</Label>
+                <Label htmlFor="remarks">💭 Remarques pédagogiques</Label>
                 <Textarea
                   id="remarks"
                   value={formData.remarks}
@@ -282,18 +288,24 @@ export default function TeacherSessions() {
                     setFormData({ ...formData, remarks: e.target.value })
                   }
                   placeholder="Observations, difficultés rencontrées, points à améliorer..."
-                  rows={4}
+                  rows={3}
+                  className="bg-card"
                 />
               </div>
 
-              <div className="flex gap-2">
-                <Button type="submit" className="flex-1">
-                  Enregistrer
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  type="submit" 
+                  className="flex-1 h-12 text-lg font-semibold"
+                  disabled={selectedActivities.size === 0 || !formData.class_id}
+                >
+                  ✅ Valider la séance
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsDialogOpen(false)}
+                  className="h-12"
                 >
                   Annuler
                 </Button>

@@ -21,8 +21,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Users, Mail, Phone } from "lucide-react";
+import { Plus, Edit, Users, Mail, Phone, Key, Copy } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Teacher {
   id: string;
@@ -48,6 +55,13 @@ export default function TeacherManagement() {
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newTeacher, setNewTeacher] = useState({
+    full_name: "",
+    matiere: "",
+    phone: "",
+  });
+  const [generatedCredentials, setGeneratedCredentials] = useState<{email: string, password: string} | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -164,6 +178,77 @@ export default function TeacherManagement() {
       .join(", ") || "Aucune";
   };
 
+  const generatePassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    let password = "";
+    for (let i = 0; i < 10; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
+  const generateEmail = (fullName: string) => {
+    const namePart = fullName
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, ".");
+    return `${namePart}@${schoolId}.ma`;
+  };
+
+  const handleAddTeacher = async () => {
+    if (!newTeacher.full_name || !newTeacher.matiere) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+
+    const email = generateEmail(newTeacher.full_name);
+    const password = generatePassword();
+
+    try {
+      // Create auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: newTeacher.full_name,
+            school_id: schoolId,
+            role: "teacher",
+          },
+        },
+      });
+
+      if (authError) throw authError;
+
+      // Update profile with additional info
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({
+            matiere: newTeacher.matiere,
+            phone: newTeacher.phone,
+          })
+          .eq("id", authData.user.id);
+
+        if (profileError) throw profileError;
+      }
+
+      setGeneratedCredentials({ email, password });
+      toast.success("Enseignant créé avec succès");
+      loadData();
+      setNewTeacher({ full_name: "", matiere: "", phone: "" });
+    } catch (error: any) {
+      toast.error(error.message);
+      console.error(error);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Copié dans le presse-papier");
+  };
+
   if (loading) {
     return <div className="p-8">Chargement...</div>;
   }
@@ -178,6 +263,126 @@ export default function TeacherManagement() {
       </div>
 
       <Card className="p-6">
+        <div className="flex justify-end mb-4">
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setGeneratedCredentials(null)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Ajouter un enseignant
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Ajouter un enseignant</DialogTitle>
+              </DialogHeader>
+              {generatedCredentials ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-accent/10 rounded-lg space-y-3">
+                    <p className="font-semibold text-accent">✅ Compte créé avec succès!</p>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Email:</span>
+                        <div className="flex items-center gap-2">
+                          <code className="text-sm font-mono bg-background px-2 py-1 rounded">
+                            {generatedCredentials.email}
+                          </code>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => copyToClipboard(generatedCredentials.email)}
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Mot de passe:</span>
+                        <div className="flex items-center gap-2">
+                          <code className="text-sm font-mono bg-background px-2 py-1 rounded">
+                            {generatedCredentials.password}
+                          </code>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => copyToClipboard(generatedCredentials.password)}
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      ⚠️ Veuillez transmettre ces identifiants à l'enseignant. Ils ne seront plus affichés.
+                    </p>
+                  </div>
+                  <Button onClick={() => setIsAddDialogOpen(false)} className="w-full">
+                    Fermer
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="full_name">Nom complet *</Label>
+                    <Input
+                      id="full_name"
+                      value={newTeacher.full_name}
+                      onChange={(e) =>
+                        setNewTeacher({ ...newTeacher, full_name: e.target.value })
+                      }
+                      placeholder="Ex: Ahmed Bennani"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="matiere">Matière *</Label>
+                    <Select
+                      value={newTeacher.matiere}
+                      onValueChange={(value) =>
+                        setNewTeacher({ ...newTeacher, matiere: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une matière" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Mathématiques">Mathématiques</SelectItem>
+                        <SelectItem value="Français">Français</SelectItem>
+                        <SelectItem value="Arabe">Arabe</SelectItem>
+                        <SelectItem value="Sciences">Sciences</SelectItem>
+                        <SelectItem value="Histoire-Géographie">Histoire-Géographie</SelectItem>
+                        <SelectItem value="Éducation Islamique">Éducation Islamique</SelectItem>
+                        <SelectItem value="Éducation Physique">Éducation Physique</SelectItem>
+                        <SelectItem value="Arts Plastiques">Arts Plastiques</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Téléphone</Label>
+                    <Input
+                      id="phone"
+                      value={newTeacher.phone}
+                      onChange={(e) =>
+                        setNewTeacher({ ...newTeacher, phone: e.target.value })
+                      }
+                      placeholder="Ex: 0612345678"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={handleAddTeacher} className="flex-1">
+                      <Key className="w-4 h-4 mr-2" />
+                      Créer le compte
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsAddDialogOpen(false)}
+                    >
+                      Annuler
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        </div>
         <Table>
           <TableHeader>
             <TableRow>

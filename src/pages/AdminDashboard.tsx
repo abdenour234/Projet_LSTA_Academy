@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DIAGNOSTIC_GRIDS } from '@/config/diagnosticGrids';
+import { AdminStatsCards } from '@/components/admin/AdminStatsCards';
 
 const AdminDashboard = () => {
   const { id } = useParams<{ id: string }>();
@@ -140,8 +141,16 @@ const AdminDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Statistics Dashboard */}
+        <div>
+          <h2 className="text-2xl font-bold mb-6">📊 Tableau de bord</h2>
+          <AdminStatsCards schoolId={id!} />
+        </div>
+
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <h2 className="text-2xl font-bold mb-6">⚡ Actions rapides</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card 
             className="p-6 cursor-pointer hover:shadow-lg transition-smooth"
             onClick={() => navigate(`/school/${id}/admin/classes`)}
@@ -174,7 +183,9 @@ const AdminDashboard = () => {
             <h3 className="font-semibold">Messagerie</h3>
             <p className="text-sm text-muted-foreground">Communications</p>
           </Card>
+          </div>
         </div>
+        
         {/* Diagnostic Sessions Section */}
         <Card className="p-6 shadow-card">
           <div className="flex items-center gap-3 mb-6">
