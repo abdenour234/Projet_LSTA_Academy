@@ -64,6 +64,69 @@ export type Database = {
           },
         ]
       }
+      classes: {
+        Row: {
+          annee_scolaire: string
+          created_at: string | null
+          effectif: number | null
+          filiere: string | null
+          id: string
+          level: string
+          name: string
+          school_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          annee_scolaire: string
+          created_at?: string | null
+          effectif?: number | null
+          filiere?: string | null
+          id?: string
+          level: string
+          name: string
+          school_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          annee_scolaire?: string
+          created_at?: string | null
+          effectif?: number | null
+          filiere?: string | null
+          id?: string
+          level?: string
+          name?: string
+          school_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          created_at: string | null
+          id: string
+          participant_ids: string[]
+          school_id: string
+          subject: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          participant_ids: string[]
+          school_id: string
+          subject?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          participant_ids?: string[]
+          school_id?: string
+          subject?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       diagnostic_results: {
         Row: {
           created_at: string | null
@@ -218,12 +281,52 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          attachments: Json | null
+          content: string
+          conversation_id: string
+          created_at: string | null
+          id: string
+          read_by: string[] | null
+          sender_id: string
+        }
+        Insert: {
+          attachments?: Json | null
+          content: string
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          read_by?: string[] | null
+          sender_id: string
+        }
+        Update: {
+          attachments?: Json | null
+          content?: string
+          conversation_id?: string
+          created_at?: string | null
+          id?: string
+          read_by?: string[] | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
           email: string
           full_name: string | null
           id: string
+          matiere: string | null
+          phone: string | null
           school_id: string
           updated_at: string | null
         }
@@ -232,6 +335,8 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          matiere?: string | null
+          phone?: string | null
           school_id: string
           updated_at?: string | null
         }
@@ -240,6 +345,8 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          matiere?: string | null
+          phone?: string | null
           school_id?: string
           updated_at?: string | null
         }
@@ -292,6 +399,153 @@ export type Database = {
           region?: string
           status?: string
           students?: number
+        }
+        Relationships: []
+      }
+      session_progress: {
+        Row: {
+          acquired_count: number | null
+          competence: string
+          created_at: string | null
+          id: string
+          not_acquired_count: number | null
+          session_id: string
+        }
+        Insert: {
+          acquired_count?: number | null
+          competence: string
+          created_at?: string | null
+          id?: string
+          not_acquired_count?: number | null
+          session_id: string
+        }
+        Update: {
+          acquired_count?: number | null
+          competence?: string
+          created_at?: string | null
+          id?: string
+          not_acquired_count?: number | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_progress_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "teaching_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_classes: {
+        Row: {
+          class_id: string
+          created_at: string | null
+          id: string
+          teacher_id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string | null
+          id?: string
+          teacher_id: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string | null
+          id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_classes_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teaching_sessions: {
+        Row: {
+          activities_realized: string[] | null
+          class_id: string
+          created_at: string | null
+          duration_minutes: number | null
+          id: string
+          percentage_acquired: number | null
+          remarks: string | null
+          school_id: string
+          session_date: string
+          teacher_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          activities_realized?: string[] | null
+          class_id: string
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          percentage_acquired?: number | null
+          remarks?: string | null
+          school_id: string
+          session_date: string
+          teacher_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          activities_realized?: string[] | null
+          class_id?: string
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          percentage_acquired?: number | null
+          remarks?: string | null
+          school_id?: string
+          session_date?: string
+          teacher_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teaching_sessions_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_activity_logs: {
+        Row: {
+          activity_date: string
+          activity_type: string
+          created_at: string | null
+          duration_seconds: number | null
+          id: string
+          metadata: Json | null
+          school_id: string
+          user_id: string
+        }
+        Insert: {
+          activity_date: string
+          activity_type: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          metadata?: Json | null
+          school_id: string
+          user_id: string
+        }
+        Update: {
+          activity_date?: string
+          activity_type?: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          metadata?: Json | null
+          school_id?: string
+          user_id?: string
         }
         Relationships: []
       }

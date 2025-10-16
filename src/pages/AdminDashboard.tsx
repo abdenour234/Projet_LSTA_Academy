@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LogOut, Plus, Trash2, BarChart3, Eye, Edit } from 'lucide-react';
+import { LogOut, Plus, Trash2, BarChart3, Eye, Edit, Users, GraduationCap, Clock, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -140,6 +140,41 @@ const AdminDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card 
+            className="p-6 cursor-pointer hover:shadow-lg transition-smooth"
+            onClick={() => navigate(`/school/${id}/admin/classes`)}
+          >
+            <Users className="h-8 w-8 text-primary mb-3" />
+            <h3 className="font-semibold">Classes</h3>
+            <p className="text-sm text-muted-foreground">Gérer les classes</p>
+          </Card>
+          <Card 
+            className="p-6 cursor-pointer hover:shadow-lg transition-smooth"
+            onClick={() => navigate(`/school/${id}/admin/teachers`)}
+          >
+            <GraduationCap className="h-8 w-8 text-primary mb-3" />
+            <h3 className="font-semibold">Enseignants</h3>
+            <p className="text-sm text-muted-foreground">Gérer les enseignants</p>
+          </Card>
+          <Card 
+            className="p-6 cursor-pointer hover:shadow-lg transition-smooth"
+            onClick={() => navigate(`/school/${id}/admin/activity-tracking`)}
+          >
+            <Clock className="h-8 w-8 text-primary mb-3" />
+            <h3 className="font-semibold">Suivi d'activité</h3>
+            <p className="text-sm text-muted-foreground">Temps d'utilisation</p>
+          </Card>
+          <Card 
+            className="p-6 cursor-pointer hover:shadow-lg transition-smooth"
+            onClick={() => navigate(`/school/${id}/messages`)}
+          >
+            <MessageSquare className="h-8 w-8 text-primary mb-3" />
+            <h3 className="font-semibold">Messagerie</h3>
+            <p className="text-sm text-muted-foreground">Communications</p>
+          </Card>
+        </div>
         {/* Diagnostic Sessions Section */}
         <Card className="p-6 shadow-card">
           <div className="flex items-center gap-3 mb-6">

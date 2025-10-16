@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LogOut, BookOpen, ClipboardList, Plus, ArrowRight, BarChart3, Eye } from 'lucide-react';
+import { LogOut, BookOpen, ClipboardList, Plus, ArrowRight, BarChart3, Eye, Calendar, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -118,6 +118,33 @@ const TeacherDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card 
+            className="p-6 cursor-pointer hover:shadow-lg transition-smooth"
+            onClick={() => navigate(`/school/${id}/teacher/sessions`)}
+          >
+            <Calendar className="h-8 w-8 text-primary mb-3" />
+            <h3 className="font-semibold">Mes Séances</h3>
+            <p className="text-sm text-muted-foreground">Enregistrer une séance</p>
+          </Card>
+          <Card 
+            className="p-6 cursor-pointer hover:shadow-lg transition-smooth"
+            onClick={handleCreateNewDiagnostic}
+          >
+            <ClipboardList className="h-8 w-8 text-primary mb-3" />
+            <h3 className="font-semibold">Diagnostic</h3>
+            <p className="text-sm text-muted-foreground">Nouveau diagnostic</p>
+          </Card>
+          <Card 
+            className="p-6 cursor-pointer hover:shadow-lg transition-smooth"
+            onClick={() => navigate(`/school/${id}/messages`)}
+          >
+            <MessageSquare className="h-8 w-8 text-primary mb-3" />
+            <h3 className="font-semibold">Messagerie</h3>
+            <p className="text-sm text-muted-foreground">Mes messages</p>
+          </Card>
+        </div>
         {/* Diagnostics Section */}
         <Card className="p-6 shadow-card">
           <div className="flex items-center justify-between mb-6">
