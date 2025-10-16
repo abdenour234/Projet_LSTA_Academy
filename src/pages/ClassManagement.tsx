@@ -146,9 +146,11 @@ export default function ClassManagement() {
     setEditingClass(null);
   };
 
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    resetForm();
+  const handleDialogChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      resetForm();
+    }
   };
 
   if (loading) {
@@ -164,7 +166,7 @@ export default function ClassManagement() {
             Gérez les classes et leurs effectifs
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+        <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
@@ -254,7 +256,7 @@ export default function ClassManagement() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={handleDialogClose}
+                  onClick={() => setIsDialogOpen(false)}
                 >
                   Annuler
                 </Button>
