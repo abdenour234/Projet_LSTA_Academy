@@ -43,7 +43,7 @@ export default function ClassManagement() {
   const [editingClass, setEditingClass] = useState<Class | null>(null);
   const [formData, setFormData] = useState({
     name: "",
-    level: "",
+    level: "Primaire",
     filiere: "",
     annee_scolaire: new Date().getFullYear() + "-" + (new Date().getFullYear() + 1),
     effectif: 0,
@@ -138,7 +138,7 @@ export default function ClassManagement() {
   const resetForm = () => {
     setFormData({
       name: "",
-      level: "",
+      level: "Primaire",
       filiere: "",
       annee_scolaire: new Date().getFullYear() + "-" + (new Date().getFullYear() + 1),
       effectif: 0,
