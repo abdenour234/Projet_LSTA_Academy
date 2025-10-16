@@ -12,6 +12,9 @@ RUN npm install
 # Copy source code
 COPY . .
 
+# Set environment variable for Vite build
+ENV VITE_API_URL=http://localhost:8080
+
 # Build the application
 RUN npm run build
 
