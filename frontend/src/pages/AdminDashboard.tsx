@@ -4,7 +4,7 @@ import { LogOut, Plus, Trash2, BarChart3, Eye, Edit, Users, GraduationCap, Clock
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { authApi, schoolApi, activityApi } from '@/lib/api';
 import { DIAGNOSTIC_GRIDS } from '@/config/diagnosticGrids';
 import { AdminStatsCards } from '@/components/admin/AdminStatsCards';
 
@@ -20,49 +20,41 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      try {
+        const user = await authApi.getCurrentUser();
+        if (!user) {
+          navigate(`/school/${id}/login`);
+          return;
+        }
+
+        setUserName(user.fullName || user.email?.split('@')[0] || 'Administrateur');
+
+        const school = await schoolApi.getById(id!);
+        if (school) {
+          setSchoolName(school.name);
+          setSchoolLogo(school.logoUrl || '');
+        }
+
+        loadDiagnosticSessions();
+        loadActivities();
+      } catch (error) {
+        console.error('Error fetching data:', error);
         navigate(`/school/${id}/login`);
-        return;
       }
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user.id)
-        .single();
-
-      if (profile) {
-        setUserName(profile.full_name || user.email?.split('@')[0] || 'Administrateur');
-      }
-
-      const { data: school } = await supabase
-        .from('schools')
-        .select('name, logo_url')
-        .eq('id', id)
-        .single();
-
-      if (school) {
-        setSchoolName(school.name);
-        setSchoolLogo(school.logo_url || '');
-      }
-
-      loadDiagnosticSessions();
-      loadActivities();
     };
 
     fetchData();
   }, [id, navigate]);
 
   const loadDiagnosticSessions = async () => {
-    const { data } = await supabase
-      .from('diagnostic_sessions')
-      .select('*')
-      .eq('school_id', id)
-      .order('created_at', { ascending: false });
-
-    if (data) {
-      setDiagnosticSessions(data);
+    try {
+      // TODO: Add diagnostic sessions API endpoint
+      // const data = await api.get(`/diagnostic-sessions/school/${id}`);
+      // setDiagnosticSessions(data || []);
+      setDiagnosticSessions([]);
+    } catch (error) {
+      console.error('Error loading diagnostic sessions:', error);
+      setDiagnosticSessions([]);
     }
   };
 
@@ -71,25 +63,20 @@ const AdminDashboard = () => {
   };
 
   const loadActivities = async () => {
-    const { data } = await supabase
-      .from('activities')
-      .select('*')
-      .eq('school_id', id)
-      .order('created_at', { ascending: false });
-
-    if (data) {
-      setActivities(data);
+    try {
+      const data = await activityApi.getAll();
+      // Filter by school_id on frontend until backend supports it
+      const schoolActivities = data?.filter((a: any) => a.schoolId === id) || [];
+      setActivities(schoolActivities);
+    } catch (error) {
+      console.error('Error loading activities:', error);
+      setActivities([]);
     }
   };
 
   const handleDeleteActivity = async (activityId: string) => {
     try {
-      const { error } = await supabase
-        .from('activities')
-        .delete()
-        .eq('id', activityId);
-
-      if (error) throw error;
+      await activityApi.delete(activityId);
 
       toast({
         title: 'Activité supprimée',
@@ -106,12 +93,7 @@ const AdminDashboard = () => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
-    toast({
-      title: 'Déconnexion',
-      description: 'À bientôt !',
-    });
+    await authApi.logout();
   };
 
   return (

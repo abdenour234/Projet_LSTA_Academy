@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { storageApi } from '@/lib/api';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -31,33 +31,16 @@ export const PDFViewer = ({ fileUrl, width = '100%', height = '600px' }: PDFView
       setLoading(true);
       setError(null);
 
-      // Vérifier si c'est une URL Supabase Storage
-      if (fileUrl.includes('supabase') || fileUrl.startsWith('activity-files/')) {
-        // Extraire le chemin du fichier
-        let filePath = fileUrl;
-        if (fileUrl.includes('activity-files/')) {
-          filePath = fileUrl.split('activity-files/')[1] || fileUrl;
-        }
-
-        // Générer une URL signée valide pour 1 heure
-        const { data, error: urlError } = await supabase.storage
-          .from('activity-files')
-          .createSignedUrl(filePath, 3600);
-
-        if (urlError) {
-          console.error('Erreur lors de la génération de l\'URL signée:', urlError);
-          setError('Fichier introuvable ou non encore disponible');
-          setLoading(false);
-          return;
-        }
-
-        if (data?.signedUrl) {
-          setSignedUrl(data.signedUrl);
+      // Check if it's a Spring Boot storage URL
+      if (fileUrl.startsWith('activity-files/') || !fileUrl.startsWith('http')) {
+        const fileName = fileUrl.replace(/^(activity-files?\/)/, '');
+        const response = await storageApi.getSignedUrl(fileName);
+        if (response?.url) {
+          setSignedUrl(response.url);
         } else {
           setError('Impossible de charger le fichier PDF');
         }
       } else {
-        // URL directe
         setSignedUrl(fileUrl);
       }
     } catch (err) {

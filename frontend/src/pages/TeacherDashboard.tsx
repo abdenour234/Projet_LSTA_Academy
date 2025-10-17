@@ -4,7 +4,7 @@ import { LogOut, BookOpen, ClipboardList, Plus, ArrowRight, BarChart3, Eye, Cale
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { authApi, schoolApi, activityApi } from '@/lib/api';
 import { DIAGNOSTIC_GRIDS } from '@/config/diagnosticGrids';
 
 const TeacherDashboard = () => {
@@ -20,54 +20,32 @@ const TeacherDashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      try {
+        const user = await authApi.getCurrentUser();
+        if (!user) {
+          navigate(`/school/${id}/login`);
+          return;
+        }
+
+        setUserName(user.fullName || user.email?.split('@')[0] || 'Professeur');
+
+        const school = await schoolApi.getById(id!);
+        if (school) {
+          setSchoolName(school.name);
+          setSchoolLogo(school.logoUrl || '');
+        }
+
+        const activitiesData = await activityApi.getAll();
+        const schoolActivities = activitiesData?.filter((a: any) => a.schoolId === id) || [];
+        setActivities(schoolActivities);
+
+        // TODO: Load diagnostic sessions
+        // const sessionsData = await api.get(`/diagnostic-sessions/teacher/${user.id}`);
+        setDiagnosticSessions([]);
+        setHasDiagnostic(false);
+      } catch (error) {
+        console.error('Error fetching data:', error);
         navigate(`/school/${id}/login`);
-        return;
-      }
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, school_id')
-        .eq('id', user.id)
-        .single();
-
-      if (profile) {
-        setUserName(profile.full_name || user.email?.split('@')[0] || 'Professeur');
-      }
-
-      const { data: school } = await supabase
-        .from('schools')
-        .select('name, logo_url')
-        .eq('id', id)
-        .single();
-
-      if (school) {
-        setSchoolName(school.name);
-        setSchoolLogo(school.logo_url || '');
-      }
-
-      const { data: activitiesData } = await supabase
-        .from('activities')
-        .select('*')
-        .eq('school_id', id)
-        .order('created_at', { ascending: false });
-
-      if (activitiesData) {
-        setActivities(activitiesData);
-      }
-
-      // Load diagnostic sessions
-      const { data: sessionsData } = await supabase
-        .from('diagnostic_sessions')
-        .select('*')
-        .eq('school_id', id)
-        .eq('teacher_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (sessionsData) {
-        setDiagnosticSessions(sessionsData);
-        setHasDiagnostic(sessionsData.length > 0);
       }
     };
 
@@ -83,12 +61,7 @@ const TeacherDashboard = () => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
-    toast({
-      title: 'Déconnexion',
-      description: 'À bientôt !',
-    });
+    await authApi.logout();
   };
 
   return (

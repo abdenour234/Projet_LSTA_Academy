@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Loader2, AlertCircle, Maximize2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { storageApi } from '@/lib/api';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
@@ -25,25 +25,12 @@ export const VideoViewer = ({ fileUrl, width = '100%', height = '400px', onFulls
       setLoading(true);
       setError(null);
 
-      if (fileUrl.includes('supabase') || fileUrl.startsWith('activity-files/')) {
-        let filePath = fileUrl;
-        if (fileUrl.includes('activity-files/')) {
-          filePath = fileUrl.split('activity-files/')[1] || fileUrl;
-        }
-
-        const { data, error: urlError } = await supabase.storage
-          .from('activity-files')
-          .createSignedUrl(filePath, 3600);
-
-        if (urlError) {
-          console.error('Erreur lors de la génération de l\'URL signée:', urlError);
-          setError('Fichier vidéo introuvable ou non encore disponible');
-          setLoading(false);
-          return;
-        }
-
-        if (data?.signedUrl) {
-          setSignedUrl(data.signedUrl);
+      // Check if it's a Spring Boot storage URL
+      if (fileUrl.startsWith('activity-files/') || !fileUrl.startsWith('http')) {
+        const fileName = fileUrl.replace(/^(activity-files?\/)/, '');
+        const response = await storageApi.getSignedUrl(fileName);
+        if (response?.url) {
+          setSignedUrl(response.url);
         } else {
           setError('Impossible de charger la vidéo');
         }
