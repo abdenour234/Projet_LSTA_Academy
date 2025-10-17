@@ -1,57 +1,66 @@
-version: '3.9'
-
 services:
   postgres:
     image: postgres:16
     container_name: school-management-db
     environment:
-      POSTGRES_DB: school_management
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: securepassword123
+      POSTGRES_DB: schoolmanagement
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - app-network
+      - ./migrations:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d school_management"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
+
+  minio:
+    image: minio/minio
+    container_name: school-management-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - app-network
 
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     container_name: school-management-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/schoolmanagement
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET_NAME: school-management
+      JWT_SECRET: your-very-secure-secret-key-change-this-in-production-minimum-512-bits
+      JWT_EXPIRATION: 86400000
     ports:
       - "8080:8080"
-      - "5005:5005"  # Debug port
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/school_management
-      SPRING_DATASOURCE_USERNAME: admin
-      SPRING_DATASOURCE_PASSWORD: securepassword123
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      SPRING_JPA_SHOW_SQL: "true"
-      MINIO_URL: http://minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin123
-      MINIO_BUCKET: school-management
-      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
-      SPRING_DEVTOOLS_LIVERELOAD_ENABLED: "true"
-    volumes:
-      # Mount source code for live reload
-      - ./backend/src:/app/src
-      - ./backend/pom.xml:/app/pom.xml
-      # Cache Maven dependencies (don't sync these)
-      - backend_maven_cache:/root/.m2
     depends_on:
       postgres:
         condition: service_healthy
       minio:
-        condition: service_started
+        condition: service_healthy
     networks:
       - app-network
     restart: unless-stopped
@@ -59,62 +68,20 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
-      args:
-        VITE_API_URL: http://localhost:8080
+      dockerfile: Dockerfile
     container_name: school-management-frontend
     ports:
-      - "5173:5173"
-    environment:
-      VITE_API_URL: http://localhost:8080/api
-    volumes:
-      # Mount source code for live reload
-      - ./frontend/src:/app/src
-      - ./frontend/public:/app/public
-      - ./frontend/index.html:/app/index.html
-      - ./frontend/vite.config.ts:/app/vite.config.ts
-      - ./frontend/tsconfig.json:/app/tsconfig.json
-      - ./frontend/tailwind.config.ts:/app/tailwind.config.ts
-      - ./frontend/postcss.config.js:/app/postcss.config.js
-      # Don't sync node_modules (use container's version)
-      - /app/node_modules
+      - "80:80"
     depends_on:
       - backend
     networks:
       - app-network
     restart: unless-stopped
-    stdin_open: true
-    tty: true
-
-  minio:
-    image: minio/minio
-    container_name: school-management-minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
-    command: server /data --console-address ":9001"
-    volumes:
-      - minio_data:/data
-    networks:
-      - app-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-
-volumes:
-  postgres_data:
-    driver: local
-  minio_data:
-    driver: local
-  backend_maven_cache:
-    driver: local
 
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:

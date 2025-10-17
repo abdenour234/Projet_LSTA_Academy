@@ -19,25 +19,20 @@ public class Classe {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(name = "school_id", nullable = false)
-    private String schoolId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "school_id", insertable = false, updatable = false)
-    private School school;
-
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column(name = "school_id", nullable = false)
+    private String schoolId;
+
+    @Column
     private String level;
 
-    private String filiere;
+    @Column(name = "academic_year")
+    private String academicYear;
 
-    @Column(name = "annee_scolaire", nullable = false)
-    private String anneeScolaire;
-
-    private Integer effectif;
+    @Column(name = "student_count")
+    private Integer studentCount;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

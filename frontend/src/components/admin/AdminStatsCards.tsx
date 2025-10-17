@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Users, GraduationCap, BookOpen, TrendingUp, Clock, MessageSquare } from 'lucide-react';
-import api from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AdminStatsCardsProps {
   schoolId: string;
@@ -23,38 +23,66 @@ export const AdminStatsCards = ({ schoolId }: AdminStatsCardsProps) => {
 
   const loadStats = async () => {
     try {
-      // Fetch all stats from backend endpoints
-      
       // Total classes
-      const classes = await api.get<any[]>(`/classes?schoolId=${schoolId}`);
-      const totalClasses = classes?.length || 0;
+      const { count: classCount } = await supabase
+        .from('classes')
+        .select('*', { count: 'exact', head: true })
+        .eq('school_id', schoolId);
 
-      // Total teachers (need backend endpoint for this - for now use 0)
-      const totalTeachers = 0; // TODO: Add GET /api/teachers?schoolId={id} endpoint
+      // Total teachers - get all profiles for this school
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('school_id', schoolId);
+
+      // Then filter only teachers by checking their roles
+      const profileIds = profiles?.map(p => p.id) || [];
+      
+      const { data: teacherRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'teacher')
+        .in('user_id', profileIds);
 
       // Total activities
-      const activities = await api.get<any[]>(`/activities?schoolId=${schoolId}`);
-      const totalActivities = activities?.length || 0;
+      const { count: activityCount } = await supabase
+        .from('activities')
+        .select('*', { count: 'exact', head: true })
+        .eq('school_id', schoolId);
 
       // Total sessions
-      const sessions = await api.get<any[]>(`/teaching-sessions?schoolId=${schoolId}`);
-      const totalSessions = sessions?.length || 0;
+      const { count: sessionCount } = await supabase
+        .from('teaching_sessions')
+        .select('*', { count: 'exact', head: true })
+        .eq('school_id', schoolId);
 
-      // Average progress from sessions
+      // Average progress
+      const { data: sessions } = await supabase
+        .from('teaching_sessions')
+        .select('percentage_acquired')
+        .eq('school_id', schoolId);
+
       const avgProgress = sessions && sessions.length > 0
-        ? Math.round(sessions.reduce((acc: number, s: any) => acc + (s.percentageAcquired || 0), 0) / sessions.length)
+        ? Math.round(sessions.reduce((acc: number, s: any) => acc + (s.percentage_acquired || 0), 0) / sessions.length)
         : 0;
 
-      // Active users (this would need a backend endpoint - for now use 0)
-      const activeUsers = 0; // TODO: Add GET /api/users/active?schoolId={id}&days=7 endpoint
+      // Active users (last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const { count: activeCount } = await supabase
+        .from('user_activity_logs')
+        .select('user_id', { count: 'exact', head: true })
+        .eq('school_id', schoolId)
+        .gte('activity_date', sevenDaysAgo.toISOString().split('T')[0]);
 
       setStats({
-        totalClasses,
-        totalTeachers,
-        totalActivities,
-        totalSessions,
+        totalClasses: classCount || 0,
+        totalTeachers: teacherRoles?.length || 0,
+        totalActivities: activityCount || 0,
+        totalSessions: sessionCount || 0,
         avgProgress,
-        activeUsers,
+        activeUsers: activeCount || 0,
       });
     } catch (error) {
       console.error('Error loading stats:', error);

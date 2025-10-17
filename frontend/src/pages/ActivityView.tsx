@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
 import { AutoActivityViewer } from '@/components/activity/AutoActivityViewer';
 import LoadingState from '@/components/LoadingState';
 import { Button } from '@/components/ui/button';
@@ -19,9 +19,15 @@ const ActivityView = () => {
 
   const loadActivity = async () => {
     try {
-      const data = await api.get<Activity>(`/activities/${activityId}`);
-      if (data && data.isPublished) {
-        setActivity(data);
+      const { data } = await supabase
+        .from('activities')
+        .select('*')
+        .eq('id', activityId)
+        .eq('is_published', true)
+        .single();
+
+      if (data) {
+        setActivity(data as any);
       }
     } catch (error) {
       console.error('Error loading activity:', error);

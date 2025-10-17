@@ -1,82 +1,353 @@
-// API client configuration
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8080/api';
+/**
+ * Spring Boot REST API Client
+ * Base configuration and HTTP methods for interacting with the backend
+ */
 
-interface RequestConfig extends RequestInit {
-  data?: any;
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
+// Token management
+const TOKEN_KEY = 'auth_token';
+const USER_KEY = 'current_user';
+
+export const auth = {
+  getToken: (): string | null => {
+    return localStorage.getItem(TOKEN_KEY);
+  },
+  
+  setToken: (token: string): void => {
+    localStorage.setItem(TOKEN_KEY, token);
+  },
+  
+  removeToken: (): void => {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+  },
+  
+  getUser: () => {
+    const userStr = localStorage.getItem(USER_KEY);
+    return userStr ? JSON.parse(userStr) : null;
+  },
+  
+  setUser: (user: any): void => {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  },
+  
+  isAuthenticated: (): boolean => {
+    return !!localStorage.getItem(TOKEN_KEY);
+  }
+};
+
+// API Error class
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    public message: string,
+    public data?: any
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
 }
 
-class ApiClient {
-  private baseURL: string;
+// HTTP Request options
+interface RequestOptions extends RequestInit {
+  skipAuth?: boolean;
+}
 
-  constructor(baseURL: string) {
-    this.baseURL = baseURL;
-  }
+// Generic fetch wrapper
+async function request<T>(
+  endpoint: string,
+  options: RequestOptions = {}
+): Promise<T> {
+  const { skipAuth = false, ...fetchOptions } = options;
+  
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...fetchOptions.headers,
+  };
 
-  private getHeaders(customHeaders?: HeadersInit): HeadersInit {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...customHeaders,
-    };
-
-    const token = localStorage.getItem('token');
+  // Add authorization header if token exists and not skipped
+  if (!skipAuth) {
+    const token = auth.getToken();
     if (token) {
-      (headers as any)['Authorization'] = `Bearer ${token}`;
+      headers['Authorization'] = `Bearer ${token}`;
     }
-
-    return headers;
   }
 
-  private async request<T>(endpoint: string, config: RequestConfig = {}): Promise<T> {
-    const { data, headers, ...restConfig } = config;
-
-    const requestHeaders = this.getHeaders(headers);
-
-    // Remove Content-Type for FormData
-    if (data instanceof FormData) {
-      delete (requestHeaders as any)['Content-Type'];
-    }
-
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      ...restConfig,
-      headers: requestHeaders,
-      body: data instanceof FormData ? data : data ? JSON.stringify(data) : undefined,
+  const url = `${API_BASE_URL}${endpoint}`;
+  
+  try {
+    const response = await fetch(url, {
+      ...fetchOptions,
+      headers,
     });
 
-    // Handle unauthorized
-    if (response.status === 401) {
-      localStorage.removeItem('token');
+    // Handle 401 Unauthorized - token expired or invalid
+    if (response.status === 401 && !skipAuth) {
+      auth.removeToken();
       window.location.href = '/login';
-      throw new Error('Unauthorized');
+      throw new ApiError(401, 'Authentication required');
+    }
+
+    // Parse response
+    let data;
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      data = await response.text();
+    }
+
+    // Handle error responses
+    if (!response.ok) {
+      throw new ApiError(
+        response.status,
+        data?.message || data || 'An error occurred',
+        data
+      );
+    }
+
+    return data as T;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(0, error instanceof Error ? error.message : 'Network error');
+  }
+}
+
+// HTTP Methods
+export const api = {
+  get: <T>(endpoint: string, options?: RequestOptions) => 
+    request<T>(endpoint, { ...options, method: 'GET' }),
+
+  post: <T>(endpoint: string, data?: any, options?: RequestOptions) =>
+    request<T>(endpoint, {
+      ...options,
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    }),
+
+  put: <T>(endpoint: string, data?: any, options?: RequestOptions) =>
+    request<T>(endpoint, {
+      ...options,
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    }),
+
+  delete: <T>(endpoint: string, options?: RequestOptions) =>
+    request<T>(endpoint, { ...options, method: 'DELETE' }),
+
+  patch: <T>(endpoint: string, data?: any, options?: RequestOptions) =>
+    request<T>(endpoint, {
+      ...options,
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    }),
+
+  // File upload helper
+  upload: async <T>(endpoint: string, file: File, additionalData?: Record<string, string>): Promise<T> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Add any additional form data
+    if (additionalData) {
+      Object.entries(additionalData).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+    }
+
+    const token = auth.getToken();
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (response.status === 401) {
+      auth.removeToken();
+      window.location.href = '/login';
+      throw new ApiError(401, 'Authentication required');
     }
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: response.statusText }));
-      throw new Error(error.message || 'Request failed');
+      const error = await response.json().catch(() => ({}));
+      throw new ApiError(
+        response.status,
+        error.message || 'Upload failed',
+        error
+      );
     }
 
-    // Handle empty responses
-    const text = await response.text();
-    return text ? JSON.parse(text) : null;
-  }
+    return response.json();
+  },
+};
 
-  async get<T>(endpoint: string, config?: RequestConfig): Promise<T> {
-    return this.request<T>(endpoint, { ...config, method: 'GET' });
-  }
+// Auth API endpoints
+export const authApi = {
+  login: async (email: string, password: string) => {
+    const response = await api.post<{ token: string; user: any }>(
+      '/auth/login',
+      { email, password },
+      { skipAuth: true }
+    );
+    
+    // Store token and user info
+    auth.setToken(response.token);
+    auth.setUser(response.user);
+    
+    return response;
+  },
 
-  async post<T>(endpoint: string, data?: any, config?: RequestConfig): Promise<T> {
-    return this.request<T>(endpoint, { ...config, method: 'POST', data });
-  }
+  logout: async () => {
+    try {
+      await api.post('/auth/logout');
+    } finally {
+      auth.removeToken();
+      window.location.href = '/login';
+    }
+  },
 
-  async put<T>(endpoint: string, data?: any, config?: RequestConfig): Promise<T> {
-    return this.request<T>(endpoint, { ...config, method: 'PUT', data });
-  }
+  getCurrentUser: async () => {
+    // First check local storage
+    const cachedUser = auth.getUser();
+    if (cachedUser) {
+      return cachedUser;
+    }
 
-  async delete<T>(endpoint: string, config?: RequestConfig): Promise<T> {
-    return this.request<T>(endpoint, { ...config, method: 'DELETE' });
-  }
-}
+    // Otherwise fetch from server
+    const user = await api.get<any>('/auth/me');
+    auth.setUser(user);
+    return user;
+  },
 
-const api = new ApiClient(API_BASE_URL);
+  register: async (userData: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    schoolId?: string;
+  }) => {
+    return api.post<{ token: string; user: any }>(
+      '/auth/register',
+      userData,
+      { skipAuth: true }
+    );
+  },
+};
 
+// School API endpoints
+export const schoolApi = {
+  getAll: () => api.get<any[]>('/schools'),
+  
+  getById: (id: string) => api.get<any>(`/schools/${id}`),
+  
+  create: (school: any) => api.post<any>('/schools', school),
+  
+  update: (id: string, school: any) => api.put<any>(`/schools/${id}`, school),
+  
+  delete: (id: string) => api.delete(`/schools/${id}`),
+  
+  uploadLogo: (schoolId: string, file: File) => 
+    api.upload<{ url: string }>('/storage/upload', file, { 
+      entityType: 'school_logo',
+      entityId: schoolId 
+    }),
+};
+
+// Activity API endpoints
+export const activityApi = {
+  getAll: () => api.get<any[]>('/activities'),
+  
+  getById: (id: string) => api.get<any>(`/activities/${id}`),
+  
+  create: (activity: any) => api.post<any>('/activities', activity),
+  
+  update: (id: string, activity: any) => api.put<any>(`/activities/${id}`, activity),
+  
+  delete: (id: string) => api.delete(`/activities/${id}`),
+  
+  uploadResource: (activityId: string, file: File) =>
+    api.upload<{ url: string }>('/storage/upload', file, {
+      entityType: 'activity_resource',
+      entityId: activityId
+    }),
+};
+
+// Class (Classe) API endpoints
+export const classApi = {
+  getAll: () => api.get<any[]>('/classes'),
+  
+  getBySchoolId: (schoolId: string) => api.get<any[]>(`/classes/school/${schoolId}`),
+  
+  getById: (id: string) => api.get<any>(`/classes/${id}`),
+  
+  create: (classData: any) => api.post<any>('/classes', classData),
+  
+  update: (id: string, classData: any) => api.put<any>(`/classes/${id}`, classData),
+  
+  delete: (id: string) => api.delete(`/classes/${id}`),
+};
+
+// Teacher API endpoints
+export const teacherApi = {
+  getAll: () => api.get<any[]>('/teachers'),
+  
+  getBySchoolId: (schoolId: string) => api.get<any[]>(`/teachers/school/${schoolId}`),
+  
+  getById: (id: string) => api.get<any>(`/teachers/${id}`),
+  
+  create: (teacher: any) => api.post<any>('/teachers', teacher),
+  
+  update: (id: string, teacher: any) => api.put<any>(`/teachers/${id}`, teacher),
+  
+  delete: (id: string) => api.delete(`/teachers/${id}`),
+};
+
+// Session API endpoints
+export const sessionApi = {
+  getAll: () => api.get<any[]>('/sessions'),
+  
+  getByTeacherId: (teacherId: string) => api.get<any[]>(`/sessions/teacher/${teacherId}`),
+  
+  getById: (id: string) => api.get<any>(`/sessions/${id}`),
+  
+  create: (session: any) => api.post<any>('/sessions', session),
+  
+  update: (id: string, session: any) => api.put<any>(`/sessions/${id}`, session),
+  
+  delete: (id: string) => api.delete(`/sessions/${id}`),
+};
+
+// Storage/File API endpoints
+export const storageApi = {
+  upload: (file: File, entityType: string, entityId: string) =>
+    api.upload<{ url: string; fileName: string }>('/storage/upload', file, {
+      entityType,
+      entityId
+    }),
+  
+  getSignedUrl: (fileName: string) =>
+    api.get<{ url: string }>(`/storage/signed-url?fileName=${encodeURIComponent(fileName)}`),
+  
+  delete: (fileName: string) =>
+    api.delete(`/storage/${encodeURIComponent(fileName)}`),
+};
+
+// Statistics API endpoints
+export const statsApi = {
+  getAdminStats: () => api.get<any>('/stats/admin'),
+  
+  getSchoolStats: (schoolId: string) => api.get<any>(`/stats/school/${schoolId}`),
+  
+  getTeacherStats: (teacherId: string) => api.get<any>(`/stats/teacher/${teacherId}`),
+};
+
+// Export everything
 export default api;
-

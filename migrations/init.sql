@@ -31,8 +31,7 @@ CREATE TABLE IF NOT EXISTS public.schools (
 -- ============================================
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY,
-  email TEXT NOT NULL UNIQUE,
-  password_hash TEXT,
+  email TEXT NOT NULL,
   full_name TEXT,
   school_id TEXT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
   matiere TEXT,

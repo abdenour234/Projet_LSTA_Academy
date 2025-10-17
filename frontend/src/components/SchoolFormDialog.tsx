@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import api from '@/lib/api';
+import { schoolApi } from '@/lib/api';
+import { uploadSchoolLogo } from '@/lib/uploadToStorage';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Loader2 } from 'lucide-react';
 
@@ -66,28 +67,24 @@ export const SchoolFormDialog = ({ open, onOpenChange, onSuccess }: SchoolFormDi
     try {
       let logoUrl = '';
 
-      // Upload logo if provided
-      if (logoFile) {
-        const fileExt = logoFile.name.split('.').pop();
-        const fileName = `${formData.id}.${fileExt}`;
-        
-        const uploadFormData = new FormData();
-        uploadFormData.append('file', logoFile);
-        uploadFormData.append('fileName', fileName);
-
-        const uploadResult = await api.post<{ fileName: string; downloadUrl: string }>(
-          '/files/upload',
-          uploadFormData
-        );
-
-        logoUrl = uploadResult.downloadUrl;
-      }
-
-      // Create school
-      await api.post('/schools', {
+      // Create school first
+      const school = await schoolApi.create({
         ...formData,
-        logoUrl,
+        logoUrl: '',
       });
+
+      // Upload logo if provided
+      if (logoFile && school.id) {
+        const result = await uploadSchoolLogo(logoFile, school.id);
+        if (result.success && result.url) {
+          logoUrl = result.url;
+          // Update school with logo URL
+          await schoolApi.update(school.id, {
+            ...formData,
+            logoUrl,
+          });
+        }
+      }
 
       toast({
         title: 'École ajoutée',

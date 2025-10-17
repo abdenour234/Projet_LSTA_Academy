@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
 import { ActivityBuilder } from '@/components/activity/ActivityBuilder';
 import LoadingState from '@/components/LoadingState';
 import { Button } from '@/components/ui/button';
@@ -19,19 +19,34 @@ const ActivityEditor = () => {
 
   const loadData = async () => {
     try {
-      // Get current user info
-      const userData = await api.get<{ id: string; schoolId: string }>('/auth/me');
-      if (!userData) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
         navigate('/');
         return;
       }
 
-      setSchoolId(userData.schoolId);
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('school_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile) {
+        navigate('/');
+        return;
+      }
+
+      setSchoolId(profile.school_id);
 
       if (activityId) {
-        const activity = await api.get<any>(`/activities/${activityId}`);
+        const { data: activity } = await supabase
+          .from('activities')
+          .select('*')
+          .eq('id', activityId)
+          .single();
+
         if (activity) {
-          const layoutData = activity.layoutData as any;
+          const layoutData = activity.layout_data as any;
           setActivityData({
             title: activity.title,
             description: activity.description || '',

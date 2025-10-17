@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import api from '@/lib/api';
+import { authApi, schoolApi, ApiError } from '@/lib/api';
 import { SetupDemo } from '@/components/SetupDemo';
 
 const SchoolLogin = () => {
@@ -21,18 +21,16 @@ const SchoolLogin = () => {
   useEffect(() => {
     const fetchSchool = async () => {
       try {
-        const data = await api.get<{ name: string }>(`/schools/${id}`);
-        if (data) {
-          setSchoolName(data.name);
+        if (id) {
+          const school = await schoolApi.getById(id);
+          setSchoolName(school.name);
         }
       } catch (error) {
         console.error('Error fetching school:', error);
       }
     };
 
-    if (id) {
-      fetchSchool();
-    }
+    fetchSchool();
   }, [id]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -40,27 +38,12 @@ const SchoolLogin = () => {
     setLoading(true);
 
     try {
-      // Login with Spring Boot API
-      const authData = await api.post<{ token: string; email: string }>('/auth/login', {
-        email,
-        password,
-      });
+      const response = await authApi.login(email, password);
+      const user = response.user;
 
-      // Store JWT token
-      localStorage.setItem('token', authData.token);
-
-      // Get current user profile
-      const userData = await api.get<{
-        id: string;
-        email: string;
-        fullName: string;
-        schoolId: string;
-        roles: string[];
-      }>('/auth/me');
-
-      // Verify school access
-      if (userData.schoolId !== id) {
-        localStorage.removeItem('token');
+      // Verify the user belongs to this school
+      if (user.schoolId !== id) {
+        await authApi.logout();
         toast({
           title: 'Erreur',
           description: 'Vous n\'êtes pas autorisé à accéder à cette école.',
@@ -71,7 +54,7 @@ const SchoolLogin = () => {
       }
 
       // Navigate based on role
-      if (userData.roles.includes('ADMIN')) {
+      if (user.role === 'ADMIN' || user.role === 'SCHOOL_ADMIN') {
         navigate(`/school/${id}/admin/dashboard`);
       } else {
         navigate(`/school/${id}/teacher/dashboard`);
@@ -81,10 +64,12 @@ const SchoolLogin = () => {
         title: 'Connexion réussie',
         description: `Bienvenue sur ${schoolName}`,
       });
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Login error:', error);
+      const apiError = error as ApiError;
       toast({
         title: 'Erreur de connexion',
-        description: 'Identifiants incorrects. Veuillez réessayer.',
+        description: apiError.message || 'Identifiants incorrects. Veuillez réessayer.',
         variant: 'destructive',
       });
     } finally {

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload, Type, Image, FileText, Video, Save, Eye, Loader2 } from 'lucide-react';
-import api from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ActivityElement, ActivityElementType } from '@/types/activity';
 import { uploadActivityFile } from '@/lib/uploadToStorage';
@@ -109,15 +109,24 @@ export const ActivityBuilder = ({ activityId, initialData, schoolId, onSave }: A
         description,
         type,
         level,
-        schoolId,
-        layoutData: { elements } as any,
-        isPublished: publish,
+        school_id: schoolId,
+        layout_data: { elements } as any,
+        is_published: publish,
       };
 
       if (activityId) {
-        await api.put(`/activities/${activityId}`, activityData);
+        const { error } = await supabase
+          .from('activities')
+          .update(activityData)
+          .eq('id', activityId);
+
+        if (error) throw error;
       } else {
-        await api.post('/activities', activityData);
+        const { error } = await supabase
+          .from('activities')
+          .insert([activityData]);
+
+        if (error) throw error;
       }
 
       toast({ 
