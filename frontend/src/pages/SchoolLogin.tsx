@@ -54,7 +54,8 @@ const SchoolLogin = () => {
       }
 
       // Navigate based on role
-      if (user.role === 'ADMIN' || user.role === 'SCHOOL_ADMIN') {
+      const role = user.role?.toLowerCase();
+      if (role === 'admin' || role === 'school_admin') {
         navigate(`/school/${id}/admin/dashboard`);
       } else {
         navigate(`/school/${id}/teacher/dashboard`);
@@ -142,8 +143,8 @@ const SchoolLogin = () => {
 
           <div className="mt-6 p-4 bg-muted/50 rounded-lg">
             <p className="text-sm text-muted-foreground text-center">
-              <strong>Admin:</strong> admin.pasteur@ecole.ma / admin123<br />
-              <strong>Prof:</strong> prof.pasteur@ecole.ma / prof123
+              <strong>Admin:</strong> admin@test.com / test123<br />
+              <strong>Prof:</strong> teacher@test.com / test123
             </p>
           </div>
         </Card>
