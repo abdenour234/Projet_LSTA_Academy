@@ -217,9 +217,12 @@ export const authApi = {
   logout: async () => {
     try {
       await api.post('/auth/logout');
+    } catch (error) {
+      // Ignore logout errors
+      console.error('Logout error:', error);
     } finally {
-      auth.removeToken();
-      window.location.href = '/login';
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     }
   },
 
