@@ -9,23 +9,39 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "profiles")
+@Table(name = "activities")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Profile {
+public class Activity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-
-    @Column(nullable = false)
-    private String email;
-
-    @Column(name = "full_name")
-    private String fullName;
 
     @Column(name = "school_id", nullable = false)
     private String schoolId;
+
+    @Column(nullable = false)
+    private String type;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(nullable = false)
+    private String level;
+
+    @Column(name = "layout_data", columnDefinition = "JSONB")
+    private String layoutData;
+
+    @Column(name = "is_published")
+    private Boolean isPublished;
+
+    @Column(name = "created_by")
+    private UUID createdBy;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -40,6 +56,9 @@ public class Profile {
         }
         if (updatedAt == null) {
             updatedAt = LocalDateTime.now();
+        }
+        if (isPublished == null) {
+            isPublished = false;
         }
     }
 

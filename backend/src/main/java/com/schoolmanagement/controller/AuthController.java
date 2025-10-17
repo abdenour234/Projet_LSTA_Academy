@@ -1,0 +1,158 @@
+package com.schoolmanagement.controller;
+
+import com.schoolmanagement.entity.Profile;
+import com.schoolmanagement.entity.UserRole;
+import com.schoolmanagement.repository.ProfileRepository;
+import com.schoolmanagement.repository.UserRoleRepository;
+import com.schoolmanagement.util.JwtUtil;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/auth")
+@CrossOrigin(origins = "*")
+public class AuthController {
+
+    private final ProfileRepository profileRepository;
+    private final UserRoleRepository userRoleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+
+    public AuthController(ProfileRepository profileRepository, 
+                         UserRoleRepository userRoleRepository,
+                         PasswordEncoder passwordEncoder,
+                         JwtUtil jwtUtil) {
+        this.profileRepository = profileRepository;
+        this.userRoleRepository = userRoleRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials) {
+        String email = credentials.get("email");
+        String password = credentials.get("password");
+
+        // Find profile by email
+        Profile profile = profileRepository.findByEmail(email);
+        if (profile == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Invalid credentials");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+
+        // Get user role
+        List<UserRole> roles = userRoleRepository.findByUserId(profile.getId());
+        if (roles.isEmpty()) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "No role assigned");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+
+        String role = roles.get(0).getRole().name();
+
+        // Generate JWT token
+        String token = jwtUtil.generateToken(profile.getId(), profile.getEmail(), role, profile.getSchoolId());
+
+        // Return user data and token
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        
+        Map<String, Object> user = new HashMap<>();
+        user.put("id", profile.getId().toString());
+        user.put("email", profile.getEmail());
+        user.put("fullName", profile.getFullName());
+        user.put("schoolId", profile.getSchoolId());
+        user.put("role", role);
+        
+        response.put("user", user);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> userDto) {
+        String email = userDto.get("email");
+        String fullName = userDto.get("fullName");
+        String schoolId = userDto.get("schoolId");
+        String roleStr = userDto.get("role");
+
+        // Check if user exists
+        if (profileRepository.findByEmail(email) != null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "User already exists");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        // Create profile
+        Profile profile = new Profile();
+        profile.setId(UUID.randomUUID());
+        profile.setEmail(email);
+        profile.setFullName(fullName);
+        profile.setSchoolId(schoolId);
+        
+        Profile savedProfile = profileRepository.save(profile);
+
+        // Create user role
+        UserRole userRole = new UserRole();
+        userRole.setUserId(savedProfile.getId());
+        userRole.setRole(UserRole.Role.valueOf(roleStr != null ? roleStr : "teacher"));
+        userRoleRepository.save(userRole);
+
+        // Generate token
+        String token = jwtUtil.generateToken(savedProfile.getId(), savedProfile.getEmail(), 
+                userRole.getRole().name(), savedProfile.getSchoolId());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        
+        Map<String, Object> user = new HashMap<>();
+        user.put("id", savedProfile.getId().toString());
+        user.put("email", savedProfile.getEmail());
+        user.put("fullName", savedProfile.getFullName());
+        user.put("schoolId", savedProfile.getSchoolId());
+        user.put("role", userRole.getRole().name());
+        
+        response.put("user", user);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<Map<String, Object>> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            String userId = jwtUtil.extractUserId(token);
+            
+            Profile profile = profileRepository.findById(UUID.fromString(userId))
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            List<UserRole> roles = userRoleRepository.findByUserId(profile.getId());
+            String role = roles.isEmpty() ? "teacher" : roles.get(0).getRole().name();
+
+            Map<String, Object> user = new HashMap<>();
+            user.put("id", profile.getId().toString());
+            user.put("email", profile.getEmail());
+            user.put("fullName", profile.getFullName());
+            user.put("schoolId", profile.getSchoolId());
+            user.put("role", role);
+
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        // With JWT, logout is handled client-side by removing the token
+        return ResponseEntity.ok().build();
+    }
+}
