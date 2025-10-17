@@ -25,7 +25,7 @@ public class SchoolController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<School> getSchool(@PathVariable String id) {
+    public ResponseEntity<School> getSchool(@PathVariable Long id) {
         School school = schoolRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("School not found"));
         return ResponseEntity.ok(school);
@@ -43,12 +43,14 @@ public class SchoolController {
 
     @PostMapping
     public ResponseEntity<School> createSchool(@RequestBody School school) {
+        // ID will be auto-generated, so we set it to null
+        school.setId(null);
         School saved = schoolRepository.save(school);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<School> updateSchool(@PathVariable String id, @RequestBody School school) {
+    public ResponseEntity<School> updateSchool(@PathVariable Long id, @RequestBody School school) {
         if (!schoolRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
@@ -58,7 +60,7 @@ public class SchoolController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSchool(@PathVariable String id) {
+    public ResponseEntity<Void> deleteSchool(@PathVariable Long id) {
         if (!schoolRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }

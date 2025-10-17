@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface SchoolRepository extends JpaRepository<School, String> {
+public interface SchoolRepository extends JpaRepository<School, Long> {
     List<School> findByCity(String city);
     List<School> findByRegion(String region);
     List<School> findByLevel(String level);

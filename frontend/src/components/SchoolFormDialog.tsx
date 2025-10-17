@@ -29,7 +29,6 @@ export const SchoolFormDialog = ({ open, onOpenChange, onSuccess }: SchoolFormDi
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [formData, setFormData] = useState({
-    id: '',
     name: '',
     address: '',
     city: '',
@@ -54,7 +53,7 @@ export const SchoolFormDialog = ({ open, onOpenChange, onSuccess }: SchoolFormDi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.id || !formData.name) {
+    if (!formData.name) {
       toast({
         title: 'Erreur',
         description: 'Veuillez remplir tous les champs obligatoires',
@@ -96,7 +95,6 @@ export const SchoolFormDialog = ({ open, onOpenChange, onSuccess }: SchoolFormDi
       
       // Reset form
       setFormData({
-        id: '',
         name: '',
         address: '',
         city: '',
@@ -107,7 +105,7 @@ export const SchoolFormDialog = ({ open, onOpenChange, onSuccess }: SchoolFormDi
       });
       setLogoFile(null);
       setLogoPreview('');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating school:', error);
       toast({
         title: 'Erreur',
@@ -153,28 +151,15 @@ export const SchoolFormDialog = ({ open, onOpenChange, onSuccess }: SchoolFormDi
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="id">ID de l'école *</Label>
-              <Input
-                id="id"
-                value={formData.id}
-                onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                placeholder="ex: 123"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="name">Nom de l'école *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="ex: École Pasteur"
-                required
-              />
-            </div>
+          <div>
+            <Label htmlFor="name">Nom de l'école *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="ex: École Pasteur"
+              required
+            />
           </div>
 
           <div>

@@ -15,8 +15,9 @@ import java.time.LocalDateTime;
 public class School {
 
     @Id
-    @Column(length = 255)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
 
     @Column(nullable = false)
     private String name;
