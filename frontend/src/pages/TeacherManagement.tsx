@@ -48,6 +48,7 @@ interface Class {
 export default function TeacherManagement() {
   const { id: schoolId } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [teacherClasses, setTeacherClasses] = useState<Record<string, string[]>>({});
@@ -69,63 +70,28 @@ export default function TeacherManagement() {
   }, [schoolId]);
 
   const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    if (!auth.isAuthenticated()) {
       navigate(`/school/${schoolId}/login`);
     }
   };
 
   const loadData = async () => {
     try {
-      // Load teachers
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, matiere, phone")
-        .eq("school_id", schoolId);
+      if (!schoolId) return;
 
-      if (profilesError) throw profilesError;
-
-      // Filter only teachers
-      const { data: rolesData, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "teacher")
-        .in("user_id", profilesData?.map(p => p.id) || []);
-
-      if (rolesError) throw rolesError;
-
-      const teacherIds = rolesData?.map(r => r.user_id) || [];
-      const filteredTeachers = profilesData?.filter(p => teacherIds.includes(p.id)) || [];
-      setTeachers(filteredTeachers);
-
-      // Load classes
-      const { data: classesData, error: classesError } = await supabase
-        .from("classes")
-        .select("*")
-        .eq("school_id", schoolId);
-
-      if (classesError) throw classesError;
-      setClasses(classesData || []);
-
-      // Load teacher-class assignments
-      const { data: assignmentsData, error: assignmentsError } = await supabase
-        .from("teacher_classes")
-        .select("teacher_id, class_id");
-
-      if (assignmentsError) throw assignmentsError;
-
-      const assignments: Record<string, string[]> = {};
-      assignmentsData?.forEach(a => {
-        if (!assignments[a.teacher_id]) {
-          assignments[a.teacher_id] = [];
-        }
-        assignments[a.teacher_id].push(a.class_id);
-      });
-      setTeacherClasses(assignments);
+      // For now, just set empty arrays until we migrate the teacher listing
+      // The registration function works with the backend API
+      setTeachers([]);
+      setClasses([]);
+      setTeacherClasses({});
 
     } catch (error: any) {
-      toast.error("Erreur lors du chargement des données");
-      console.error(error);
+      console.error('Error loading data:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors du chargement des données',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -141,32 +107,19 @@ export default function TeacherManagement() {
     if (!selectedTeacher) return;
 
     try {
-      // Delete existing assignments
-      await supabase
-        .from("teacher_classes")
-        .delete()
-        .eq("teacher_id", selectedTeacher.id);
-
-      // Insert new assignments
-      if (selectedClassIds.length > 0) {
-        const assignments = selectedClassIds.map(classId => ({
-          teacher_id: selectedTeacher.id,
-          class_id: classId,
-        }));
-
-        const { error } = await supabase
-          .from("teacher_classes")
-          .insert(assignments);
-
-        if (error) throw error;
-      }
-
-      toast.success("Affectations mises à jour");
+      // TODO: Implement class assignment with backend API
+      toast({
+        title: 'Info',
+        description: 'Fonctionnalité d\'affectation des classes à venir',
+      });
       setIsAssignDialogOpen(false);
-      loadData();
     } catch (error: any) {
-      toast.error(error.message);
-      console.error(error);
+      console.error('Error saving assignments:', error);
+      toast({
+        title: 'Erreur',
+        description: error.message || 'Erreur lors de l\'enregistrement',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -252,7 +205,10 @@ export default function TeacherManagement() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success("Copié dans le presse-papier");
+    toast({
+      title: 'Succès',
+      description: 'Copié dans le presse-papier',
+    });
   };
 
   if (loading) {
