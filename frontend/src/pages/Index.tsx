@@ -5,9 +5,8 @@ import FiltersPanel, { Filters } from '@/components/FiltersPanel';
 import SchoolCard from '@/components/SchoolCard';
 import EmptyState from '@/components/EmptyState';
 import { SetupDemo } from '@/components/SetupDemo';
-import { SchoolFormDialog } from '@/components/SchoolFormDialog';
 import { Button } from '@/components/ui/button';
-import { Plus, UserPlus } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { schoolApi } from '@/lib/api';
 import LoadingState from '@/components/LoadingState';
 
@@ -21,7 +20,6 @@ const Index = () => {
   });
   const [schools, setSchools] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     loadSchools();
@@ -94,16 +92,10 @@ const Index = () => {
               Sélectionnez une école pour vous connecter et accéder au tableau de bord
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/signup')}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Créer un compte
-            </Button>
-            <Button onClick={() => setDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Nouvelle école
-            </Button>
-          </div>
+          <Button variant="outline" onClick={() => navigate('/signup')}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Créer un compte
+          </Button>
         </div>
 
         {/* Filters */}
@@ -137,12 +129,6 @@ const Index = () => {
           <EmptyState onReset={resetFilters} />
         )}
       </main>
-
-      <SchoolFormDialog 
-        open={dialogOpen} 
-        onOpenChange={setDialogOpen}
-        onSuccess={loadSchools}
-      />
     </div>
   );
 };
