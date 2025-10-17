@@ -16,6 +16,7 @@ import java.util.UUID;
 public class Profile {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @Column(nullable = false)
@@ -26,6 +27,9 @@ public class Profile {
 
     @Column(name = "school_id", nullable = false)
     private String schoolId;
+
+    @Column(name = "password_hash")
+    private String passwordHash;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
