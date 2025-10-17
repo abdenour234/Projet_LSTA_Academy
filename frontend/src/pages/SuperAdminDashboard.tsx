@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Shield, School, Users, UserCheck, GraduationCap, 
-  LogOut, BarChart3, Activity, TrendingUp, MapPin
+  LogOut, BarChart3, Activity, TrendingUp, MapPin, Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -119,10 +119,16 @@ const SuperAdminDashboard = () => {
                 <p className="text-sm text-muted-foreground">Vue globale du système</p>
               </div>
             </div>
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Déconnexion
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => navigate('/superadmin/activities/new')}>
+                <Plus className="mr-2 h-4 w-4" />
+                Nouvelle Activité
+              </Button>
+              <Button variant="outline" onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Déconnexion
+              </Button>
+            </div>
           </div>
         </div>
       </header>
