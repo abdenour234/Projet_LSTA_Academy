@@ -67,10 +67,20 @@ const SchoolLogin = () => {
       });
     } catch (error) {
       console.error('Login error:', error);
-      const apiError = error as ApiError;
+      let errorMessage = 'Identifiants incorrects. Veuillez réessayer.';
+      
+      if (error instanceof ApiError) {
+        // Ensure we have a string message
+        errorMessage = typeof error.message === 'string' 
+          ? error.message 
+          : 'Une erreur est survenue lors de la connexion.';
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: 'Erreur de connexion',
-        description: apiError.message || 'Identifiants incorrects. Veuillez réessayer.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

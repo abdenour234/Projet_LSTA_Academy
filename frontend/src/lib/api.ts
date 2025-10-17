@@ -100,9 +100,19 @@ async function request<T>(
 
     // Handle error responses
     if (!response.ok) {
+      // Ensure message is always a string
+      let errorMessage = 'An error occurred';
+      if (typeof data === 'string') {
+        errorMessage = data;
+      } else if (data && typeof data.message === 'string') {
+        errorMessage = data.message;
+      } else if (data && typeof data.error === 'string') {
+        errorMessage = data.error;
+      }
+      
       throw new ApiError(
         response.status,
-        data?.message || data || 'An error occurred',
+        errorMessage,
         data
       );
     }
