@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,7 +21,8 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Edit, Users, Mail, Phone, Key, Copy } from "lucide-react";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
+import { authApi, auth, ApiError } from "@/lib/api";
 import {
   Select,
   SelectContent,
@@ -198,50 +198,55 @@ export default function TeacherManagement() {
 
   const handleAddTeacher = async () => {
     if (!newTeacher.full_name || !newTeacher.matiere) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez remplir tous les champs obligatoires',
+        variant: 'destructive',
+      });
       return;
     }
 
+    if (!schoolId) return;
+
+    // Generate email and password
     const email = generateEmail(newTeacher.full_name);
     const password = generatePassword();
 
     try {
-      // Check if user already exists
-      const { data: existingUser } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .maybeSingle();
-
-      if (existingUser) {
-        toast.error("Un enseignant avec cet email existe déjà");
-        return;
-      }
-
-      // Create auth user with ALL data in metadata for atomic save
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Register the teacher using the backend API
+      await authApi.register({
         email,
         password,
-        options: {
-          data: {
-            full_name: newTeacher.full_name,
-            school_id: schoolId,
-            role: "teacher",
-            matiere: newTeacher.matiere,
-            phone: newTeacher.phone || null,
-          },
-        },
+        fullName: newTeacher.full_name,
+        role: 'teacher',
+        schoolId,
+        matiere: newTeacher.matiere,
+        phone: newTeacher.phone || undefined,
       });
 
-      if (authError) throw authError;
-
       setGeneratedCredentials({ email, password });
-      toast.success("Enseignant créé avec succès");
+      
+      toast({
+        title: 'Succès',
+        description: 'Enseignant créé avec succès',
+      });
+
       await loadData();
       setNewTeacher({ full_name: "", matiere: "", phone: "" });
-    } catch (error: any) {
-      toast.error(error.message);
-      console.error(error);
+      
+    } catch (error) {
+      console.error('Error creating teacher:', error);
+      let errorMessage = 'Une erreur est survenue';
+      
+      if (error instanceof ApiError) {
+        errorMessage = typeof error.message === 'string' ? error.message : errorMessage;
+      }
+      
+      toast({
+        title: 'Erreur',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     }
   };
 

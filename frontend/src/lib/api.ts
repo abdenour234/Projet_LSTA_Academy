@@ -239,16 +239,23 @@ export const authApi = {
   register: async (userData: {
     email: string;
     password: string;
-    firstName: string;
-    lastName: string;
+    fullName?: string;
     role: string;
-    schoolId?: string;
+    schoolId: string;
+    matiere?: string;
+    phone?: string;
   }) => {
-    return api.post<{ token: string; user: any }>(
+    const response = await api.post<{ token: string; user: any }>(
       '/auth/register',
       userData,
       { skipAuth: true }
     );
+    
+    // Store token and user info
+    auth.setToken(response.token);
+    auth.setUser(response.user);
+    
+    return response;
   },
 };
 
