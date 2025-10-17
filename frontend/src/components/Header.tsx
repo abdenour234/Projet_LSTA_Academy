@@ -1,4 +1,4 @@
-import { Search, Plus, User, Shield } from 'lucide-react';
+import { Search, Plus, User, Shield, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
@@ -43,15 +43,20 @@ const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
             <Button 
               variant="outline" 
               size="sm" 
+              onClick={() => navigate('/login')}
+              className="hidden sm:flex"
+            >
+              <LogIn className="mr-2 h-4 w-4" />
+              Connexion
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
               onClick={() => navigate('/superadmin/login')}
               className="hidden sm:flex"
             >
               <Shield className="mr-2 h-4 w-4" />
               SuperAdmin
-            </Button>
-            <Button variant="default" size="sm" className="hidden sm:flex">
-              <Plus className="mr-2 h-4 w-4" />
-              Nouvelle école
             </Button>
             <Button variant="ghost" size="icon" className="rounded-full">
               <User className="h-5 w-5" />
