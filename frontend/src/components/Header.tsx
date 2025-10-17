@@ -1,6 +1,7 @@
-import { Search, Plus, User } from 'lucide-react';
+import { Search, Plus, User, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   searchQuery: string;
@@ -8,6 +9,8 @@ interface HeaderProps {
 }
 
 const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
+  const navigate = useNavigate();
+  
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -37,6 +40,15 @@ const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => navigate('/superadmin/login')}
+              className="hidden sm:flex"
+            >
+              <Shield className="mr-2 h-4 w-4" />
+              SuperAdmin
+            </Button>
             <Button variant="default" size="sm" className="hidden sm:flex">
               <Plus className="mr-2 h-4 w-4" />
               Nouvelle école
