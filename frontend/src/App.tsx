@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import SchoolDashboard from "./pages/SchoolDashboard";
 import SchoolLogin from "./pages/SchoolLogin";
+import AdminSignup from "./pages/AdminSignup";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import DiagnosticNewSession from "./pages/DiagnosticNewSession";
@@ -30,6 +31,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/signup" element={<AdminSignup />} />
           <Route path="/school/:id" element={<SchoolDashboard />} />
           <Route path="/school/:id/login" element={<SchoolLogin />} />
           <Route path="/school/:id/teacher/dashboard" element={<TeacherDashboard />} />

@@ -257,6 +257,35 @@ export const authApi = {
     
     return response;
   },
+
+  signupAdmin: async (signupData: {
+    fullName: string;
+    email: string;
+    password: string;
+    schoolName: string;
+    schoolCity: string;
+    schoolRegion: string;
+    schoolLevel: string;
+    schoolStatus: string;
+    schoolAddress: string;
+    schoolStudents: number;
+  }) => {
+    const response = await api.post<{ 
+      token: string; 
+      user: any;
+      school: { id: number; name: string; city: string; region: string; };
+    }>(
+      '/auth/signup-admin',
+      signupData,
+      { skipAuth: true }
+    );
+    
+    // Store token and user info
+    auth.setToken(response.token);
+    auth.setUser(response.user);
+    
+    return response;
+  },
 };
 
 // School API endpoints

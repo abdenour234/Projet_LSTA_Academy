@@ -1,13 +1,17 @@
 package com.schoolmanagement.controller;
 
+import com.schoolmanagement.dto.AdminSignupRequest;
 import com.schoolmanagement.entity.Profile;
+import com.schoolmanagement.entity.School;
 import com.schoolmanagement.entity.UserRole;
 import com.schoolmanagement.repository.ProfileRepository;
+import com.schoolmanagement.repository.SchoolRepository;
 import com.schoolmanagement.repository.UserRoleRepository;
 import com.schoolmanagement.util.JwtUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -22,15 +26,18 @@ public class AuthController {
 
     private final ProfileRepository profileRepository;
     private final UserRoleRepository userRoleRepository;
+    private final SchoolRepository schoolRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     public AuthController(ProfileRepository profileRepository, 
                          UserRoleRepository userRoleRepository,
+                         SchoolRepository schoolRepository,
                          PasswordEncoder passwordEncoder,
                          JwtUtil jwtUtil) {
         this.profileRepository = profileRepository;
         this.userRoleRepository = userRoleRepository;
+        this.schoolRepository = schoolRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
@@ -82,6 +89,106 @@ public class AuthController {
         response.put("user", user);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/signup-admin")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> signupAdmin(@RequestBody AdminSignupRequest request) {
+        // Validate required fields
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Email is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Password is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        if (request.getPassword().length() < 6) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Password must be at least 6 characters");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        if (request.getSchoolName() == null || request.getSchoolName().trim().isEmpty()) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "School name is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        // Check if user already exists
+        if (profileRepository.findByEmail(request.getEmail()) != null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "An account with this email already exists");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        try {
+            // Step 1: Create the school (ID will be auto-generated)
+            School school = new School();
+            school.setName(request.getSchoolName());
+            school.setCity(request.getSchoolCity() != null ? request.getSchoolCity() : "");
+            school.setRegion(request.getSchoolRegion() != null ? request.getSchoolRegion() : "");
+            school.setLevel(request.getSchoolLevel() != null ? request.getSchoolLevel() : "Primaire");
+            school.setStatus(request.getSchoolStatus() != null ? request.getSchoolStatus() : "Public");
+            school.setAddress(request.getSchoolAddress() != null ? request.getSchoolAddress() : "");
+            school.setStudents(request.getSchoolStudents() != null ? request.getSchoolStudents() : 0);
+            
+            School savedSchool = schoolRepository.save(school);
+
+            // Step 2: Create the admin profile
+            Profile profile = new Profile();
+            profile.setEmail(request.getEmail());
+            profile.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+            profile.setFullName(request.getFullName() != null ? request.getFullName() : request.getEmail().split("@")[0]);
+            profile.setSchoolId(String.valueOf(savedSchool.getId())); // Use the auto-generated school ID
+            
+            Profile savedProfile = profileRepository.save(profile);
+
+            // Step 3: Create admin role
+            UserRole userRole = new UserRole();
+            userRole.setUserId(savedProfile.getId());
+            userRole.setRole(UserRole.Role.admin);
+            userRoleRepository.save(userRole);
+
+            // Step 4: Generate JWT token
+            String token = jwtUtil.generateToken(
+                savedProfile.getId(), 
+                savedProfile.getEmail(), 
+                "admin", 
+                savedProfile.getSchoolId()
+            );
+
+            // Step 5: Return response
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+            
+            Map<String, Object> user = new HashMap<>();
+            user.put("id", savedProfile.getId().toString());
+            user.put("email", savedProfile.getEmail());
+            user.put("fullName", savedProfile.getFullName());
+            user.put("schoolId", savedProfile.getSchoolId());
+            user.put("role", "admin");
+            
+            Map<String, Object> schoolData = new HashMap<>();
+            schoolData.put("id", savedSchool.getId());
+            schoolData.put("name", savedSchool.getName());
+            schoolData.put("city", savedSchool.getCity());
+            schoolData.put("region", savedSchool.getRegion());
+            
+            response.put("user", user);
+            response.put("school", schoolData);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Failed to create account: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 
     @PostMapping("/register")

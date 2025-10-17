@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import FiltersPanel, { Filters } from '@/components/FiltersPanel';
 import SchoolCard from '@/components/SchoolCard';
@@ -6,11 +7,12 @@ import EmptyState from '@/components/EmptyState';
 import { SetupDemo } from '@/components/SetupDemo';
 import { SchoolFormDialog } from '@/components/SchoolFormDialog';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, UserPlus } from 'lucide-react';
 import { schoolApi } from '@/lib/api';
 import LoadingState from '@/components/LoadingState';
 
 const Index = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<Filters>({
     region: 'Toutes les régions',
@@ -92,10 +94,16 @@ const Index = () => {
               Sélectionnez une école pour vous connecter et accéder au tableau de bord
             </p>
           </div>
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nouvelle école
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/signup')}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Créer un compte
+            </Button>
+            <Button onClick={() => setDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nouvelle école
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
