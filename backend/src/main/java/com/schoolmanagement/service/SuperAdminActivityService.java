@@ -26,13 +26,17 @@ public class SuperAdminActivityService {
 
     @Transactional
     public Activity createAndDistributeActivity(ActivityCreationDTO dto) {
-        // Create the activity (will be distributed to all selected schools)
+        if (dto.getSchoolIds() == null || dto.getSchoolIds().isEmpty()) {
+            throw new RuntimeException("At least one school must be selected");
+        }
+
+        // Create the activity - use first school as primary owner
         Activity activity = new Activity();
         activity.setTitle(dto.getTitle());
         activity.setDescription(dto.getDescription());
-        activity.setType(dto.getType());
-        activity.setLevel(dto.getDifficulty()); // map difficulty to level
-        activity.setSchoolId("superadmin"); // special marker for super admin activities
+        activity.setType(dto.getType() != null ? dto.getType() : "lesson");
+        activity.setLevel(dto.getDifficulty() != null ? dto.getDifficulty() : "medium");
+        activity.setSchoolId(String.valueOf(dto.getSchoolIds().get(0))); // Use first school as owner
         activity.setIsPublished(true);
         activity.setCreatedBy(null); // superadmin UUID if available
         activity.setCreatedAt(LocalDateTime.now());
