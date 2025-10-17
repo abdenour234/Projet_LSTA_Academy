@@ -131,7 +131,18 @@ public class AuthController {
         // Create user role
         UserRole userRole = new UserRole();
         userRole.setUserId(savedProfile.getId());
-        userRole.setRole(UserRole.Role.valueOf(roleStr != null ? roleStr.toLowerCase() : "teacher"));
+        
+        // Parse role, default to teacher if not provided or invalid
+        UserRole.Role parsedRole = UserRole.Role.teacher;
+        if (roleStr != null && !roleStr.trim().isEmpty()) {
+            try {
+                parsedRole = UserRole.Role.valueOf(roleStr.toLowerCase().trim());
+            } catch (IllegalArgumentException e) {
+                // Invalid role, default to teacher
+                parsedRole = UserRole.Role.teacher;
+            }
+        }
+        userRole.setRole(parsedRole);
         userRoleRepository.save(userRole);
 
         // Generate token
