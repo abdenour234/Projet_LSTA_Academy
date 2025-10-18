@@ -11,7 +11,7 @@ import AdminSignup from "./pages/AdminSignup";
 import SuperAdminLogin from "./pages/SuperAdminLogin";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import SuperAdminSchoolDetails from "./pages/SuperAdminSchoolDetails";
-import SuperAdminActivityCreator from "./pages/SuperAdminActivityCreator";
+import SuperAdminActivityEditor from "./pages/SuperAdminActivityEditor";
 import StudentDashboard from "./pages/StudentDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -42,7 +42,9 @@ const App = () => (
           <Route path="/superadmin/login" element={<SuperAdminLogin />} />
           <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
           <Route path="/superadmin/schools/:schoolId" element={<SuperAdminSchoolDetails />} />
-          <Route path="/superadmin/activities/new" element={<SuperAdminActivityCreator />} />
+          <Route path="/superadmin/activities/new" element={<SuperAdminActivityEditor />} />
+          <Route path="/superadmin/activities/new/:schoolId" element={<SuperAdminActivityEditor />} />
+          <Route path="/superadmin/activities/edit/:schoolId/:activityId" element={<SuperAdminActivityEditor />} />
           <Route path="/student/dashboard" element={<StudentDashboard />} />
           <Route path="/school/:id" element={<SchoolDashboard />} />
           <Route path="/school/:id/login" element={<SchoolLogin />} />

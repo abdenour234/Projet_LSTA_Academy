@@ -305,14 +305,24 @@ const SuperAdminDashboard = () => {
                       <td className="p-3 text-right">{school.teachers}</td>
                       <td className="p-3 text-right">{school.totalUsers}</td>
                       <td className="p-3 text-center">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => navigate(`/superadmin/schools/${school.id}`)}
-                        >
-                          <Activity className="h-4 w-4 mr-1" />
-                          Détails
-                        </Button>
+                        <div className="flex gap-2 justify-center">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => navigate(`/superadmin/schools/${school.id}`)}
+                          >
+                            <Activity className="h-4 w-4 mr-1" />
+                            Détails
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => navigate(`/superadmin/activities/new/${school.id}`)}
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Activité
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}

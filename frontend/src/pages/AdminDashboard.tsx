@@ -221,20 +221,14 @@ const AdminDashboard = () => {
 
         {/* Activities Management Section */}
         <Card className="p-6 shadow-card">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-lg bg-primary/10">
-                <Plus className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-foreground">Gestion des activités</h2>
-                <p className="text-sm text-muted-foreground">Ajouter et gérer les activités pour les professeurs</p>
-              </div>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 rounded-lg bg-primary/10">
+              <Plus className="h-6 w-6 text-primary" />
             </div>
-            <Button onClick={() => navigate('/activity/editor')}>
-              <Plus className="mr-2 h-4 w-4" />
-              Nouvelle activité
-            </Button>
+            <div>
+              <h2 className="text-xl font-bold text-foreground">Activités disponibles</h2>
+              <p className="text-sm text-muted-foreground">Les activités créées par le SuperAdmin pour votre école</p>
+            </div>
           </div>
 
           {activities.length > 0 ? (
@@ -260,25 +254,10 @@ const AdminDashboard = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => navigate(`/activity/editor/${activity.id}`)}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Modifier
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
                         onClick={() => navigate(`/activity/${activity.id}`)}
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         Voir
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteActivity(activity.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   </div>
