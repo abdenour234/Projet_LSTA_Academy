@@ -92,7 +92,7 @@ public class AuthController {
     }
 
     @PostMapping("/signup-admin")
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<Map<String, Object>> signupAdmin(@RequestBody AdminSignupRequest request) {
         // Validate required fields
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
@@ -185,9 +185,10 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
             
         } catch (Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", "Failed to create account: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+            // Log the exception for debugging
+            e.printStackTrace();
+            // Mark transaction for rollback and throw runtime exception
+            throw new RuntimeException("Failed to create account: " + e.getMessage(), e);
         }
     }
 
