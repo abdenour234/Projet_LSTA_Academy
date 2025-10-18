@@ -110,7 +110,7 @@ export const ActivityBuilder = ({ activityId, initialData, schoolId, onSave }: A
         type,
         level,
         schoolId,
-        layoutData: { elements } as any,
+        layoutData: JSON.stringify({ elements }),
         isPublished: publish,
       };
 

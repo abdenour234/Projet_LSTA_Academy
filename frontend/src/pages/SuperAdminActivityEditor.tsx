@@ -66,7 +66,16 @@ const SuperAdminActivityEditor = () => {
       if (activityId) {
         const activity = await activityApi.getById(activityId);
         if (activity) {
-          const layoutData = activity.layoutData as any;
+          let layoutData;
+          try {
+            layoutData = typeof activity.layoutData === 'string' 
+              ? JSON.parse(activity.layoutData) 
+              : activity.layoutData;
+          } catch (e) {
+            console.error('Error parsing layoutData:', e);
+            layoutData = { elements: [] };
+          }
+          
           setActivityData({
             title: activity.title,
             description: activity.description || '',
