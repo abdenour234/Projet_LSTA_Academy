@@ -23,8 +23,9 @@ interface ActivityBuilderProps {
   onSave?: () => void;
 }
 
-export const ActivityBuilder = ({ activityId, initialData, schoolId, onSave }: ActivityBuilderProps) => {
+export const ActivityBuilder = ({ activityId: initialActivityId, initialData, schoolId, onSave }: ActivityBuilderProps) => {
   const { toast } = useToast();
+  const [activityId, setActivityId] = useState<string | undefined>(initialActivityId);
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [type, setType] = useState(initialData?.type || 'Cours');
@@ -64,22 +65,50 @@ export const ActivityBuilder = ({ activityId, initialData, schoolId, onSave }: A
   const handleFileUpload = async (elementId: string, file: File) => {
     setUploading(true);
     try {
-      // Créer un ID d'activité temporaire si on est en création
-      const tempActivityId = activityId || `temp-${Date.now()}`;
-      
-      const result = await uploadActivityFile(file, tempActivityId);
-
-      if (!result.success) {
-        throw new Error(result.error || 'Erreur lors de l\'upload');
+      // Si pas d'activityId, sauvegarder d'abord l'activité
+      if (!activityId) {
+        toast({ 
+          title: 'Enregistrement requis',
+          description: 'Veuillez d\'abord enregistrer l\'activité avant d\'ajouter des fichiers',
+          variant: 'destructive'
+        });
+        setUploading(false);
+        return;
       }
 
-      // Utiliser le chemin du fichier pour le stockage
-      updateElement(elementId, { content: result.url || result.path || '' });
-      
-      toast({ 
-        title: 'Fichier uploadé avec succès',
-        description: 'Le fichier a été ajouté à l\'activité'
+      // Upload via nouvelle API
+      const formData = new FormData();
+      formData.append('files', file);
+      formData.append('elementIds', elementId);
+
+      const response = await fetch(`http://localhost:8080/api/activity-files/upload/${activityId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: formData,
       });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'upload');
+      }
+
+      const result = await response.json();
+      
+      if (result.success && result.files && result.files.length > 0) {
+        const uploadedFile = result.files[0];
+        // Mettre l'URL du fichier dans l'élément
+        updateElement(elementId, { 
+          content: uploadedFile.url,
+          fileId: uploadedFile.id,
+          fileName: uploadedFile.fileName
+        });
+        
+        toast({ 
+          title: 'Fichier uploadé avec succès',
+          description: `${uploadedFile.fileName} ajouté (TTL: 7 jours)`
+        });
+      }
     } catch (error) {
       console.error('Upload error:', error);
       toast({ 
@@ -117,12 +146,16 @@ export const ActivityBuilder = ({ activityId, initialData, schoolId, onSave }: A
       if (activityId) {
         await activityApi.update(activityId, activityData);
       } else {
-        await activityApi.create(activityData);
+        const created = await activityApi.create(activityData);
+        // Stocker l'ID de l'activité créée pour les uploads ultérieurs
+        if (created && created.id) {
+          setActivityId(created.id);
+        }
       }
 
       toast({ 
         title: publish ? 'Activité publiée' : 'Activité enregistrée',
-        description: 'L\'activité a été enregistrée avec succès'
+        description: activityId ? 'L\'activité a été mise à jour' : 'L\'activité a été créée - Vous pouvez maintenant ajouter des fichiers'
       });
       
       if (onSave) onSave();

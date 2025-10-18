@@ -20,6 +20,9 @@ export interface ActivityElement {
     borderRadius?: string;
     padding?: string;
   };
+  // File metadata (optional)
+  fileId?: string;
+  fileName?: string;
 }
 
 export interface ActivityLayout {
