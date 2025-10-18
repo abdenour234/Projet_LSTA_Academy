@@ -57,16 +57,17 @@ public class MinioLifecycleConfig implements CommandLineRunner {
 
             // Create lifecycle rule for automatic file deletion after 7 days
             Expiration expiration = new Expiration((java.time.ZonedDateTime) null, 7, null);
+            RuleFilter filter = new RuleFilter("activity-files/");
             
             LifecycleRule rule = new LifecycleRule(
                 Status.ENABLED,
-                null, // ID will be auto-generated
-                null, // No transition
+                null,  // abortIncompleteMultipartUpload
                 expiration,
-                new RuleFilter("activity-files/"), // Only apply to activity files
-                null,
-                null,
-                null
+                filter,
+                "activity-files-cleanup-rule", // id
+                null,  // noncurrentVersionExpiration
+                null,  // noncurrentVersionTransition
+                null   // transition
             );
 
             List<LifecycleRule> rules = new LinkedList<>();
