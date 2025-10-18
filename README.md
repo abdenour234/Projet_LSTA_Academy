@@ -1,53 +1,206 @@
-# Welcome to your Lovable project
+# 🎓 Projet LSTA Academy - School Management System
 
-## Project info
+Système de gestion scolaire complet avec dashboard SuperAdmin, gestion des activités, diagnostics et suivi des élèves.
 
-**URL**: https://lovable.dev/projects/b0588786-61b8-4ad5-82a4-c8158ac08c66
+## 📋 Table des Matières
 
-## How can I edit this code?
+- [Guide de Configuration](#-guide-de-configuration)
+- [Fonctionnalités](#-fonctionnalités)
+- [Stack Technique](#-stack-technique)
+- [Architecture](#-architecture)
+- [Développement](#-développement)
+- [Documentation](#-documentation)
 
-There are several ways of editing your application.
+## 🚀 Guide de Configuration
 
-**Use Lovable**
+### Installation Rapide
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/b0588786-61b8-4ad5-82a4-c8158ac08c66) and start prompting.
+**Pour Windows (PowerShell):**
+```powershell
+# Cloner le projet
+git clone https://github.com/abdenour234/Projet_LSTA_Academy.git
+cd Projet_LSTA_Academy
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# Lancer le script de setup automatique
+.\setup.ps1
 ```
 
-**Edit a file directly in GitHub**
+**Pour Linux/Mac (Bash):**
+```bash
+# Cloner le projet
+git clone https://github.com/abdenour234/Projet_LSTA_Academy.git
+cd Projet_LSTA_Academy
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+# Rendre le script exécutable et le lancer
+chmod +x setup.sh
+./setup.sh
+```
 
-**Use GitHub Codespaces**
+### Configuration Manuelle
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
+Si vous préférez configurer manuellement, consultez le [**SETUP_GUIDE.md**](SETUP_GUIDE.md) pour les instructions détaillées.
+
+### 🔐 Identifiants par Défaut
+
+**SuperAdmin:**
+- Email: `admin@admin.com`
+- Mot de passe: `admin`
+
+## ✨ Fonctionnalités
+
+### SuperAdmin
+- ✅ Dashboard global avec statistiques
+- ✅ Gestion des écoles
+- ✅ Création et distribution d'activités pédagogiques
+- ✅ Vue détaillée de chaque école
+- ✅ Suivi des performances globales
+
+### Admin d'École
+- ✅ Dashboard spécifique à l'école
+- ✅ Gestion des enseignants
+- ✅ Gestion des classes
+- ✅ Suivi des activités
+- ✅ Messagerie interne
+
+### Enseignant
+- ✅ Dashboard personnel
+- ✅ Gestion des sessions de diagnostic
+- ✅ Suivi des élèves
+- ✅ Accès aux activités pédagogiques
+- ✅ Création de sessions
+
+### Étudiant
+- 🚧 Dashboard (en développement)
+- 🚧 Accès aux activités
+- 🚧 Suivi de progression
+
+## 🛠 Stack Technique
+
+### Frontend
+- **React** 18 + TypeScript
+- **Vite** - Build tool
+- **React Router** - Navigation
+- **Shadcn UI** - Composants UI
+- **Tailwind CSS** - Styling
+- **Lucide React** - Icônes
+
+### Backend
+- **Spring Boot** 3.2.0
+- **Java** 17
+- **Spring Security** - Authentification/Autorisation
+- **Spring Data JPA** - ORM
+- **PostgreSQL** - Base de données
+- **BCrypt** - Hachage des mots de passe
+
+### Infrastructure
+- **Docker** & Docker Compose
+- **PostgreSQL** 16
+- **MinIO** - Stockage d'objets
+- **Nginx** - Serveur web frontend
+
+## 📁 Architecture
+
+```
+Projet_LSTA_Academy/
+├── frontend/               # Application React
+│   ├── src/
+│   │   ├── components/    # Composants réutilisables
+│   │   ├── pages/         # Pages de l'application
+│   │   ├── lib/           # Utilitaires et API
+│   │   └── types/         # Types TypeScript
+│   └── Dockerfile
+│
+├── backend/               # Application Spring Boot
+│   ├── src/main/java/
+│   │   └── com/schoolmanagement/
+│   │       ├── controller/  # Contrôleurs REST
+│   │       ├── service/     # Logique métier
+│   │       ├── repository/  # Accès aux données
+│   │       ├── model/       # Modèles de données
+│   │       ├── entity/      # Entités JPA
+│   │       └── security/    # Configuration sécurité
+│   └── Dockerfile
+│
+├── supabase/              # Migrations SQL
+│   └── migrations/
+│
+├── docker-compose.yml     # Configuration Docker
+├── setup.ps1              # Script de setup Windows
+├── setup.sh               # Script de setup Linux/Mac
+├── setup-superadmin.sql   # Script SQL SuperAdmin
+├── SETUP_GUIDE.md         # Guide de configuration détaillé
+└── GIT_WORKFLOW.md        # Guide du workflow Git
+```
+
+## 💻 Développement
+
+### Prérequis
+- Docker Desktop
+- Git
+- Node.js 18+ (pour développement frontend local)
+- Java 17+ (pour développement backend local)
+
+### Workflow Git
+
+Nous utilisons un workflow Git Flow avec deux branches principales:
+- `main` - Production (stable)
+- `develop` - Développement (source de toutes les features)
+
+Consultez [**GIT_WORKFLOW.md**](GIT_WORKFLOW.md) pour les détails complets.
+
+### Commandes Utiles
+
+```bash
+# Démarrer tous les services
+docker-compose up -d
+
+# Voir les logs
+docker-compose logs -f
+
+# Reconstruire après modifications
+docker-compose up -d --build
+
+# Arrêter tous les services
+docker-compose down
+
+# Accéder à la base de données
+docker exec -it school-management-db psql -U postgres -d schoolmanagement
+```
+
+## 📚 Documentation
+
+- [**SETUP_GUIDE.md**](SETUP_GUIDE.md) - Guide de configuration complet
+- [**GIT_WORKFLOW.md**](GIT_WORKFLOW.md) - Workflow Git et conventions
+- [**DOCUMENTATION.md**](DOCUMENTATION.md) - Documentation technique
+
+## 🔗 URLs des Services
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| Frontend | http://localhost | Interface utilisateur |
+| Backend API | http://localhost:8080 | API REST |
+| PostgreSQL | localhost:5432 | Base de données |
+| MinIO | http://localhost:9000 | Stockage d'objets |
+
+## 🤝 Contribution
+
+1. Cloner le projet
+2. Créer une branche depuis `develop`: `git checkout -b feat/ma-feature`
+3. Commiter les changements: `git commit -m "feat: description"`
+4. Pousser la branche: `git push origin feat/ma-feature`
+5. Créer une Pull Request vers `develop`
+
+## 📝 License
+
+Ce projet est sous licence privée - tous droits réservés.
+
+## 👥 Équipe
+
+- **Development Team** - LSTA Academy
+
+---
+
+**🎉 Bon développement!**
 - Edit files directly within the Codespace and commit and push your changes once you're done.
 
 ## What technologies are used for this project?
