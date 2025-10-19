@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -16,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Send, Plus, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import { auth } from "@/lib/api";
 
 interface Conversation {
   id: string;
@@ -49,34 +49,21 @@ export default function MessagingPage() {
     loadConversations();
   }, [schoolId]);
 
+  // Polling pour les nouveaux messages (toutes les 5 secondes)
   useEffect(() => {
     if (selectedConversation) {
       loadMessages(selectedConversation);
-      // Subscribe to realtime updates
-      const channel = supabase
-        .channel(`messages:${selectedConversation}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "messages",
-            filter: `conversation_id=eq.${selectedConversation}`,
-          },
-          (payload) => {
-            loadMessages(selectedConversation);
-          }
-        )
-        .subscribe();
+      
+      const interval = setInterval(() => {
+        loadMessages(selectedConversation);
+      }, 5000);
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
+      return () => clearInterval(interval);
     }
   }, [selectedConversation]);
 
   const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = auth.getUser();
     if (!user) {
       navigate(`/school/${schoolId}/login`);
       return;
@@ -86,17 +73,19 @@ export default function MessagingPage() {
 
   const loadConversations = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data, error } = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/conversations?schoolId=${schoolId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${auth.getToken()}`,
+          },
+        }
+      );
 
-      const { data, error } = await supabase
-        .from("conversations")
-        .select("*")
-        .contains("participant_ids", [user.id])
-        .order("updated_at", { ascending: false });
-
-      if (error) throw error;
-      setConversations(data || []);
+      if (!data.ok) throw new Error('Erreur API');
+      
+      const conversationsData = await data.json();
+      setConversations(conversationsData || []);
     } catch (error: any) {
       toast.error("Erreur lors du chargement des conversations");
       console.error(error);
@@ -105,21 +94,22 @@ export default function MessagingPage() {
 
   const loadMessages = async (conversationId: string) => {
     try {
-      const { data, error } = await supabase
-        .from("messages")
-        .select(`
-          *,
-          profiles:sender_id (full_name)
-        `)
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/conversations/${conversationId}/messages`,
+        {
+          headers: {
+            'Authorization': `Bearer ${auth.getToken()}`,
+          },
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) throw new Error('Erreur API');
 
-      const messagesWithNames = data?.map((m: any) => ({
+      const data = await response.json();
+      const messagesWithNames = data.map((m: any) => ({
         ...m,
-        sender_name: m.profiles?.full_name || "Utilisateur",
-      })) || [];
+        sender_name: m.sender_name || "Utilisateur",
+      }));
 
       setMessages(messagesWithNames);
     } catch (error: any) {
@@ -132,21 +122,22 @@ export default function MessagingPage() {
     if (!newMessage.trim() || !selectedConversation) return;
 
     try {
-      const { error } = await supabase.from("messages").insert([
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/conversations/${selectedConversation}/messages`,
         {
-          conversation_id: selectedConversation,
-          sender_id: userId,
-          content: newMessage.trim(),
-        },
-      ]);
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${auth.getToken()}`,
+          },
+          body: JSON.stringify({
+            sender_id: userId,
+            content: newMessage.trim(),
+          }),
+        }
+      );
 
-      if (error) throw error;
-
-      // Update conversation timestamp
-      await supabase
-        .from("conversations")
-        .update({ updated_at: new Date().toISOString() })
-        .eq("id", selectedConversation);
+      if (!response.ok) throw new Error('Erreur envoi message');
 
       setNewMessage("");
       loadMessages(selectedConversation);
@@ -158,41 +149,48 @@ export default function MessagingPage() {
 
   const handleCreateConversation = async () => {
     try {
-      // Find recipient by email
-      const { data: recipientData, error: recipientError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", recipientEmail)
-        .eq("school_id", schoolId)
-        .single();
+      // Trouver le destinataire par email
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/users/by-email?email=${encodeURIComponent(recipientEmail)}&schoolId=${schoolId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${auth.getToken()}`,
+          },
+        }
+      );
 
-      if (recipientError || !recipientData) {
-        toast.error("Destinataire introuvable");
-        return;
-      }
+      if (!response.ok) throw new Error('Destinataire introuvable');
 
-      const { data, error } = await supabase
-        .from("conversations")
-        .insert([
-          {
+      const recipientData = await response.json();
+
+      const createResponse = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/conversations`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${auth.getToken()}`,
+          },
+          body: JSON.stringify({
             school_id: schoolId,
             participant_ids: [userId, recipientData.id],
-            subject: newConvSubject,
-          },
-        ])
-        .select()
-        .single();
+            subject: newConvSubject || null,
+          }),
+        }
+      );
 
-      if (error) throw error;
+      if (!createResponse.ok) throw new Error('Erreur création conversation');
 
+      const newConv = await createResponse.json();
+      
       toast.success("Conversation créée");
       setIsNewConvDialogOpen(false);
       setNewConvSubject("");
       setRecipientEmail("");
       loadConversations();
-      setSelectedConversation(data.id);
+      setSelectedConversation(newConv.id);
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "Erreur lors de la création");
       console.error(error);
     }
   };

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -11,8 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Clock, TrendingUp, Calendar, Activity } from "lucide-react";
+import { Clock, TrendingUp, Activity } from "lucide-react";
 import { toast } from "sonner";
+import { auth, statsApi } from "@/lib/api";
 
 interface UserActivity {
   user_name: string;
@@ -35,78 +35,60 @@ export default function ActivityTracking() {
   }, [schoolId]);
 
   const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = auth.getUser();
     if (!user) {
       navigate(`/school/${schoolId}/login`);
       return;
     }
 
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .single();
+    setUserRole(user.role || "");
 
-    setUserRole(roleData?.role || "");
-
-    if (roleData?.role !== "admin") {
+    if (user.role !== "admin") {
       toast.error("Accès réservé aux administrateurs");
       navigate(`/school/${schoolId}/teacher/dashboard`);
     }
   };
 
   const trackUserActivity = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = auth.getUser();
     if (!user) return;
 
-    // Log current activity
-    await supabase.from("user_activity_logs").insert([
-      {
-        user_id: user.id,
-        school_id: schoolId,
-        activity_type: "page_visit",
-        activity_date: new Date().toISOString().split("T")[0],
-        duration_seconds: 60,
-        metadata: { page: "activity_tracking" },
-      },
-    ]);
+    try {
+      // Log current activity via API
+      await fetch(`${import.meta.env.VITE_API_URL}/api/activity-logs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.getToken()}`,
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          school_id: schoolId,
+          activity_type: "page_visit",
+          activity_date: new Date().toISOString().split("T")[0],
+          duration_seconds: 60,
+          metadata: { page: "activity_tracking" },
+        }),
+      });
+    } catch (error) {
+      console.error('Error tracking activity:', error);
+    }
   };
 
   const loadActivityData = async () => {
     try {
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .eq("school_id", schoolId);
+      // Utiliser statsApi pour récupérer les stats d'activité de l'école
+      const stats = await statsApi.getSchoolStats(schoolId!);
+      
+      // Mapper les données de stats vers notre interface
+      const mappedActivities: UserActivity[] = stats.userActivities?.map((activity: any) => ({
+        user_name: activity.user_name,
+        total_time_seconds: activity.total_time_seconds || 0,
+        activity_count: activity.activity_count || 0,
+        last_activity: activity.last_activity || new Date().toISOString(),
+      })) || [];
 
-      if (profilesError) throw profilesError;
-
-      const { data: logsData, error: logsError } = await supabase
-        .from("user_activity_logs")
-        .select("*")
-        .eq("school_id", schoolId)
-        .order("created_at", { ascending: false });
-
-      if (logsError) throw logsError;
-
-      // Aggregate data by user
-      const userActivityMap: Record<string, any> = {};
-
-      logsData?.forEach((log) => {
-        if (!userActivityMap[log.user_id]) {
-          const profile = profilesData?.find((p) => p.id === log.user_id);
-          userActivityMap[log.user_id] = {
-            user_name: profile?.full_name || "Utilisateur",
-            total_time_seconds: 0,
-            activity_count: 0,
-            last_activity: log.created_at,
-          };
-        }
-        userActivityMap[log.user_id].total_time_seconds += log.duration_seconds;
-        userActivityMap[log.user_id].activity_count += 1;
-      });
-
-      setActivities(Object.values(userActivityMap));
+      setActivities(mappedActivities);
     } catch (error: any) {
       toast.error("Erreur lors du chargement");
       console.error(error);

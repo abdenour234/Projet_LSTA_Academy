@@ -139,7 +139,7 @@ const AdminDashboard = () => {
           >
             <Users className="h-8 w-8 text-primary mb-3" />
             <h3 className="font-semibold">Classes</h3>
-            <p className="text-sm text-muted-foreground">Gérer les classes</p>
+            <p className="text-sm text-muted-foreground">Gérer les classesssss</p>
           </Card>
           <Card 
             className="p-6 cursor-pointer hover:shadow-lg transition-smooth"

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,10 +21,22 @@ import {
 } from "@/components/ui/select";
 import { Plus, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { auth, classApi, activityApi, sessionApi } from "@/lib/api";
 
 interface Class {
   id: string;
   name: string;
+}
+
+interface Session {
+  id: string;
+  class_id: string;
+  class_name: string;
+  session_date: string;
+  duration_minutes: number;
+  activities_realized: string[];
+  percentage_acquired: number;
+  remarks: string;
 }
 
 export default function TeacherSessions() {
@@ -33,7 +44,7 @@ export default function TeacherSessions() {
   const navigate = useNavigate();
   const [classes, setClasses] = useState<Class[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
-  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<Session[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [userId, setUserId] = useState<string>("");
   const [formData, setFormData] = useState({
@@ -52,7 +63,7 @@ export default function TeacherSessions() {
   }, [schoolId]);
 
   const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = auth.getUser();
     if (!user) {
       navigate(`/school/${schoolId}/login`);
       return;
@@ -62,43 +73,40 @@ export default function TeacherSessions() {
 
   const loadData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       // Load teacher's classes
-      const { data: teacherClassesData, error: tcError } = await supabase
-        .from("teacher_classes")
-        .select("class_id, classes(id, name)")
-        .eq("teacher_id", user.id);
+      const teacherClasses = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/teachers/${userId}/classes`,
+        {
+          headers: {
+            'Authorization': `Bearer ${auth.getToken()}`,
+          },
+        }
+      );
 
-      if (tcError) throw tcError;
-
-      const classesData = teacherClassesData?.map((tc: any) => ({
-        id: tc.classes.id,
-        name: tc.classes.name,
-      })) || [];
-      setClasses(classesData);
+      if (!teacherClasses.ok) throw new Error('Erreur chargement classes');
+      const classesData = await teacherClasses.json();
+      setClasses(classesData || []);
 
       // Load activities
-      const { data: activitiesData, error: actError } = await supabase
-        .from("activities")
-        .select("id, title")
-        .eq("school_id", schoolId)
-        .eq("is_published", true);
-
-      if (actError) throw actError;
-      setActivities(activitiesData || []);
+      const activitiesData = await activityApi.getAll();
+      const publishedActivities = activitiesData.filter(
+        (act: any) => act.school_id === schoolId && act.is_published
+      );
+      setActivities(publishedActivities);
 
       // Load sessions
-      const { data: sessionsData, error: sessionsError } = await supabase
-        .from("teaching_sessions")
-        .select("*, classes(name)")
-        .eq("teacher_id", user.id)
-        .eq("school_id", schoolId)
-        .order("session_date", { ascending: false });
+      const sessionsData = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/sessions/teacher/${userId}?schoolId=${schoolId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${auth.getToken()}`,
+          },
+        }
+      );
 
-      if (sessionsError) throw sessionsError;
-      setSessions(sessionsData || []);
+      if (!sessionsData.ok) throw new Error('Erreur chargement sessions');
+      const sessionsResponse = await sessionsData.json();
+      setSessions(sessionsResponse || []);
     } catch (error: any) {
       toast.error("Erreur lors du chargement");
       console.error(error);
@@ -115,16 +123,12 @@ export default function TeacherSessions() {
 
     try {
       const activitiesList = Array.from(selectedActivities);
-      const { error } = await supabase.from("teaching_sessions").insert([
-        {
-          ...formData,
-          activities_realized: activitiesList,
-          teacher_id: userId,
-          school_id: schoolId,
-        },
-      ]);
-
-      if (error) throw error;
+      await sessionApi.create({
+        ...formData,
+        activities_realized: activitiesList,
+        teacher_id: userId,
+        school_id: schoolId,
+      });
 
       toast.success("Séance validée avec succès ✅");
       setIsDialogOpen(false);
@@ -340,7 +344,7 @@ export default function TeacherSessions() {
             <Card key={session.id} className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold">{session.classes?.name}</h3>
+                  <h3 className="text-lg font-semibold">{session.class_name}</h3>
                   <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                     <Calendar className="w-4 h-4" />
                     {new Date(session.session_date).toLocaleDateString('fr-FR', {

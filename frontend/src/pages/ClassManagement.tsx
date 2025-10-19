@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +22,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Edit, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
+import { classApi } from "@/lib/api";
 
 interface Class {
   id: string;
@@ -55,7 +55,7 @@ export default function ClassManagement() {
   }, [schoolId]);
 
   const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = localStorage.getItem('current_user');
     if (!user) {
       navigate(`/school/${schoolId}/login`);
     }
@@ -63,13 +63,7 @@ export default function ClassManagement() {
 
   const loadClasses = async () => {
     try {
-      const { data, error } = await supabase
-        .from("classes")
-        .select("*")
-        .eq("school_id", schoolId)
-        .order("level", { ascending: true });
-
-      if (error) throw error;
+      const data = await classApi.getBySchoolId(schoolId!);
       setClasses(data || []);
     } catch (error: any) {
       toast.error("Erreur lors du chargement des classes");
@@ -84,19 +78,19 @@ export default function ClassManagement() {
 
     try {
       if (editingClass) {
-        const { error } = await supabase
-          .from("classes")
-          .update(formData)
-          .eq("id", editingClass.id);
-
-        if (error) throw error;
+        await classApi.update(editingClass.id, {
+          ...formData,
+          effectif: Number(formData.effectif),
+          filiere: formData.filiere || null
+        });
         toast.success("Classe modifiée avec succès");
       } else {
-        const { error } = await supabase
-          .from("classes")
-          .insert([{ ...formData, school_id: schoolId }]);
-
-        if (error) throw error;
+        await classApi.create({
+          ...formData,
+          school_id: schoolId,
+          effectif: Number(formData.effectif),
+          filiere: formData.filiere || null
+        });
         toast.success("Classe créée avec succès");
       }
 
@@ -104,7 +98,7 @@ export default function ClassManagement() {
       resetForm();
       loadClasses();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "Erreur lors de la sauvegarde");
       console.error(error);
     }
   };
@@ -125,12 +119,11 @@ export default function ClassManagement() {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cette classe ?")) return;
 
     try {
-      const { error } = await supabase.from("classes").delete().eq("id", id);
-      if (error) throw error;
+      await classApi.delete(id);
       toast.success("Classe supprimée");
       loadClasses();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "Erreur lors de la suppression");
       console.error(error);
     }
   };
