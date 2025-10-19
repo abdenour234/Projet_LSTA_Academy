@@ -97,3 +97,4 @@ When Copilot opens a PR:
 ---
 
 **In short:** Copilot works like a careful team member—branching for every task, keeping main safe, and waiting for human approval before final merges.
+also don't creat document files unless ur told to

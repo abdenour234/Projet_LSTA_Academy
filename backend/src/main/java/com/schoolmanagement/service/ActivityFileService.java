@@ -83,6 +83,13 @@ public class ActivityFileService {
     }
 
     /**
+     * Get a single file by ID.
+     */
+    public ActivityFile getFileById(UUID fileId) {
+        return activityFileRepository.findById(fileId).orElse(null);
+    }
+
+    /**
      * Get file content from MinIO.
      */
     public InputStream getFileStream(String minioKey) {

@@ -21,6 +21,22 @@ const ActivityView = () => {
     try {
       const data = await activityApi.getById(activityId!);
       if (data && data.isPublished) {
+        // Parse layoutData if it's a JSON string
+        if (data.layoutData && typeof data.layoutData === 'string') {
+          try {
+            data.layout_data = JSON.parse(data.layoutData);
+          } catch (e) {
+            console.error('Error parsing layoutData:', e);
+            data.layout_data = { elements: [] };
+          }
+        } else if (data.layout_data && typeof data.layout_data === 'string') {
+          try {
+            data.layout_data = JSON.parse(data.layout_data);
+          } catch (e) {
+            console.error('Error parsing layout_data:', e);
+            data.layout_data = { elements: [] };
+          }
+        }
         setActivity(data as any);
       }
     } catch (error) {

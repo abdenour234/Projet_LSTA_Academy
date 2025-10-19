@@ -122,20 +122,22 @@ public class ActivityFileController {
     @GetMapping("/download/{fileId}")
     public ResponseEntity<InputStreamResource> downloadFile(@PathVariable UUID fileId) {
         try {
-            ActivityFile file = activityFileService.getActivityFiles(null).stream()
-                .filter(f -> f.getId().equals(fileId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("File not found"));
+            ActivityFile file = activityFileService.getFileById(fileId);
+            if (file == null) {
+                log.warn("File not found: {}", fileId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
             
             InputStream stream = activityFileService.getFileStream(file.getMinioKey());
             
             return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getFileName() + "\"")
+                .header(HttpHeaders.CACHE_CONTROL, "max-age=86400") // Cache for 1 day
                 .contentType(MediaType.parseMediaType(file.getMimeType() != null ? file.getMimeType() : "application/octet-stream"))
                 .body(new InputStreamResource(stream));
                 
         } catch (Exception e) {
-            log.error("Error downloading file {}: {}", fileId, e.getMessage());
+            log.error("Error downloading file {}: {}", fileId, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
