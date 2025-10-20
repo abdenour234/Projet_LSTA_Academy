@@ -20,18 +20,31 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Users } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Download } from "lucide-react";
 import { toast } from "sonner";
-import { classApi } from "@/lib/api";
+import { classApi, authApi, studentApi } from "@/lib/api";
 
 interface Class {
   id: string;
   name: string;
   level: string;
-  filiere: string | null;
-  annee_scolaire: string;
-  effectif: number;
-  school_id: string;
+  academicYear: string;
+  studentCount: number;
+  schoolId: string;
+}
+
+interface ImportedStudent {
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  gender: string;
+  parentContact: string;
+}
+
+interface Credential {
+  fullName: string;
+  email: string;
+  password: string;
 }
 
 export default function ClassManagement() {
@@ -44,10 +57,10 @@ export default function ClassManagement() {
   const [formData, setFormData] = useState({
     name: "",
     level: "Primaire",
-    filiere: "",
-    annee_scolaire: new Date().getFullYear() + "-" + (new Date().getFullYear() + 1),
-    effectif: 0,
+    academicYear: new Date().getFullYear() + "-" + (new Date().getFullYear() + 1),
+    studentCount: 0,
   });
+  const [importedStudents, setImportedStudents] = useState<ImportedStudent[]>([]);
 
   useEffect(() => {
     checkAuth();
@@ -73,25 +86,137 @@ export default function ClassManagement() {
     }
   };
 
+  const generatePassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    let password = "";
+    for (let i = 0; i < 10; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
+  const generateEmail = (firstName: string, lastName: string) => {
+    const firstPart = firstName
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .substring(0, 3);
+    const lastPart = lastName
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .substring(0, 3);
+    return `${firstPart}${lastPart}${Math.floor(Math.random() * 100)}@${schoolId}.ma`;
+  };
+
+  const parseDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    const [dd, mm, yyyy] = dateStr.split('/');
+    if (!dd || !mm || !yyyy) return '';
+    return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+  };
+
+  const parseGender = (gender: string) => {
+    if (gender.toLowerCase() === 'male') return 'M';
+    if (gender.toLowerCase() === 'female') return 'F';
+    return gender;
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const rows = text.split('\n').filter(row => row.trim());
+      if (rows.length < 2) {
+        toast.error("Fichier CSV invalide");
+        return;
+      }
+
+      const headers = rows[0].split(';').map(h => h.trim());
+      const expectedHeaders = ['firstName', 'lastName', 'dateOfBirth', 'gender', 'parentContact'];
+      if (!expectedHeaders.every((h, i) => headers[i] === h)) {
+        toast.error("Le CSV doit contenir les colonnes exactes: firstName;lastName;dateOfBirth;gender;parentContact");
+        return;
+      }
+
+      const data: ImportedStudent[] = rows.slice(1).map(row => {
+        const values = row.split(';').map(v => v.trim());
+        return {
+          firstName: values[0] || '',
+          lastName: values[1] || '',
+          dateOfBirth: parseDate(values[2] || ''),
+          gender: parseGender(values[3] || ''),
+          parentContact: values[4] || '',
+        };
+      }).filter(student => student.firstName && student.lastName && student.dateOfBirth && student.gender);
+
+      if (data.length === 0) {
+        toast.error("Aucun étudiant valide dans le CSV");
+        return;
+      }
+
+      setImportedStudents(data);
+      setFormData({ ...formData, studentCount: data.length });
+      toast.success(`${data.length} étudiants importés du CSV`);
+    };
+    reader.readAsText(file);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
+      let savedClass: Class;
       if (editingClass) {
-        await classApi.update(editingClass.id, {
+        savedClass = await classApi.update(editingClass.id, {
           ...formData,
-          effectif: Number(formData.effectif),
-          filiere: formData.filiere || null
+          studentCount: Number(formData.studentCount),
         });
         toast.success("Classe modifiée avec succès");
       } else {
-        await classApi.create({
+        savedClass = await classApi.create({
           ...formData,
-          school_id: schoolId,
-          effectif: Number(formData.effectif),
-          filiere: formData.filiere || null
+          schoolId: schoolId!,
+          studentCount: importedStudents.length > 0 ? importedStudents.length : Number(formData.studentCount),
         });
         toast.success("Classe créée avec succès");
+      }
+
+      const credentials: Credential[] = [];
+
+      if (!editingClass && importedStudents.length > 0) {
+        for (const student of importedStudents) {
+          const fullName = `${student.firstName} ${student.lastName}`;
+          const email = generateEmail(student.firstName, student.lastName);
+          const password = generatePassword();
+
+          await authApi.register({
+            email,
+            password,
+            fullName,
+            role: 'student',
+            schoolId: schoolId!,
+          });
+
+          await studentApi.create({
+            firstName: student.firstName,
+            lastName: student.lastName,
+            dateOfBirth: `${student.dateOfBirth}T00:00:00`,
+            gender: student.gender,
+            parentContact: student.parentContact,
+            classId: savedClass.id,
+            schoolId: schoolId!,
+          });
+
+          credentials.push({ fullName, email, password });
+        }
+
+        if (credentials.length > 0) {
+          downloadCredentialsCSV(credentials, savedClass.name);
+        }
       }
 
       setIsDialogOpen(false);
@@ -103,15 +228,59 @@ export default function ClassManagement() {
     }
   };
 
+  const downloadCredentialsCSV = (credentials: Credential[], className: string) => {
+    const csvContent = "nom complet;email;mot de passe\n" +
+      credentials.map(c => `${c.fullName};${c.email};${c.password}`).join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `etudiants_${className}_credentials.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportClass = async (classItem: Class) => {
+    try {
+      const students = await studentApi.getByClass(classItem.id);
+      
+      if (!students || students.length === 0) {
+        toast.error("Aucun étudiant trouvé pour cette classe");
+        return;
+      }
+
+      const csvContent = "nom complet;email\n" +
+        students.map((s: any) => `${s.firstName} ${s.lastName};${s.email || 'N/A'}`).join("\n");
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `etudiants_${classItem.name}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success("Export CSV terminé. Note : Les mots de passe sont disponibles uniquement dans le CSV généré lors de la création de la classe.");
+    } catch (error: any) {
+      toast.error("Erreur lors de l'export");
+      console.error(error);
+    }
+  };
+
   const handleEdit = (classItem: Class) => {
     setEditingClass(classItem);
     setFormData({
       name: classItem.name,
       level: classItem.level,
-      filiere: classItem.filiere || "",
-      annee_scolaire: classItem.annee_scolaire,
-      effectif: classItem.effectif,
+      academicYear: classItem.academicYear,
+      studentCount: classItem.studentCount,
     });
+    setImportedStudents([]);
     setIsDialogOpen(true);
   };
 
@@ -132,11 +301,11 @@ export default function ClassManagement() {
     setFormData({
       name: "",
       level: "Primaire",
-      filiere: "",
-      annee_scolaire: new Date().getFullYear() + "-" + (new Date().getFullYear() + 1),
-      effectif: 0,
+      academicYear: new Date().getFullYear() + "-" + (new Date().getFullYear() + 1),
+      studentCount: 0,
     });
     setEditingClass(null);
+    setImportedStudents([]);
   };
 
   const handleDialogChange = (open: boolean) => {
@@ -204,41 +373,45 @@ export default function ClassManagement() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="filiere">Filière (optionnel)</Label>
-                <Input
-                  id="filiere"
-                  value={formData.filiere}
-                  onChange={(e) =>
-                    setFormData({ ...formData, filiere: e.target.value })
-                  }
-                  placeholder="Sciences, Lettres..."
-                />
-              </div>
-              <div>
                 <Label htmlFor="annee">Année scolaire</Label>
                 <Input
                   id="annee"
-                  value={formData.annee_scolaire}
+                  value={formData.academicYear}
                   onChange={(e) =>
-                    setFormData({ ...formData, annee_scolaire: e.target.value })
+                    setFormData({ ...formData, academicYear: e.target.value })
                   }
                   placeholder="2024-2025"
                   required
                 />
               </div>
+              {!editingClass && (
+                <div>
+                  <Label htmlFor="csv">Importer CSV Étudiants (optionnel)</Label>
+                  <Input
+                    id="csv"
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileUpload}
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Colonnes requises: firstName;lastName;dateOfBirth (DD/MM/YYYY);gender (Male/Female);parentContact
+                  </p>
+                </div>
+              )}
               <div>
-                <Label htmlFor="effectif">Effectif</Label>
+                <Label htmlFor="studentCount">Effectif</Label>
                 <Input
-                  id="effectif"
+                  id="studentCount"
                   type="number"
                   min="0"
-                  value={formData.effectif}
+                  value={formData.studentCount}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      effectif: parseInt(e.target.value) || 0,
+                      studentCount: parseInt(e.target.value) || 0,
                     })
                   }
+                  disabled={importedStudents.length > 0}
                   required
                 />
               </div>
@@ -265,7 +438,6 @@ export default function ClassManagement() {
             <TableRow>
               <TableHead>Nom</TableHead>
               <TableHead>Niveau</TableHead>
-              <TableHead>Filière</TableHead>
               <TableHead>Année scolaire</TableHead>
               <TableHead>
                 <Users className="w-4 h-4 inline mr-2" />
@@ -277,7 +449,7 @@ export default function ClassManagement() {
           <TableBody>
             {classes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell colSpan={5} className="text-center text-muted-foreground">
                   Aucune classe enregistrée
                 </TableCell>
               </TableRow>
@@ -286,11 +458,17 @@ export default function ClassManagement() {
                 <TableRow key={classItem.id}>
                   <TableCell className="font-medium">{classItem.name}</TableCell>
                   <TableCell>{classItem.level}</TableCell>
-                  <TableCell>{classItem.filiere || "-"}</TableCell>
-                  <TableCell>{classItem.annee_scolaire}</TableCell>
-                  <TableCell>{classItem.effectif}</TableCell>
+                  <TableCell>{classItem.academicYear}</TableCell>
+                  <TableCell>{classItem.studentCount}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleExportClass(classItem)}
+                      >
+                        <Download className="w-4 h-4" />
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"

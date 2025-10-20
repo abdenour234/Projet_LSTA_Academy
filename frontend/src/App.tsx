@@ -26,6 +26,7 @@ import TeacherSessions from "./pages/TeacherSessions";
 import MessagingPage from "./pages/MessagingPage";
 import ActivityTracking from "./pages/ActivityTracking";
 import NotFound from "./pages/NotFound";
+import StudentManagement from "./pages/StudentManagement";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,7 @@ const App = () => (
           <Route path="/school/:id/admin/activity-tracking" element={<ActivityTracking />} />
           <Route path="/school/:id/teacher/sessions" element={<TeacherSessions />} />
           <Route path="/school/:id/messages" element={<MessagingPage />} />
+          <Route path="/school/:id/students" element={<StudentManagement />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

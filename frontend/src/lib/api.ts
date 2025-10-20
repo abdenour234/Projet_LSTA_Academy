@@ -200,6 +200,40 @@ export const api = {
 
 // Auth API endpoints
 export const authApi = {
+  // AJOUTEZ CES 2 MÉTHODES dans authApi
+getStudentsBySchool: async (schoolId: string) => {
+  const allUsers = await api.get<any[]>(`/teachers/school/${schoolId}`);
+  const students = allUsers.filter(user => user.role === 'student');
+  
+  // Get student details from /students endpoint
+  const studentDetails = await api.get<any[]>(`/students/school/${schoolId}`);
+  
+  return students.map(student => {
+    const detail = studentDetails.find(d => 
+      d.first_name === student.fullName.split(' ')[0] && 
+      d.last_name === student.fullName.split(' ').slice(1).join(' ')
+    );
+    return {
+      ...student,
+      first_name: detail?.firstName || student.fullName.split(' ')[0],
+      last_name: detail?.lastName || student.fullName.split(' ').slice(1).join(' '),
+      date_of_birth: detail?.dateOfBirth || '',
+      gender: detail?.gender || '',
+      parent_contact: detail?.parentContact || '',
+    };
+  });
+},
+
+createStudentRecord: async (studentData: {
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  gender: string;
+  parentContact?: string;
+  schoolId: string;
+}) => {
+  return api.post('/students', studentData);
+},
   login: async (email: string, password: string) => {
     const response = await api.post<{ token: string; user: any }>(
       '/auth/login',
@@ -396,6 +430,23 @@ export const statsApi = {
   getSchoolStats: (schoolId: string) => api.get<any>(`/stats/school/${schoolId}`),
   
   getTeacherStats: (teacherId: string) => api.get<any>(`/stats/teacher/${teacherId}`),
+};
+
+// Student API endpoints
+export const studentApi = {
+  getAll: () => api.get<any[]>('/students'),
+  
+  getBySchoolId: (schoolId: string) => api.get<any[]>(`/students/school/${schoolId}`),
+  
+  getByClass: (classId: string) => api.get<any[]>(`/students/class/${classId}`),
+  
+  getById: (id: string) => api.get<any>(`/students/${id}`),
+  
+  create: (studentData: any) => api.post<any>('/students', studentData),
+  
+  update: (id: string, studentData: any) => api.put<any>(`/students/${id}`, studentData),
+  
+  delete: (id: string) => api.delete(`/students/${id}`),
 };
 
 // Export everything
