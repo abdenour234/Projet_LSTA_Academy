@@ -3,6 +3,7 @@
  * Base configuration and HTTP methods for interacting with the backend
  */
 
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 // Token management
@@ -344,6 +345,14 @@ export const schoolApi = {
     }),
 };
 
+interface Activity {
+  id: string;
+  title: string;
+  description: string;
+  createdAt: string;
+  classId: string;
+}
+
 // Activity API endpoints
 export const activityApi = {
   getAll: () => api.get<any[]>('/activities'),
@@ -361,6 +370,11 @@ export const activityApi = {
       entityType: 'activity_resource',
       entityId: activityId
     }),
+   getPublished: (params: { schoolId: string; classId?: string }) => {
+    const { schoolId, classId } = params;
+    const query = classId ? `?schoolId=${schoolId}&classId=${classId}` : `?schoolId=${schoolId}`;
+    return api.get<Activity[]>(`/activities/published${query}`);
+  },
 };
 
 // Class (Classe) API endpoints
@@ -441,7 +455,7 @@ export const studentApi = {
   getByClass: (classId: string) => api.get<any[]>(`/students/class/${classId}`),
   
   getById: (id: string) => api.get<any>(`/students/${id}`),
-  
+getCurrentStudent: () => api.get<any>('/students/me', { headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` } }),  
   create: (studentData: any) => api.post<any>('/students', studentData),
   
   update: (id: string, studentData: any) => api.put<any>(`/students/${id}`, studentData),

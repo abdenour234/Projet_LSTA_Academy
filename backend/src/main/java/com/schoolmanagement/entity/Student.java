@@ -31,6 +31,9 @@ public class Student {
     @Column(name = "school_id", nullable = false)
     private String schoolId;
 
+    @Column(name = "user_id")  // NEW: Link to profile
+    private UUID userId;
+
     @Column(name = "date_of_birth")
     private LocalDateTime dateOfBirth;
 

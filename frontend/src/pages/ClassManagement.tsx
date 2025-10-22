@@ -22,7 +22,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Edit, Trash2, Users, Download } from "lucide-react";
 import { toast } from "sonner";
-import { classApi, authApi, studentApi } from "@/lib/api";
+import { classApi, authApi } from "@/lib/api";
 
 interface Class {
   id: string;
@@ -52,6 +52,7 @@ export default function ClassManagement() {
   const navigate = useNavigate();
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | null>(null);
   const [formData, setFormData] = useState({
@@ -111,11 +112,17 @@ export default function ClassManagement() {
 
   const parseDate = (dateStr: string) => {
     if (!dateStr) return '';
-    const [dd, mm, yyyy] = dateStr.split('/');
-    if (!dd || !mm || !yyyy) return '';
-    return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+    const parts = dateStr.trim().split('/');
+    if (parts.length !== 3) return '';
+    const [dd, mm, yyyy] = parts;
+    const paddedMonth = mm.padStart(2, '0');
+    const paddedDay = dd.padStart(2, '0');
+    const isoDate = `${yyyy}-${paddedMonth}-${paddedDay}`;
+    // Validate the date
+    const dateObj = new Date(isoDate);
+    if (isNaN(dateObj.getTime())) return '';
+    return isoDate;
   };
-
   const parseGender = (gender: string) => {
     if (gender.toLowerCase() === 'male') return 'M';
     if (gender.toLowerCase() === 'female') return 'F';
@@ -168,6 +175,11 @@ export default function ClassManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (submitting) return;
+    const submitButton = e.currentTarget.querySelector('button[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
+    setSubmitting(true);
+
     try {
       let savedClass: Class;
       if (editingClass) {
@@ -188,43 +200,52 @@ export default function ClassManagement() {
       const credentials: Credential[] = [];
 
       if (!editingClass && importedStudents.length > 0) {
+        console.log("Processing students:", importedStudents);
         for (const student of importedStudents) {
           const fullName = `${student.firstName} ${student.lastName}`;
           const email = generateEmail(student.firstName, student.lastName);
           const password = generatePassword();
+          console.log(`Attempting to register student: ${fullName}, email: ${email}`);
 
-          await authApi.register({
+          const userData = {
             email,
             password,
             fullName,
             role: 'student',
             schoolId: schoolId!,
-          });
-
-          await studentApi.create({
-            firstName: student.firstName,
-            lastName: student.lastName,
-            dateOfBirth: `${student.dateOfBirth}T00:00:00`,
+            dateOfBirth: student.dateOfBirth || undefined, // Pass undefined if empty
             gender: student.gender,
             parentContact: student.parentContact,
             classId: savedClass.id,
-            schoolId: schoolId!,
-          });
+          };
 
-          credentials.push({ fullName, email, password });
+          try {
+            const response = await authApi.register(userData);
+            credentials.push({ fullName, email, password });
+          } catch (error: any) {
+            if (error.status === 400 && error.message.includes('already exists')) {
+              console.warn(`Utilisateur ${fullName} existe déjà, ignoré`);
+              continue;
+            }
+            throw error;
+          }
         }
 
         if (credentials.length > 0) {
           downloadCredentialsCSV(credentials, savedClass.name);
+          toast.success(`${credentials.length} étudiants créés avec succès`);
         }
       }
 
       setIsDialogOpen(false);
       resetForm();
-      loadClasses();
+      await loadClasses();
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la sauvegarde");
       console.error(error);
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+      setSubmitting(false);
     }
   };
 
@@ -245,8 +266,7 @@ export default function ClassManagement() {
 
   const handleExportClass = async (classItem: Class) => {
     try {
-      const students = await studentApi.getByClass(classItem.id);
-      
+      const students = await classApi.getBySchoolId(classItem.id); // Adjust endpoint as needed
       if (!students || students.length === 0) {
         toast.error("Aucun étudiant trouvé pour cette classe");
         return;
@@ -416,13 +436,14 @@ export default function ClassManagement() {
                 />
               </div>
               <div className="flex gap-2">
-                <Button type="submit" className="flex-1">
-                  {editingClass ? "Modifier" : "Créer"}
+                <Button type="submit" className="flex-1" disabled={submitting}>
+                  {submitting ? "En cours..." : (editingClass ? "Modifier" : "Créer")}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsDialogOpen(false)}
+                  disabled={submitting}
                 >
                   Annuler
                 </Button>

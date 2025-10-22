@@ -22,6 +22,9 @@ public class Activity {
     @Column(name = "school_id", nullable = false)
     private String schoolId;
 
+    @Column(name = "class_id")  // NEW: Link to class
+    private UUID classId;
+
     @Column(nullable = false)
     private String type;
 
@@ -43,7 +46,7 @@ public class Activity {
     @Column(name = "created_by")
     private UUID createdBy;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false) 
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")

@@ -2,6 +2,7 @@ package com.schoolmanagement.controller;
 
 import com.schoolmanagement.entity.Student;
 import com.schoolmanagement.repository.StudentRepository;
+import com.schoolmanagement.util.JwtUtil;  // Assume you have JwtUtil for extracting userId
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,9 +16,11 @@ import java.util.UUID;
 public class StudentController {
 
     private final StudentRepository studentRepository;
+    private final JwtUtil jwtUtil;  // NEW: For extracting userId from token
 
-    public StudentController(StudentRepository studentRepository) {
+    public StudentController(StudentRepository studentRepository, JwtUtil jwtUtil) {
         this.studentRepository = studentRepository;
+        this.jwtUtil = jwtUtil;
     }
 
     @GetMapping
@@ -42,8 +45,23 @@ public class StudentController {
         return ResponseEntity.ok(studentRepository.findByClassId(classId));
     }
 
+    // NEW: Get current student (/me)
+    @GetMapping("/me")
+    public ResponseEntity<Student> getCurrentStudent(@RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            UUID userId = UUID.fromString(jwtUtil.extractUserId(token));  // Extract userId from JWT
+            Student student = studentRepository.findByUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("Student not found"));  // Correct: Call orElseThrow on Optional
+            return ResponseEntity.ok(student);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch current student: " + e.getMessage(), e);
+        }
+    }
+
     @PostMapping
     public ResponseEntity<Student> createStudent(@RequestBody Student student) {
+        // NEW: Set userId if provided in body (from frontend register)
         Student saved = studentRepository.save(student);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
