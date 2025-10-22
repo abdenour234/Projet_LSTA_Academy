@@ -19,12 +19,14 @@ interface ActivityBuilderProps {
     type: string;
     level: string;
     elements: ActivityElement[];
+    classId?: string; // NEW: Add classId to initialData
   };
   schoolId: string;
+  classId?: string; // NEW: Add classId prop
   onSave?: () => void;
 }
 
-export const ActivityBuilder = ({ activityId: initialActivityId, initialData, schoolId, onSave }: ActivityBuilderProps) => {
+export const ActivityBuilder = ({ activityId: initialActivityId, initialData, schoolId, classId,onSave }: ActivityBuilderProps) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activityId, setActivityId] = useState<string | undefined>(initialActivityId);
@@ -193,6 +195,7 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
         type,
         level,
         schoolId,
+        classId,
         layoutData: JSON.stringify({ elements }),
         isPublished: publish,
       };
@@ -300,6 +303,7 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
               type,
               level,
               schoolId,
+              classId,
               layoutData: JSON.stringify({ elements: allElements }),
               isPublished: publish,
             };

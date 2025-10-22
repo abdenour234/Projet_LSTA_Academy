@@ -17,4 +17,5 @@ public interface ActivityRepository extends JpaRepository<Activity, UUID> {
     List<Activity> findByCreatedBy(UUID createdBy);
     List<Activity> findByIsPublished(Boolean isPublished);
     List<Activity> findBySchoolIdAndIsPublished(String schoolId, Boolean isPublished);
+    List<Activity> findBySchoolIdAndClassIdAndIsPublished(String schoolId, UUID classId, boolean isPublished);
 }

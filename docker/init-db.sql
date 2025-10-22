@@ -1,6 +1,6 @@
 --
 -- PostgreSQL database initialization script
--- Generated from production database: October 20, 2025
+-- Generated from production database: October 21, 2025 (updated with class_id in activities and user_id in students)
 -- This script creates the complete database schema with all tables and initial data
 --
 
@@ -60,7 +60,7 @@ ALTER TYPE public.app_role OWNER TO postgres;
 -- Create tables
 --
 
--- Schools table
+-- Schools table (unchanged)
 CREATE TABLE public.schools (
     id bigint NOT NULL,
     address character varying(255) NOT NULL,
@@ -87,7 +87,7 @@ ALTER SEQUENCE public.schools_id_seq OWNER TO postgres;
 ALTER SEQUENCE public.schools_id_seq OWNED BY public.schools.id;
 ALTER TABLE ONLY public.schools ALTER COLUMN id SET DEFAULT nextval('public.schools_id_seq'::regclass);
 
--- Profiles table
+-- Profiles table (unchanged)
 CREATE TABLE public.profiles (
     id uuid NOT NULL,
     created_at timestamp(6) without time zone,
@@ -100,7 +100,7 @@ CREATE TABLE public.profiles (
 
 ALTER TABLE public.profiles OWNER TO postgres;
 
--- User roles table
+-- User roles table (unchanged)
 CREATE TABLE public.user_roles (
     id uuid NOT NULL,
     role character varying(255) NOT NULL,
@@ -110,7 +110,7 @@ CREATE TABLE public.user_roles (
 
 ALTER TABLE public.user_roles OWNER TO postgres;
 
--- Activities table
+-- Activities table (MODIFIED: Added class_id)
 CREATE TABLE public.activities (
     id uuid NOT NULL,
     created_at timestamp(6) without time zone,
@@ -123,13 +123,14 @@ CREATE TABLE public.activities (
     title character varying(255) NOT NULL,
     type character varying(255) NOT NULL,
     updated_at timestamp(6) without time zone,
+    class_id uuid,  -- NEW: Link to class (nullable if activity is school-wide)
     CONSTRAINT activities_layout_data_json_check CHECK (((layout_data)::jsonb IS NOT NULL))
 );
 
 ALTER TABLE public.activities OWNER TO postgres;
 COMMENT ON COLUMN public.activities.layout_data IS 'JSON string (stored as TEXT) containing activity layout elements';
 
--- Activity files table
+-- Activity files table (unchanged)
 CREATE TABLE public.activity_files (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     activity_id uuid NOT NULL,
@@ -150,7 +151,7 @@ COMMENT ON COLUMN public.activity_files.minio_key IS 'Unique identifier for file
 COMMENT ON COLUMN public.activity_files."position" IS 'Display order within the activity';
 COMMENT ON COLUMN public.activity_files.element_id IS 'Reference to element ID in activity layout_data JSON';
 
--- Activity assignments table
+-- Activity assignments table (unchanged)
 CREATE TABLE public.activity_assignments (
     id uuid NOT NULL,
     assigned_at timestamp(6) without time zone,
@@ -161,7 +162,7 @@ CREATE TABLE public.activity_assignments (
 
 ALTER TABLE public.activity_assignments OWNER TO postgres;
 
--- Classes table
+-- Classes table (unchanged)
 CREATE TABLE public.classes (
     id uuid NOT NULL,
     academic_year character varying(255),
@@ -175,7 +176,7 @@ CREATE TABLE public.classes (
 
 ALTER TABLE public.classes OWNER TO postgres;
 
--- Students table
+-- Students table (MODIFIED: Added user_id to link to profiles)
 CREATE TABLE public.students (
     id uuid NOT NULL,
     class_id uuid,
@@ -186,12 +187,13 @@ CREATE TABLE public.students (
     last_name character varying(255) NOT NULL,
     parent_contact character varying(255),
     school_id character varying(255) NOT NULL,
-    updated_at timestamp(6) without time zone
+    updated_at timestamp(6) without time zone,
+    user_id uuid  -- NEW: Link to profiles.id (user profile)
 );
 
 ALTER TABLE public.students OWNER TO postgres;
 
--- Diagnostic sessions table
+-- Diagnostic sessions table (unchanged)
 CREATE TABLE public.diagnostic_sessions (
     id uuid NOT NULL,
     class_id uuid,
@@ -208,7 +210,7 @@ CREATE TABLE public.diagnostic_sessions (
 
 ALTER TABLE public.diagnostic_sessions OWNER TO postgres;
 
--- Teaching sessions table
+-- Teaching sessions table (unchanged)
 CREATE TABLE public.teaching_sessions (
     id uuid NOT NULL,
     activity_id uuid,
@@ -225,7 +227,7 @@ CREATE TABLE public.teaching_sessions (
 
 ALTER TABLE public.teaching_sessions OWNER TO postgres;
 
--- Messages table
+-- Messages table (unchanged)
 CREATE TABLE public.messages (
     id uuid NOT NULL,
     content text NOT NULL,
@@ -239,7 +241,7 @@ CREATE TABLE public.messages (
 
 ALTER TABLE public.messages OWNER TO postgres;
 
--- Resources table
+-- Resources table (unchanged)
 CREATE TABLE public.resources (
     id uuid NOT NULL,
     category character varying(255),
@@ -256,7 +258,7 @@ CREATE TABLE public.resources (
 
 ALTER TABLE public.resources OWNER TO postgres;
 
--- User activity logs table
+-- User activity logs table (unchanged)
 CREATE TABLE public.user_activity_logs (
     id uuid NOT NULL,
     action_type character varying(255),
@@ -269,10 +271,10 @@ CREATE TABLE public.user_activity_logs (
 ALTER TABLE public.user_activity_logs OWNER TO postgres;
 
 --
--- Insert initial data
+-- Insert initial data (unchanged, but add user_id to students if needed for existing data)
 --
 
--- Schools
+-- Schools (unchanged)
 INSERT INTO public.schools (id, address, city, created_at, last_diagnostic, level, name, region, status, students) VALUES
 (1, 'Avenue Mohammed V', 'Oujda', '2025-10-18 12:43:48.104076', NULL, 'Primaire', 'Pasteur', 'L''Oriental', 'Active', 0),
 (2, '', 'Oujda', '2025-10-18 12:53:05.596974', NULL, 'Primaire', 'Orient', 'L''Oriental', 'Privé', 2500),
@@ -281,15 +283,15 @@ INSERT INTO public.schools (id, address, city, created_at, last_diagnostic, leve
 -- Set sequence for schools
 SELECT pg_catalog.setval('public.schools_id_seq', 3, true);
 
--- Profiles (users) - Note: passwords are hashed with BCrypt
+-- Profiles (unchanged)
 INSERT INTO public.profiles (id, created_at, email, full_name, password_hash, school_id, updated_at) VALUES
 ('5054ed0f-3f4b-4e2d-b009-43e8d0e08f22', '2025-10-18 12:43:48.339806', 'admin@admin.com', 'Super Admin', '$2a$10$mAOHPc29emF0i/6ZPS3o8eWSEwNnepE8Dc52qlfl5/4yOsLgh2wDa', '1', '2025-10-18 12:43:48.339826'),
-('61b017bd-17d5-4274-93bb-648d8a6d3a89', '2025-10-18 12:53:05.654434', 'ahmed@pasteur.ma', 'Ahmed Bannani', '$2a$10$cYMq1x2AVNrf4cA9nNCHieURGD4Q82tioAyoo3UCZ6F0RunErktU.', '2', '2025-10-18 12:53:05.654453'),
+('61b017bd-17d5-4274-93bb-648d8a6d3a89', '2025-10-18 12:53:05.654434', 'ahmed@pasteur.ma', 'Ahmed Bannani', '$2a$10$cYMq1x2AVNrf4cA9nNCHieURGDPEPEW3GHdY8n8ZfMVkbnliDlYkbSl6', '2', '2025-10-18 12:53:05.654453'),
 ('56c5ddac-561d-4178-9ba3-763e3f07a837', '2025-10-18 14:10:00.54315', 'ahmed@kali.ma', 'Ahmed Bannani', '$2a$10$MNJTusPNE9hbVIeL7d35OuoBUJLwEl25GVyTjt5NhnG4ZRRxFMVba', '3', '2025-10-18 14:10:00.543171'),
 ('7baf1f9e-d8c8-4835-b2f5-adac9d182279', '2025-10-19 14:52:01.737434', 'chenouf.abdenour@3.ma', 'Chenouf Abdenour', '$2a$10$CKrn/p70nNDp4B7IB2IqkeQAEkaGIR1l/r03n8OWgWRcM8jCYl9Xe', '3', '2025-10-19 14:52:01.737439'),
-('a303af5c-e60d-41fb-b95d-d099d3636dd1', '2025-10-20 20:04:09.417801', 'test@3.ma', 'Test', '$2a$10$1h4vYoTMR9RTYGnMMt/e7.cFKPEW3GHdY8n8ZfMVkbnliDlYkbSl6', '3', '2025-10-20 20:04:09.417808');
+('a303af5c-e60d-41fb-b95d-d099d3636dd1', '2025-10-20 20:04:09.417801', 'test@3.ma', 'Test', '$2a$10$1h4vYoTMR9RTYGnMMt/e7.cFKPEPEW3GHdY8n8ZfMVkbnliDlYkbSl6', '3', '2025-10-20 20:04:09.417808');
 
--- User roles
+-- User roles (unchanged)
 INSERT INTO public.user_roles (id, role, user_id) VALUES
 ('9fd33843-27b7-45e6-899b-6c820afe4efd', 'superadmin', '5054ed0f-3f4b-4e2d-b009-43e8d0e08f22'),
 ('77d649ed-edbf-4c7d-886c-d6451fb212a4', 'admin', '61b017bd-17d5-4274-93bb-648d8a6d3a89'),
@@ -298,7 +300,27 @@ INSERT INTO public.user_roles (id, role, user_id) VALUES
 ('4087e50b-e551-404a-9027-287a74d7b4f3', 'teacher', 'a303af5c-e60d-41fb-b95d-d099d3636dd1');
 
 --
--- Add primary keys
+-- Migration: Add new columns if database already exists
+--
+
+-- Add class_id to activities if not exists
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'activities' AND column_name = 'class_id') THEN
+    ALTER TABLE public.activities ADD COLUMN class_id uuid;
+  END IF;
+END$$;
+
+-- Add user_id to students if not exists
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'students' AND column_name = 'user_id') THEN
+    ALTER TABLE public.students ADD COLUMN user_id uuid;
+  END IF;
+END$$;
+
+--
+-- Add primary keys (unchanged)
 --
 
 ALTER TABLE ONLY public.schools ADD CONSTRAINT schools_pkey PRIMARY KEY (id);
@@ -317,16 +339,31 @@ ALTER TABLE ONLY public.resources ADD CONSTRAINT resources_pkey PRIMARY KEY (id)
 ALTER TABLE ONLY public.user_activity_logs ADD CONSTRAINT user_activity_logs_pkey PRIMARY KEY (id);
 
 --
--- Create indexes
+-- Add unique constraint for students table
+--
+
+ALTER TABLE public.students
+    ADD CONSTRAINT unique_user_id UNIQUE (user_id);  -- Moved here after table creation
+
+--
+-- Create indexes (updated with new columns)
 --
 
 CREATE INDEX idx_activity_files_activity_id ON public.activity_files USING btree (activity_id);
 CREATE INDEX idx_activity_files_minio_key ON public.activity_files USING btree (minio_key);
 CREATE INDEX idx_activity_files_position ON public.activity_files USING btree (activity_id, "position");
+CREATE INDEX idx_activities_school_class ON public.activities USING btree (school_id, class_id);  -- NEW: For fast filtering by school and class
+CREATE INDEX idx_students_user_id ON public.students USING btree (user_id);  -- NEW: For fast lookup by user_id
 
 --
--- Add foreign key constraints
+-- Add foreign key constraints (updated with new columns)
 --
+
+ALTER TABLE ONLY public.activities
+    ADD CONSTRAINT fk_activities_class FOREIGN KEY (class_id) REFERENCES public.classes(id) ON DELETE SET NULL;  -- NEW: Link activities to classes (SET NULL if class deleted)
+
+ALTER TABLE ONLY public.students
+    ADD CONSTRAINT fk_students_user FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;  -- NEW: Link students to profiles
 
 ALTER TABLE ONLY public.activity_files
     ADD CONSTRAINT fk_activity_files_activity FOREIGN KEY (activity_id) REFERENCES public.activities(id) ON DELETE CASCADE;
@@ -338,7 +375,7 @@ ALTER TABLE ONLY public.activity_assignments
     ADD CONSTRAINT fkm2oori63bygtylk54868jrih FOREIGN KEY (activity_id) REFERENCES public.activities(id);
 
 --
--- Grant permissions
+-- Grant permissions (unchanged)
 --
 
 GRANT ALL ON SCHEMA public TO postgres;

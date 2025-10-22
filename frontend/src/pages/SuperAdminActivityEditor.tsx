@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { authApi, activityApi } from '@/lib/api';
+import { authApi, activityApi, classApi, schoolApi } from '@/lib/api';
 import { ActivityBuilder } from '@/components/activity/ActivityBuilder';
 import LoadingState from '@/components/LoadingState';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, School } from 'lucide-react';
+import { ArrowLeft, School, Users } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -22,13 +22,22 @@ interface School {
   region: string;
 }
 
+interface Class {
+  id: string;
+  name: string;
+  level?: string;
+  academicYear?: string;
+}
+
 const SuperAdminActivityEditor = () => {
   const { schoolId: urlSchoolId, activityId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [schools, setSchools] = useState<School[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>('');
+  const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [activityData, setActivityData] = useState<any>(null);
 
   useEffect(() => {
@@ -37,29 +46,34 @@ const SuperAdminActivityEditor = () => {
 
   const loadData = async () => {
     try {
+      // Verify superadmin role
       const user = await authApi.getCurrentUser();
       if (!user || user.role !== 'superadmin') {
+        toast({
+          title: 'Accès refusé',
+          description: 'Seuls les superadmins peuvent accéder à cette page',
+          variant: 'destructive',
+        });
         navigate('/');
         return;
       }
 
       // Load schools list
-      const response = await fetch('http://localhost:8080/api/superadmin/stats', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const schoolResponse = await schoolApi.getAll(); // Use schoolApi.getAll instead of /superadmin/stats
+      setSchools(schoolResponse || []);
 
-      if (response.ok) {
-        const data = await response.json();
-        setSchools(data.schools || []);
-        
-        // Set school ID from URL or first school
-        if (urlSchoolId) {
-          setSelectedSchoolId(urlSchoolId);
-        } else if (data.schools && data.schools.length > 0) {
-          setSelectedSchoolId(data.schools[0].id.toString());
-        }
+      // Set school ID from URL or first school
+      if (urlSchoolId) {
+        setSelectedSchoolId(urlSchoolId);
+      } else if (schoolResponse.length > 0) {
+        setSelectedSchoolId(schoolResponse[0].id.toString());
+      }
+
+      // Load classes for selected school
+      if (urlSchoolId || schoolResponse.length > 0) {
+        const schoolIdToFetch = urlSchoolId || schoolResponse[0].id.toString();
+        const classResponse = await classApi.getBySchoolId(schoolIdToFetch);
+        setClasses(classResponse || []);
       }
 
       // Load activity data if editing
@@ -82,18 +96,22 @@ const SuperAdminActivityEditor = () => {
             type: activity.type,
             level: activity.level,
             elements: layoutData?.elements || [],
+            classId: activity.classId, // Include classId
           });
-          // Set school ID from activity
+          // Set school ID and class ID from activity
           if (activity.schoolId) {
             setSelectedSchoolId(activity.schoolId);
           }
+          if (activity.classId) {
+            setSelectedClassId(activity.classId);
+          }
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading data:', error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de charger les données',
+        description: error.message || 'Impossible de charger les données',
         variant: 'destructive',
       });
     } finally {
@@ -101,8 +119,24 @@ const SuperAdminActivityEditor = () => {
     }
   };
 
-  const handleSchoolChange = (schoolId: string) => {
+  const handleSchoolChange = async (schoolId: string) => {
     setSelectedSchoolId(schoolId);
+    setSelectedClassId(''); // Reset class selection
+    try {
+      const classResponse = await classApi.getBySchoolId(schoolId);
+      setClasses(classResponse || []);
+    } catch (error: any) {
+      console.error('Error loading classes:', error);
+      toast({
+        title: 'Erreur',
+        description: error.message || 'Impossible de charger les classes',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleClassChange = (classId: string) => {
+    setSelectedClassId(classId);
   };
 
   const handleSave = () => {
@@ -116,6 +150,7 @@ const SuperAdminActivityEditor = () => {
   if (loading) return <LoadingState />;
 
   const selectedSchool = schools.find(s => s.id.toString() === selectedSchoolId);
+  const selectedClass = classes.find(c => c.id === selectedClassId);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -175,12 +210,55 @@ const SuperAdminActivityEditor = () => {
           </div>
         </Card>
 
+        {/* Class Selection Card */}
+        {selectedSchoolId && (
+          <Card className="p-6 mb-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-lg bg-primary/10">
+                <Users className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg mb-2">Sélectionner la classe</h3>
+                <Select
+                  value={selectedClassId}
+                  onValueChange={handleClassChange}
+                  disabled={!!activityId} // Disable if editing
+                >
+                  <SelectTrigger className="w-full max-w-md">
+                    <SelectValue placeholder="Choisir une classe" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classes.map((classItem) => (
+                      <SelectItem key={classItem.id} value={classItem.id}>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{classItem.name}</span>
+                          {classItem.level && (
+                            <span className="text-sm text-muted-foreground">
+                              • {classItem.level}
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedClass && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Cette activité sera assignée à la classe <strong>{selectedClass.name}</strong>
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
+
         {/* Activity Builder */}
         {selectedSchoolId && (
           <ActivityBuilder
             activityId={activityId}
             initialData={activityData}
             schoolId={selectedSchoolId}
+            classId={selectedClassId}
             onSave={handleSave}
           />
         )}

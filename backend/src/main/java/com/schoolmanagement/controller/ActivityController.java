@@ -42,13 +42,21 @@ public class ActivityController {
         return ResponseEntity.ok(activityRepository.findByType(type));
     }
 
+    // UPDATED: Accept optional classId for filtering
     @GetMapping("/published")
-    public ResponseEntity<List<Activity>> getPublishedActivities(@RequestParam String schoolId) {
-        return ResponseEntity.ok(activityRepository.findBySchoolIdAndIsPublished(schoolId, true));
+    public ResponseEntity<List<Activity>> getPublishedActivities(
+            @RequestParam String schoolId,
+            @RequestParam(required = false) UUID classId) {
+        if (classId != null) {
+            return ResponseEntity.ok(activityRepository.findBySchoolIdAndClassIdAndIsPublished(schoolId, classId, true));
+        } else {
+            return ResponseEntity.ok(activityRepository.findBySchoolIdAndIsPublished(schoolId, true));
+        }
     }
 
     @PostMapping
     public ResponseEntity<Activity> createActivity(@RequestBody Activity activity) {
+        // NEW: Validate classId if provided (optional logic)
         Activity saved = activityRepository.save(activity);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }

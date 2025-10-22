@@ -3,9 +3,11 @@ package com.schoolmanagement.controller;
 import com.schoolmanagement.dto.AdminSignupRequest;
 import com.schoolmanagement.entity.Profile;
 import com.schoolmanagement.entity.School;
+import com.schoolmanagement.entity.Student;
 import com.schoolmanagement.entity.UserRole;
 import com.schoolmanagement.repository.ProfileRepository;
 import com.schoolmanagement.repository.SchoolRepository;
+import com.schoolmanagement.repository.StudentRepository;
 import com.schoolmanagement.repository.UserRoleRepository;
 import com.schoolmanagement.util.JwtUtil;
 import org.springframework.http.HttpStatus;
@@ -14,9 +16,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -27,17 +32,20 @@ public class AuthController {
     private final ProfileRepository profileRepository;
     private final UserRoleRepository userRoleRepository;
     private final SchoolRepository schoolRepository;
+    private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    public AuthController(ProfileRepository profileRepository, 
-                         UserRoleRepository userRoleRepository,
-                         SchoolRepository schoolRepository,
-                         PasswordEncoder passwordEncoder,
-                         JwtUtil jwtUtil) {
+    public AuthController(ProfileRepository profileRepository,
+                          UserRoleRepository userRoleRepository,
+                          SchoolRepository schoolRepository,
+                          StudentRepository studentRepository,
+                          PasswordEncoder passwordEncoder,
+                          JwtUtil jwtUtil) {
         this.profileRepository = profileRepository;
         this.userRoleRepository = userRoleRepository;
         this.schoolRepository = schoolRepository;
+        this.studentRepository = studentRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
@@ -47,7 +55,6 @@ public class AuthController {
         String email = credentials.get("email");
         String password = credentials.get("password");
 
-        // Find profile by email
         Profile profile = profileRepository.findByEmail(email);
         if (profile == null) {
             Map<String, Object> error = new HashMap<>();
@@ -55,14 +62,12 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
 
-        // Verify password
         if (profile.getPasswordHash() == null || !passwordEncoder.matches(password, profile.getPasswordHash())) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "Invalid credentials");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
 
-        // Get user role
         List<UserRole> roles = userRoleRepository.findByUserId(profile.getId());
         if (roles.isEmpty()) {
             Map<String, Object> error = new HashMap<>();
@@ -71,21 +76,18 @@ public class AuthController {
         }
 
         String role = roles.get(0).getRole().name();
-
-        // Generate JWT token
         String token = jwtUtil.generateToken(profile.getId(), profile.getEmail(), role, profile.getSchoolId());
 
-        // Return user data and token
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
-        
+
         Map<String, Object> user = new HashMap<>();
         user.put("id", profile.getId().toString());
         user.put("email", profile.getEmail());
         user.put("fullName", profile.getFullName());
         user.put("schoolId", profile.getSchoolId());
         user.put("role", role);
-        
+
         response.put("user", user);
 
         return ResponseEntity.ok(response);
@@ -94,7 +96,6 @@ public class AuthController {
     @PostMapping("/signup-admin")
     @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<Map<String, Object>> signupAdmin(@RequestBody AdminSignupRequest request) {
-        // Validate required fields
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "Email is required");
@@ -119,7 +120,6 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
 
-        // Check if user already exists
         if (profileRepository.findByEmail(request.getEmail()) != null) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "An account with this email already exists");
@@ -127,7 +127,6 @@ public class AuthController {
         }
 
         try {
-            // Step 1: Create the school (ID will be auto-generated)
             School school = new School();
             school.setName(request.getSchoolName());
             school.setCity(request.getSchoolCity() != null ? request.getSchoolCity() : "");
@@ -136,71 +135,69 @@ public class AuthController {
             school.setStatus(request.getSchoolStatus() != null ? request.getSchoolStatus() : "Public");
             school.setAddress(request.getSchoolAddress() != null ? request.getSchoolAddress() : "");
             school.setStudents(request.getSchoolStudents() != null ? request.getSchoolStudents() : 0);
-            
+
             School savedSchool = schoolRepository.save(school);
 
-            // Step 2: Create the admin profile
             Profile profile = new Profile();
             profile.setEmail(request.getEmail());
             profile.setPasswordHash(passwordEncoder.encode(request.getPassword()));
             profile.setFullName(request.getFullName() != null ? request.getFullName() : request.getEmail().split("@")[0]);
-            profile.setSchoolId(String.valueOf(savedSchool.getId())); // Use the auto-generated school ID
-            
+            profile.setSchoolId(String.valueOf(savedSchool.getId()));
+
             Profile savedProfile = profileRepository.save(profile);
 
-            // Step 3: Create admin role
             UserRole userRole = new UserRole();
             userRole.setUserId(savedProfile.getId());
             userRole.setRole(UserRole.Role.admin);
             userRoleRepository.save(userRole);
 
-            // Step 4: Generate JWT token
             String token = jwtUtil.generateToken(
-                savedProfile.getId(), 
-                savedProfile.getEmail(), 
-                "admin", 
-                savedProfile.getSchoolId()
+                    savedProfile.getId(),
+                    savedProfile.getEmail(),
+                    "admin",
+                    savedProfile.getSchoolId()
             );
 
-            // Step 5: Return response
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
-            
+
             Map<String, Object> user = new HashMap<>();
             user.put("id", savedProfile.getId().toString());
             user.put("email", savedProfile.getEmail());
             user.put("fullName", savedProfile.getFullName());
             user.put("schoolId", savedProfile.getSchoolId());
             user.put("role", "admin");
-            
+
             Map<String, Object> schoolData = new HashMap<>();
             schoolData.put("id", savedSchool.getId());
             schoolData.put("name", savedSchool.getName());
             schoolData.put("city", savedSchool.getCity());
             schoolData.put("region", savedSchool.getRegion());
-            
+
             response.put("user", user);
             response.put("school", schoolData);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
-            
+
         } catch (Exception e) {
-            // Log the exception for debugging
             e.printStackTrace();
-            // Mark transaction for rollback and throw runtime exception
             throw new RuntimeException("Failed to create account: " + e.getMessage(), e);
         }
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> userDto) {
-        String email = userDto.get("email");
-        String password = userDto.get("password");
-        String fullName = userDto.get("fullName");
-        String schoolId = userDto.get("schoolId");
-        String roleStr = userDto.get("role");
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, Object> userDto) {
+        String email = (String) userDto.get("email");
+        String password = (String) userDto.get("password");
+        String fullName = (String) userDto.get("fullName");
+        String schoolId = (String) userDto.get("schoolId");
+        String roleStr = (String) userDto.get("role");
+        String dateOfBirth = (String) userDto.get("dateOfBirth"); // NEW
+        String gender = (String) userDto.get("gender"); // NEW
+        String parentContact = (String) userDto.get("parentContact"); // NEW
+        UUID classId = userDto.get("classId") != null ? UUID.fromString((String) userDto.get("classId")) : null; // NEW
 
-        // Validate required fields
         if (email == null || email.trim().isEmpty()) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "Email is required");
@@ -219,57 +216,76 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
 
-        // Check if user exists
         if (profileRepository.findByEmail(email) != null) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "User already exists");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
 
-        // Create profile with auto-generated ID
-        Profile profile = new Profile();
-        // ID will be auto-generated by @GeneratedValue
-        profile.setEmail(email);
-        profile.setPasswordHash(passwordEncoder.encode(password));
-        profile.setFullName(fullName != null ? fullName : email.split("@")[0]);
-        profile.setSchoolId(schoolId);
-        
-        Profile savedProfile = profileRepository.save(profile);
+        try {
+            Profile profile = new Profile();
+            profile.setEmail(email);
+            profile.setPasswordHash(passwordEncoder.encode(password));
+            profile.setFullName(fullName != null ? fullName : email.split("@")[0]);
+            profile.setSchoolId(schoolId);
 
-        // Create user role
-        UserRole userRole = new UserRole();
-        userRole.setUserId(savedProfile.getId());
-        
-        // Parse role, default to teacher if not provided or invalid
-        UserRole.Role parsedRole = UserRole.Role.teacher;
-        if (roleStr != null && !roleStr.trim().isEmpty()) {
-            try {
-                parsedRole = UserRole.Role.valueOf(roleStr.toLowerCase().trim());
-            } catch (IllegalArgumentException e) {
-                // Invalid role, default to teacher
-                parsedRole = UserRole.Role.teacher;
+            Profile savedProfile = profileRepository.save(profile);
+
+            UserRole userRole = new UserRole();
+            userRole.setUserId(savedProfile.getId());
+
+            UserRole.Role parsedRole = UserRole.Role.teacher;
+            if (roleStr != null && !roleStr.trim().isEmpty()) {
+                try {
+                    parsedRole = UserRole.Role.valueOf(roleStr.toLowerCase().trim());
+                } catch (IllegalArgumentException e) {
+                    parsedRole = UserRole.Role.teacher;
+                }
             }
+            userRole.setRole(parsedRole);
+            userRoleRepository.save(userRole);
+
+            if (parsedRole == UserRole.Role.student) {
+                // Check if student already exists for this userId
+                Optional<Student> existingStudentOpt = studentRepository.findByUserId(savedProfile.getId());
+                if (!existingStudentOpt.isPresent()) {
+                    Student student = new Student();
+                    student.setUserId(savedProfile.getId());
+                    student.setFirstName(fullName != null ? fullName.split(" ")[0] : email.split("@")[0]);
+                    student.setLastName(fullName != null && fullName.contains(" ") ? fullName.split(" ", 2)[1] : "");
+                    student.setSchoolId(schoolId);
+                    student.setClassId(classId); // NEW: Set classId if provided
+                    student.setDateOfBirth(dateOfBirth != null && !dateOfBirth.trim().isEmpty()
+                            ? LocalDate.parse(dateOfBirth).atStartOfDay()
+                            : null);
+                    student.setGender(gender); // NEW
+                    student.setParentContact(parentContact); // NEW
+                    student.setCreatedAt(LocalDateTime.now());
+                    student.setUpdatedAt(LocalDateTime.now());
+                    studentRepository.save(student);
+                }
+            }
+
+            String token = jwtUtil.generateToken(savedProfile.getId(), savedProfile.getEmail(),
+                    userRole.getRole().name(), savedProfile.getSchoolId());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+
+            Map<String, Object> user = new HashMap<>();
+            user.put("id", savedProfile.getId().toString());
+            user.put("email", savedProfile.getEmail());
+            user.put("fullName", savedProfile.getFullName());
+            user.put("schoolId", savedProfile.getSchoolId());
+            user.put("role", userRole.getRole().name());
+
+            response.put("user", user);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to register user: " + e.getMessage(), e);
         }
-        userRole.setRole(parsedRole);
-        userRoleRepository.save(userRole);
-
-        // Generate token
-        String token = jwtUtil.generateToken(savedProfile.getId(), savedProfile.getEmail(), 
-                userRole.getRole().name(), savedProfile.getSchoolId());
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", token);
-        
-        Map<String, Object> user = new HashMap<>();
-        user.put("id", savedProfile.getId().toString());
-        user.put("email", savedProfile.getEmail());
-        user.put("fullName", savedProfile.getFullName());
-        user.put("schoolId", savedProfile.getSchoolId());
-        user.put("role", userRole.getRole().name());
-        
-        response.put("user", user);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/me")
@@ -277,10 +293,10 @@ public class AuthController {
         try {
             String token = authHeader.replace("Bearer ", "");
             String userId = jwtUtil.extractUserId(token);
-            
+
             Profile profile = profileRepository.findById(UUID.fromString(userId))
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            
+
             List<UserRole> roles = userRoleRepository.findByUserId(profile.getId());
             String role = roles.isEmpty() ? "teacher" : roles.get(0).getRole().name();
 
@@ -299,7 +315,6 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {
-        // With JWT, logout is handled client-side by removing the token
         return ResponseEntity.ok().build();
     }
 }
