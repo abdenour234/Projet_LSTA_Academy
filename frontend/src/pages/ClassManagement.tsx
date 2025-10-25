@@ -181,7 +181,7 @@ export default function ClassManagement() {
     e.preventDefault();
 
     if (submitting) return;
-    const submitButton = e.currentTarget.querySelector('button[type="submit"]');
+    const submitButton = e.currentTarget.querySelector('button[type="submit"]') as HTMLButtonElement;
     if (submitButton) submitButton.disabled = true;
     setSubmitting(true);
 
