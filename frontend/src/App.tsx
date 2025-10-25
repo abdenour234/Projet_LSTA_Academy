@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import LandingPage from "./pages/LandingPage";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import SchoolDashboard from "./pages/SchoolDashboard";
@@ -27,6 +28,7 @@ import MessagingPage from "./pages/MessagingPage";
 import ActivityTracking from "./pages/ActivityTracking";
 import NotFound from "./pages/NotFound";
 import StudentManagement from "./pages/StudentManagement";
+import UnderConstruction from "./pages/UnderConstruction";
 
 const queryClient = new QueryClient();
 
@@ -37,9 +39,17 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/schools" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<AdminSignup />} />
+          
+          {/* Under Construction Pages */}
+          <Route path="/methode" element={<UnderConstruction pageName="Méthode" />} />
+          <Route path="/espace" element={<UnderConstruction pageName="Espace" />} />
+          <Route path="/clubs" element={<UnderConstruction pageName="Clubs" />} />
+          <Route path="/contact" element={<UnderConstruction pageName="Contact" />} />
+          
           <Route path="/superadmin/login" element={<SuperAdminLogin />} />
           <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
           <Route path="/superadmin/schools/:schoolId" element={<SuperAdminSchoolDetails />} />
