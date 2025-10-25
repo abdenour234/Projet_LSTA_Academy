@@ -62,7 +62,7 @@ const LandingPage = () => {
             {/* Logo */}
             <div className="flex items-center space-x-2">
               <img 
-                src="/logo.png" 
+                src="/logo.png?v=2" 
                 alt="LSTA Academy Logo" 
                 className="h-12 w-auto"
                 onError={(e) => {
@@ -174,7 +174,7 @@ const LandingPage = () => {
           <div className="relative">
             <div className="relative z-10">
               <img 
-                src="/image.png" 
+                src="/image.png?v=2" 
                 alt="Students learning" 
                 className="w-full h-auto rounded-3xl shadow-2xl"
                 onError={(e) => {
