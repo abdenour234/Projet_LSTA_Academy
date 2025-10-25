@@ -1,16 +1,18 @@
 package com.schoolmanagement.controller;
 
+import io.minio.GetObjectArgs;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -18,28 +20,42 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/storage")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
+@Slf4j
 public class StorageController {
 
-    @Value("${file.upload-dir:uploads}")
-    private String uploadDir;
+    private final MinioClient minioClient;
+
+    @Value("${minio.bucket-name}")
+    private String bucketName;
 
     @PostMapping("/upload")
     public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            // Create upload directory if it doesn't exist
-            Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
+            if (file.isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "File is empty");
+                return ResponseEntity.badRequest().body(error);
             }
 
             // Generate unique filename
             String originalFilename = file.getOriginalFilename();
-            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String extension = originalFilename != null && originalFilename.contains(".") 
+                ? originalFilename.substring(originalFilename.lastIndexOf(".")) 
+                : "";
             String filename = UUID.randomUUID().toString() + extension;
             
-            // Save file
-            Path filePath = uploadPath.resolve(filename);
-            Files.copy(file.getInputStream(), filePath);
+            // Upload to MinIO
+            minioClient.putObject(
+                PutObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(filename)
+                    .stream(file.getInputStream(), file.getSize(), -1)
+                    .contentType(file.getContentType())
+                    .build()
+            );
+
+            log.info("✅ File uploaded successfully: {}", filename);
 
             // Return file info
             Map<String, String> response = new HashMap<>();
@@ -48,7 +64,8 @@ public class StorageController {
             response.put("url", "/api/storage/files/" + filename);
             
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (IOException e) {
+        } catch (Exception e) {
+            log.error("❌ Error uploading file: {}", e.getMessage(), e);
             Map<String, String> error = new HashMap<>();
             error.put("error", "Failed to upload file: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
@@ -58,13 +75,22 @@ public class StorageController {
     @GetMapping("/files/{filename}")
     public ResponseEntity<byte[]> getFile(@PathVariable String filename) {
         try {
-            Path filePath = Paths.get(uploadDir).resolve(filename);
-            byte[] data = Files.readAllBytes(filePath);
-            
+            InputStream stream = minioClient.getObject(
+                GetObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(filename)
+                    .build()
+            );
+
+            byte[] data = stream.readAllBytes();
+            stream.close();
+
             return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .header("Content-Disposition", "inline; filename=\"" + filename + "\"")
                     .body(data);
-        } catch (IOException e) {
+        } catch (Exception e) {
+            log.error("❌ Error retrieving file {}: {}", filename, e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
@@ -82,10 +108,16 @@ public class StorageController {
     @DeleteMapping("/files/{filename}")
     public ResponseEntity<Void> deleteFile(@PathVariable String filename) {
         try {
-            Path filePath = Paths.get(uploadDir).resolve(filename);
-            Files.deleteIfExists(filePath);
+            minioClient.removeObject(
+                io.minio.RemoveObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(filename)
+                    .build()
+            );
+            log.info("✅ File deleted successfully: {}", filename);
             return ResponseEntity.noContent().build();
-        } catch (IOException e) {
+        } catch (Exception e) {
+            log.error("❌ Error deleting file {}: {}", filename, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
