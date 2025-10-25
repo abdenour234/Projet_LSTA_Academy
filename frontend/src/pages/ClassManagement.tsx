@@ -20,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Users, Download } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Download, ArrowLeft, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { classApi, authApi } from "@/lib/api";
 
@@ -62,6 +62,11 @@ export default function ClassManagement() {
     studentCount: 0,
   });
   const [importedStudents, setImportedStudents] = useState<ImportedStudent[]>([]);
+
+  const handleLogout = async () => {
+    await authApi.logout();
+    navigate(`/school/${schoolId}/login`);
+  };
 
   useEffect(() => {
     checkAuth();
@@ -340,15 +345,34 @@ export default function ClassManagement() {
   }
 
   return (
-    <div className="container mx-auto p-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Gestion des Classes</h1>
-          <p className="text-muted-foreground mt-2">
-            Gérez les classes et leurs effectifs
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
+      <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => navigate(`/admin/${schoolId}/dashboard`)}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold">Gestion des Classes</h1>
+                <p className="text-sm text-muted-foreground">Gérez les classes et leurs effectifs</p>
+              </div>
+            </div>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Déconnexion
+            </Button>
+          </div>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
+      </header>
+
+      <main className="container mx-auto p-8">
+        <div className="flex justify-end items-center mb-8">
+          <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
@@ -512,6 +536,7 @@ export default function ClassManagement() {
           </TableBody>
         </Table>
       </Card>
+      </main>
     </div>
   );
 }
