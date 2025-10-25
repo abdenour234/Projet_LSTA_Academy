@@ -69,11 +69,11 @@ public class StorageController {
         }
     }
 
-    @GetMapping("/signed-url/{filename}")
-    public ResponseEntity<Map<String, String>> getSignedUrl(@PathVariable String filename) {
+    @GetMapping("/signed-url")
+    public ResponseEntity<Map<String, String>> getSignedUrl(@RequestParam String fileName) {
         // For now, just return the direct URL. In production, implement token-based signed URLs
         Map<String, String> response = new HashMap<>();
-        response.put("url", "/api/storage/files/" + filename);
+        response.put("url", "/api/storage/files/" + fileName);
         response.put("expiresIn", "3600"); // 1 hour
         
         return ResponseEntity.ok(response);
