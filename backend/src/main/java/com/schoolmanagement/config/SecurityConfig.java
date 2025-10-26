@@ -37,6 +37,7 @@ public class SecurityConfig {
                 // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/storage/files/**").permitAll()
+                .requestMatchers("/api/schools").permitAll()  // Allow public access to schools list
                 
                 // Role-based access control
                 .requestMatchers("/api/superadmin/**").hasRole("SUPERADMIN")
