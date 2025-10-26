@@ -10,6 +10,7 @@ import com.schoolmanagement.repository.SchoolRepository;
 import com.schoolmanagement.repository.StudentRepository;
 import com.schoolmanagement.repository.UserRoleRepository;
 import com.schoolmanagement.util.JwtUtil;
+import com.schoolmanagement.util.InputSanitizer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,25 +36,37 @@ public class AuthController {
     private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final InputSanitizer inputSanitizer;
 
     public AuthController(ProfileRepository profileRepository,
                           UserRoleRepository userRoleRepository,
                           SchoolRepository schoolRepository,
                           StudentRepository studentRepository,
                           PasswordEncoder passwordEncoder,
-                          JwtUtil jwtUtil) {
+                          JwtUtil jwtUtil,
+                          InputSanitizer inputSanitizer) {
         this.profileRepository = profileRepository;
         this.userRoleRepository = userRoleRepository;
         this.schoolRepository = schoolRepository;
         this.studentRepository = studentRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.inputSanitizer = inputSanitizer;
     }
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials) {
         String email = credentials.get("email");
         String password = credentials.get("password");
+        
+        // Sanitize email input
+        try {
+            email = inputSanitizer.sanitizeEmail(email);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Invalid email format");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
 
         Profile profile = profileRepository.findByEmail(email);
         if (profile == null) {
