@@ -2,12 +2,14 @@ com/schoolmanagement/controller/AuthController.class
 com/schoolmanagement/entity/Classe.class
 com/schoolmanagement/entity/School.class
 com/schoolmanagement/model/ActivityAssignment.class
+com/schoolmanagement/service/OwnershipValidationService.class
 com/schoolmanagement/entity/Message.class
 com/schoolmanagement/security/JwtAuthenticationFilter.class
 com/schoolmanagement/service/ActivityFileService.class
 com/schoolmanagement/repository/DiagnosticSessionRepository.class
 com/schoolmanagement/entity/TeachingSession.class
 com/schoolmanagement/controller/StudentController.class
+com/schoolmanagement/security/ResourceOwnershipValidator.class
 com/schoolmanagement/repository/ClasseRepository.class
 com/schoolmanagement/entity/Resource.class
 com/schoolmanagement/controller/ActivityStorageController.class
@@ -23,6 +25,7 @@ com/schoolmanagement/controller/DiagnosticSessionController.class
 com/schoolmanagement/entity/ActivityFile.class
 com/schoolmanagement/repository/ActivityRepository.class
 com/schoolmanagement/repository/ActivityFileRepository.class
+com/schoolmanagement/security/ResourceOwnershipValidator$UserContext.class
 com/schoolmanagement/controller/SessionController.class
 com/schoolmanagement/exception/GlobalExceptionHandler.class
 com/schoolmanagement/repository/ActivityAssignmentRepository.class
@@ -40,6 +43,7 @@ com/schoolmanagement/config/DataInitializer.class
 com/schoolmanagement/controller/ClasseController.class
 com/schoolmanagement/controller/ActivityController.class
 com/schoolmanagement/repository/MessageRepository.class
+com/schoolmanagement/util/InputSanitizer.class
 com/schoolmanagement/controller/ActivityFileController.class
 com/schoolmanagement/controller/ResourceController.class
 com/schoolmanagement/entity/Student.class

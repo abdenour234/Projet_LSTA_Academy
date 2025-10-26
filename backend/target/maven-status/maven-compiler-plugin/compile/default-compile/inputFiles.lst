@@ -5,6 +5,7 @@
 /app/src/main/java/com/schoolmanagement/entity/Student.java
 /app/src/main/java/com/schoolmanagement/entity/UserRole.java
 /app/src/main/java/com/schoolmanagement/config/SecurityConfig.java
+/app/src/main/java/com/schoolmanagement/util/InputSanitizer.java
 /app/src/main/java/com/schoolmanagement/repository/DiagnosticSessionRepository.java
 /app/src/main/java/com/schoolmanagement/repository/SchoolRepository.java
 /app/src/main/java/com/schoolmanagement/service/ActivityFileService.java
@@ -35,6 +36,7 @@
 /app/src/main/java/com/schoolmanagement/controller/SessionController.java
 /app/src/main/java/com/schoolmanagement/SchoolManagementApplication.java
 /app/src/main/java/com/schoolmanagement/controller/ClasseController.java
+/app/src/main/java/com/schoolmanagement/service/OwnershipValidationService.java
 /app/src/main/java/com/schoolmanagement/config/MinioLifecycleConfig.java
 /app/src/main/java/com/schoolmanagement/dto/ActivityCreationDTO.java
 /app/src/main/java/com/schoolmanagement/entity/Activity.java
@@ -46,6 +48,7 @@
 /app/src/main/java/com/schoolmanagement/service/MessageService.java
 /app/src/main/java/com/schoolmanagement/controller/ActivityFileController.java
 /app/src/main/java/com/schoolmanagement/repository/UserActivityLogRepository.java
+/app/src/main/java/com/schoolmanagement/security/ResourceOwnershipValidator.java
 /app/src/main/java/com/schoolmanagement/entity/Profile.java
 /app/src/main/java/com/schoolmanagement/repository/StudentRepository.java
 /app/src/main/java/com/schoolmanagement/entity/Classe.java

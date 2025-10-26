@@ -99,9 +99,11 @@ public class SecurityConfig {
         
         // Restrict to specific origins - UPDATE THESE FOR PRODUCTION
         configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:5173",
-            "http://localhost:3000",
-            "http://frontend:5173"
+            "http://localhost",        // Port 80 (nginx)
+            "http://localhost:80",     // Explicit port 80
+            "http://localhost:5173",   // Vite dev server
+            "http://localhost:3000",   // Alternative dev port
+            "http://frontend:5173"     // Docker frontend
             // Add production domain here: "https://yourdomain.com"
         ));
         
