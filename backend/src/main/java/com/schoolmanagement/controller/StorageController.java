@@ -1,11 +1,16 @@
 package com.schoolmanagement.controller;
 
 import io.minio.GetObjectArgs;
+import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.StatObjectArgs;
+import io.minio.StatObjectResponse;
+import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +21,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/storage")
@@ -29,13 +35,27 @@ public class StorageController {
     @Value("${minio.bucket-name}")
     private String bucketName;
 
+    // Maximum file size: 10MB
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+
     @PostMapping("/upload")
     public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
+            // Validate file is not empty
             if (file.isEmpty()) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "File is empty");
                 return ResponseEntity.badRequest().body(error);
+            }
+
+            // Validate file size (10MB limit)
+            if (file.getSize() > MAX_FILE_SIZE) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "File size exceeds maximum limit of 10MB");
+                error.put("size", String.valueOf(file.getSize()));
+                error.put("maxSize", String.valueOf(MAX_FILE_SIZE));
+                log.warn("❌ File upload rejected: size {} exceeds limit {}", file.getSize(), MAX_FILE_SIZE);
+                return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(error);
             }
 
             // Generate unique filename
@@ -45,23 +65,32 @@ public class StorageController {
                 : "";
             String filename = UUID.randomUUID().toString() + extension;
             
+            // Detect and set content type
+            String contentType = file.getContentType();
+            if (contentType == null || contentType.isEmpty()) {
+                contentType = detectContentType(extension);
+            }
+
             // Upload to MinIO
             minioClient.putObject(
                 PutObjectArgs.builder()
                     .bucket(bucketName)
                     .object(filename)
                     .stream(file.getInputStream(), file.getSize(), -1)
-                    .contentType(file.getContentType())
+                    .contentType(contentType)
                     .build()
             );
 
-            log.info("✅ File uploaded successfully: {}", filename);
+            log.info("✅ File uploaded successfully: {} (size: {} bytes, type: {})", 
+                    filename, file.getSize(), contentType);
 
             // Return file info
             Map<String, String> response = new HashMap<>();
             response.put("filename", filename);
             response.put("originalName", originalFilename);
             response.put("url", "/api/storage/files/" + filename);
+            response.put("contentType", contentType);
+            response.put("size", String.valueOf(file.getSize()));
             
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
@@ -75,6 +104,22 @@ public class StorageController {
     @GetMapping("/files/{filename}")
     public ResponseEntity<byte[]> getFile(@PathVariable String filename) {
         try {
+            // Check if file exists in MinIO
+            StatObjectResponse stat;
+            try {
+                stat = minioClient.statObject(
+                    StatObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(filename)
+                        .build()
+                );
+            } catch (Exception e) {
+                log.warn("⚠️ File not found: {}", filename);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(("File not found: " + filename).getBytes());
+            }
+
+            // Get file from MinIO
             InputStream stream = minioClient.getObject(
                 GetObjectArgs.builder()
                     .bucket(bucketName)
@@ -85,24 +130,73 @@ public class StorageController {
             byte[] data = stream.readAllBytes();
             stream.close();
 
+            // Get content type from MinIO metadata or detect from extension
+            String contentType = stat.contentType();
+            if (contentType == null || contentType.isEmpty()) {
+                String extension = filename.contains(".") 
+                    ? filename.substring(filename.lastIndexOf("."))
+                    : "";
+                contentType = detectContentType(extension);
+            }
+
+            log.info("✅ File retrieved successfully: {} (size: {} bytes, type: {})", 
+                    filename, data.length, contentType);
+
+            // Set proper headers - force inline viewing (not download)
             return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .header("Content-Disposition", "inline; filename=\"" + filename + "\"")
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(data.length))
                     .body(data);
         } catch (Exception e) {
             log.error("❌ Error retrieving file {}: {}", filename, e.getMessage());
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(("Error retrieving file: " + e.getMessage()).getBytes());
         }
     }
 
     @GetMapping("/signed-url")
     public ResponseEntity<Map<String, String>> getSignedUrl(@RequestParam String fileName) {
-        // For now, just return the direct URL. In production, implement token-based signed URLs
-        Map<String, String> response = new HashMap<>();
-        response.put("url", "/api/storage/files/" + fileName);
-        response.put("expiresIn", "3600"); // 1 hour
-        
-        return ResponseEntity.ok(response);
+        try {
+            // Check if file exists before generating signed URL
+            try {
+                minioClient.statObject(
+                    StatObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(fileName)
+                        .build()
+                );
+            } catch (Exception e) {
+                log.warn("⚠️ File not found for signed URL: {}", fileName);
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "File not found: " + fileName);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+            }
+
+            // Generate real MinIO pre-signed URL with 1 hour expiry
+            String presignedUrl = minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                    .method(Method.GET)
+                    .bucket(bucketName)
+                    .object(fileName)
+                    .expiry(3600, TimeUnit.SECONDS) // 1 hour
+                    .build()
+            );
+
+            log.info("✅ Generated pre-signed URL for file: {} (expires in 1 hour)", fileName);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("url", presignedUrl);
+            response.put("expiresIn", "3600"); // 1 hour in seconds
+            response.put("fileName", fileName);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("❌ Error generating signed URL for {}: {}", fileName, e.getMessage(), e);
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to generate signed URL: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 
     @DeleteMapping("/files/{filename}")
@@ -120,5 +214,33 @@ public class StorageController {
             log.error("❌ Error deleting file {}: {}", filename, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    /**
+     * Detect content type from file extension
+     * @param extension File extension (e.g., ".pdf", ".jpg")
+     * @return MIME type string
+     */
+    private String detectContentType(String extension) {
+        return switch (extension.toLowerCase()) {
+            case ".pdf" -> "application/pdf";
+            case ".jpg", ".jpeg" -> "image/jpeg";
+            case ".png" -> "image/png";
+            case ".gif" -> "image/gif";
+            case ".doc" -> "application/msword";
+            case ".docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+            case ".xls" -> "application/vnd.ms-excel";
+            case ".xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            case ".ppt" -> "application/vnd.ms-powerpoint";
+            case ".pptx" -> "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+            case ".txt" -> "text/plain";
+            case ".csv" -> "text/csv";
+            case ".json" -> "application/json";
+            case ".xml" -> "application/xml";
+            case ".zip" -> "application/zip";
+            case ".mp4" -> "video/mp4";
+            case ".mp3" -> "audio/mpeg";
+            default -> "application/octet-stream";
+        };
     }
 }
