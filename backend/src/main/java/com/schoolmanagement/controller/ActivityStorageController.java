@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,6 +27,7 @@ import java.util.UUID;
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Slf4j
+@PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
 public class ActivityStorageController {
 
     private final MinioClient minioClient;
@@ -88,6 +90,7 @@ public class ActivityStorageController {
      * Get a file from MinIO.
      */
     @GetMapping("/files/{filename}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<byte[]> getFile(@PathVariable String filename) {
         try {
             String objectName = FILE_PREFIX + filename;
@@ -117,6 +120,7 @@ public class ActivityStorageController {
      * Get file info including remaining TTL.
      */
     @GetMapping("/info/{filename}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Object>> getFileInfo(@PathVariable String filename) {
         try {
             String objectName = FILE_PREFIX + filename;

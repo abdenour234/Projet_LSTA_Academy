@@ -67,6 +67,7 @@ public class SchoolController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('SUPERADMIN')")
     public ResponseEntity<Void> deleteSchool(@PathVariable Long id) {
         if (!schoolRepository.existsById(id)) {
             return ResponseEntity.notFound().build();

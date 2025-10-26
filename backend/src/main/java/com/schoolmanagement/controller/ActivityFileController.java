@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,6 +24,7 @@ import java.util.*;
 @RequiredArgsConstructor
 @Slf4j
 @CrossOrigin(origins = "*")
+@PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
 public class ActivityFileController {
 
     private final ActivityFileService activityFileService;
@@ -89,6 +91,7 @@ public class ActivityFileController {
      * Get all files for an activity.
      */
     @GetMapping("/activity/{activityId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Map<String, Object>>> getActivityFiles(@PathVariable UUID activityId) {
         try {
             List<ActivityFile> files = activityFileService.getActivityFiles(activityId);
@@ -120,6 +123,7 @@ public class ActivityFileController {
      * Download a file.
      */
     @GetMapping("/download/{fileId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<InputStreamResource> downloadFile(@PathVariable UUID fileId) {
         try {
             ActivityFile file = activityFileService.getFileById(fileId);

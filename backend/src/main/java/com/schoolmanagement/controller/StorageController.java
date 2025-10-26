@@ -14,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,6 +40,7 @@ public class StorageController {
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
 
     @PostMapping("/upload")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
     public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
             // Validate file is not empty
@@ -156,6 +158,7 @@ public class StorageController {
     }
 
     @GetMapping("/signed-url")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, String>> getSignedUrl(@RequestParam String fileName) {
         try {
             // Check if file exists before generating signed URL
@@ -200,6 +203,7 @@ public class StorageController {
     }
 
     @DeleteMapping("/files/{filename}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
     public ResponseEntity<Void> deleteFile(@PathVariable String filename) {
         try {
             minioClient.removeObject(

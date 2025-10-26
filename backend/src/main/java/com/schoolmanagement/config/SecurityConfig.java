@@ -36,14 +36,25 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/storage/files/**").permitAll()
+                .requestMatchers("/api/storage/files/**").permitAll()  // Public file access
                 .requestMatchers("/api/schools").permitAll()  // Allow public access to schools list
+                .requestMatchers("/api/schools/{id}").permitAll()  // Public school details
+                .requestMatchers("/api/schools/by-city/**").permitAll()  // Public search
+                .requestMatchers("/api/schools/by-region/**").permitAll()  // Public search
                 
-                // Role-based access control
+                // SuperAdmin-only endpoints
                 .requestMatchers("/api/superadmin/**").hasRole("SUPERADMIN")
-                .requestMatchers("/api/school/*/admin/**").hasAnyRole("SUPERADMIN", "ADMIN")
-                .requestMatchers("/api/school/*/teacher/**").hasAnyRole("SUPERADMIN", "ADMIN", "TEACHER")
-                .requestMatchers("/api/student/**").hasAnyRole("SUPERADMIN", "ADMIN", "TEACHER", "STUDENT")
+                .requestMatchers("/api/schools").hasRole("SUPERADMIN")  // POST/PUT/DELETE schools
+                
+                // Admin and above
+                .requestMatchers("/api/students").hasAnyRole("SUPERADMIN", "ADMIN", "TEACHER")
+                .requestMatchers("/api/classes/**").hasAnyRole("SUPERADMIN", "ADMIN", "TEACHER")
+                
+                // Authenticated users
+                .requestMatchers("/api/messages/**").authenticated()
+                .requestMatchers("/api/resources/**").authenticated()
+                .requestMatchers("/api/activities/**").authenticated()
+                .requestMatchers("/api/storage/**").authenticated()
                 
                 // All other requests require authentication
                 .anyRequest().authenticated()

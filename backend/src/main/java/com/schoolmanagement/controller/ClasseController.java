@@ -19,13 +19,13 @@ public class ClasseController {
     private final ClasseRepository classeRepository;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
     public ResponseEntity<List<Classe>> getAllClasses() {
         return ResponseEntity.ok(classeRepository.findAll());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
     public ResponseEntity<Classe> getClasse(@PathVariable UUID id) {
         Classe classe = classeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Class not found"));
@@ -33,13 +33,13 @@ public class ClasseController {
     }
 
     @GetMapping("/school/{schoolId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
     public ResponseEntity<List<Classe>> getClassesBySchool(@PathVariable String schoolId) {
         return ResponseEntity.ok(classeRepository.findBySchoolId(schoolId));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
     public ResponseEntity<Classe> createClasse(@RequestBody Classe classe) {
         classe.setId(UUID.randomUUID());
         Classe saved = classeRepository.save(classe);
@@ -47,7 +47,7 @@ public class ClasseController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
     public ResponseEntity<Classe> updateClasse(@PathVariable UUID id, @RequestBody Classe classe) {
         if (!classeRepository.existsById(id)) {
             throw new RuntimeException("Class not found");
@@ -58,7 +58,7 @@ public class ClasseController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<Void> deleteClasse(@PathVariable UUID id) {
         if (!classeRepository.existsById(id)) {
             throw new RuntimeException("Class not found");
