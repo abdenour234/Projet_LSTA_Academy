@@ -56,7 +56,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     
                     // Extract role from token
                     String role = jwtUtil.extractRole(jwt);
-                    String userId = jwtUtil.extractUserId(jwt);
                     
                     // Create authority with ROLE_ prefix (Spring Security convention)
                     SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role.toUpperCase());

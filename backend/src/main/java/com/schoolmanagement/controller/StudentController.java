@@ -60,6 +60,12 @@ public class StudentController {
             Student student = studentRepository.findByUserId(userId)
                     .orElseThrow(() -> new RuntimeException("Student not found"));  // Correct: Call orElseThrow on Optional
             return ResponseEntity.ok(student);
+        } catch (RuntimeException e) {
+            // If student not found, return 404 instead of 500
+            if (e.getMessage().contains("Student not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Failed to fetch current student: " + e.getMessage(), e);
         }
