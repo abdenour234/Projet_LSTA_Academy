@@ -5,6 +5,7 @@ import com.schoolmanagement.entity.UserRole;
 import com.schoolmanagement.repository.ProfileRepository;
 import com.schoolmanagement.repository.UserRoleRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/teachers")
 @CrossOrigin(origins = "*")
+@PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
 public class TeacherController {
 
     private final ProfileRepository profileRepository;

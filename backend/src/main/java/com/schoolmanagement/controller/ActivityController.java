@@ -4,6 +4,7 @@ import com.schoolmanagement.entity.Activity;
 import com.schoolmanagement.repository.ActivityRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,11 +22,13 @@ public class ActivityController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
     public ResponseEntity<List<Activity>> getAllActivities() {
         return ResponseEntity.ok(activityRepository.findAll());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Activity> getActivity(@PathVariable UUID id) {
         Activity activity = activityRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Activity not found"));
@@ -33,17 +36,20 @@ public class ActivityController {
     }
 
     @GetMapping("/school/{schoolId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
     public ResponseEntity<List<Activity>> getActivitiesBySchool(@PathVariable String schoolId) {
         return ResponseEntity.ok(activityRepository.findBySchoolId(schoolId));
     }
 
     @GetMapping("/type/{type}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
     public ResponseEntity<List<Activity>> getActivitiesByType(@PathVariable String type) {
         return ResponseEntity.ok(activityRepository.findByType(type));
     }
 
     // UPDATED: Accept optional classId for filtering
     @GetMapping("/published")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Activity>> getPublishedActivities(
             @RequestParam String schoolId,
             @RequestParam(required = false) UUID classId) {
@@ -55,6 +61,7 @@ public class ActivityController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
     public ResponseEntity<Activity> createActivity(@RequestBody Activity activity) {
         // NEW: Validate classId if provided (optional logic)
         Activity saved = activityRepository.save(activity);
@@ -62,6 +69,7 @@ public class ActivityController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
     public ResponseEntity<Activity> updateActivity(@PathVariable UUID id, @RequestBody Activity activity) {
         if (!activityRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
@@ -72,6 +80,7 @@ public class ActivityController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<Void> deleteActivity(@PathVariable UUID id) {
         if (!activityRepository.existsById(id)) {
             return ResponseEntity.notFound().build();

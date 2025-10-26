@@ -4,6 +4,7 @@ import com.schoolmanagement.entity.DiagnosticSession;
 import com.schoolmanagement.repository.DiagnosticSessionRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/diagnostic-sessions")
 @CrossOrigin(origins = "*")
+@PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
 public class DiagnosticSessionController {
 
     private final DiagnosticSessionRepository diagnosticSessionRepository;
