@@ -37,7 +37,7 @@ public class ActivityController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT')")
     public ResponseEntity<Activity> getActivity(
             @PathVariable UUID id,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -68,7 +68,7 @@ public class ActivityController {
 
     // UPDATED: Accept optional classId for filtering
     @GetMapping("/published")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT')")
     public ResponseEntity<List<Activity>> getPublishedActivities(
             @RequestParam String schoolId,
             @RequestParam(required = false) UUID classId) {

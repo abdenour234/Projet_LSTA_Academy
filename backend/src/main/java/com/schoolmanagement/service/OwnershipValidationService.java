@@ -2,10 +2,14 @@ package com.schoolmanagement.service;
 
 import com.schoolmanagement.entity.*;
 import com.schoolmanagement.repository.*;
+import com.schoolmanagement.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.UUID;
 
@@ -22,6 +26,7 @@ public class OwnershipValidationService {
     private final TeachingSessionRepository teachingSessionRepository;
     private final DiagnosticSessionRepository diagnosticSessionRepository;
     private final UserRoleRepository userRoleRepository;
+    private final JwtUtil jwtUtil;
 
     /**
      * Validates that a teacher belongs to the specified school.
@@ -164,19 +169,39 @@ public class OwnershipValidationService {
 
     /**
      * Extract user ID from Authentication object.
-     * TODO: Implement proper JWT claim extraction
-     * Currently returns null - needs to be implemented with JWT token parsing.
+     * Extracts userId from JWT token in Authorization header.
      */
     private UUID extractUserIdFromAuth(Authentication auth) {
-        if (auth == null || auth.getPrincipal() == null) {
-            return null;
+        try {
+            // Get current HTTP request
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes == null) {
+                throw new AccessDeniedException("No request context available");
+            }
+            
+            HttpServletRequest request = attributes.getRequest();
+            String authHeader = request.getHeader("Authorization");
+            
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                throw new AccessDeniedException("No valid JWT token found");
+            }
+            
+            // Extract JWT token
+            String jwt = authHeader.substring(7);
+            
+            // Extract userId claim from token
+            String userIdStr = jwtUtil.extractUserId(jwt);
+            
+            if (userIdStr == null || userIdStr.isEmpty()) {
+                throw new AccessDeniedException("No userId found in token");
+            }
+            
+            return UUID.fromString(userIdStr);
+            
+        } catch (IllegalArgumentException e) {
+            throw new AccessDeniedException("Invalid userId format in token");
+        } catch (Exception e) {
+            throw new AccessDeniedException("Failed to extract userId from token: " + e.getMessage());
         }
-
-        // TODO: Extract userId from JWT claims
-        // This should parse the JWT token and extract the user ID claim
-        // For now, returning null to avoid breaking existing functionality
-        // Implementation needed: Parse auth.getPrincipal() to get JWT userId claim
-        
-        return null;
     }
 }
