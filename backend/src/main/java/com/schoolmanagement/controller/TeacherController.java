@@ -4,8 +4,10 @@ import com.schoolmanagement.entity.Profile;
 import com.schoolmanagement.entity.UserRole;
 import com.schoolmanagement.repository.ProfileRepository;
 import com.schoolmanagement.repository.UserRoleRepository;
+import com.schoolmanagement.service.OwnershipValidationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,14 +22,24 @@ public class TeacherController {
 
     private final ProfileRepository profileRepository;
     private final UserRoleRepository userRoleRepository;
+    private final OwnershipValidationService ownershipValidator;
 
-    public TeacherController(ProfileRepository profileRepository, UserRoleRepository userRoleRepository) {
+    public TeacherController(ProfileRepository profileRepository, 
+                           UserRoleRepository userRoleRepository,
+                           OwnershipValidationService ownershipValidator) {
         this.profileRepository = profileRepository;
         this.userRoleRepository = userRoleRepository;
+        this.ownershipValidator = ownershipValidator;
     }
 
     @GetMapping("/school/{schoolId}")
-    public ResponseEntity<List<Profile>> getTeachersBySchool(@PathVariable String schoolId) {
+    public ResponseEntity<List<Profile>> getTeachersBySchool(
+            @PathVariable String schoolId,
+            Authentication authentication) {
+        
+        // Validate user can access this school's data
+        ownershipValidator.validateSchoolAccess(schoolId, authentication);
+        
         // Get all profiles for this school
         List<Profile> allProfiles = profileRepository.findBySchoolId(schoolId);
         
@@ -44,9 +56,16 @@ public class TeacherController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Profile> getTeacher(@PathVariable UUID id) {
+    public ResponseEntity<Profile> getTeacher(
+            @PathVariable UUID id,
+            Authentication authentication) {
+        
         Profile teacher = profileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
+        
+        // Validate user can access this teacher's school data
+        ownershipValidator.validateSchoolAccess(teacher.getSchoolId(), authentication);
+        
         return ResponseEntity.ok(teacher);
     }
 }
