@@ -100,3 +100,20 @@ When Copilot opens a PR:
 also don't creat document files unless ur told to
 Never push directly to develop or main 
 the repo we work on is new-repo
+
+Run Tests in Docker
+ for example :
+    # Start the containers
+    docker-compose up -d
+
+    # Run all tests
+    docker-compose exec backend ./mvnw test
+
+    # Run only JWT Authentication Filter tests
+    docker-compose exec backend ./mvnw test -Dtest=JwtAuthenticationFilterTest
+
+    # Run only Security Config Integration tests
+    docker-compose exec backend ./mvnw test -Dtest=SecurityConfigIntegrationTest
+
+    # View test results
+    docker-compose exec backend ./mvnw test -Dtest=JwtAuthenticationFilterTest,SecurityConfigIntegrationTest
