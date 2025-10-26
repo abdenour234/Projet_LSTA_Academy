@@ -91,7 +91,7 @@ public class ActivityFileController {
      * Get all files for an activity.
      */
     @GetMapping("/activity/{activityId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT')")
     public ResponseEntity<List<Map<String, Object>>> getActivityFiles(@PathVariable UUID activityId) {
         try {
             List<ActivityFile> files = activityFileService.getActivityFiles(activityId);
@@ -123,7 +123,7 @@ public class ActivityFileController {
      * Download a file.
      */
     @GetMapping("/download/{fileId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT')")
     public ResponseEntity<InputStreamResource> downloadFile(@PathVariable UUID fileId) {
         try {
             ActivityFile file = activityFileService.getFileById(fileId);

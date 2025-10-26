@@ -19,7 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -38,6 +40,23 @@ public class StorageController {
 
     // Maximum file size: 10MB
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+    
+    // Allowed file types for security
+    private static final List<String> ALLOWED_CONTENT_TYPES = Arrays.asList(
+        "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp",
+        "application/pdf",
+        "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "text/plain", "text/csv"
+    );
+    
+    private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList(
+        ".jpg", ".jpeg", ".png", ".gif", ".webp",
+        ".pdf",
+        ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
+        ".txt", ".csv"
+    );
 
     @PostMapping("/upload")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
@@ -59,16 +78,33 @@ public class StorageController {
                 log.warn("❌ File upload rejected: size {} exceeds limit {}", file.getSize(), MAX_FILE_SIZE);
                 return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(error);
             }
-
-            // Generate unique filename
+            
+            // Validate file type by extension
             String originalFilename = file.getOriginalFilename();
             String extension = originalFilename != null && originalFilename.contains(".") 
-                ? originalFilename.substring(originalFilename.lastIndexOf(".")) 
+                ? originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase() 
                 : "";
+            
+            if (!ALLOWED_EXTENSIONS.contains(extension)) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "File type not allowed. Allowed types: " + String.join(", ", ALLOWED_EXTENSIONS));
+                log.warn("❌ File upload rejected: extension {} not allowed", extension);
+                return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(error);
+            }
+            
+            // Validate content type
+            String contentType = file.getContentType();
+            if (contentType != null && !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Content type not allowed");
+                log.warn("❌ File upload rejected: content type {} not allowed", contentType);
+                return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(error);
+            }
+
+            // Generate unique filename
             String filename = UUID.randomUUID().toString() + extension;
             
-            // Detect and set content type
-            String contentType = file.getContentType();
+            // Set final content type
             if (contentType == null || contentType.isEmpty()) {
                 contentType = detectContentType(extension);
             }

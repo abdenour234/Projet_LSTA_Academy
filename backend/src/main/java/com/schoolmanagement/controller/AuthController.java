@@ -108,9 +108,16 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
 
-        if (request.getPassword().length() < 6) {
+        if (request.getPassword().length() < 8) {
             Map<String, Object> error = new HashMap<>();
-            error.put("error", "Password must be at least 6 characters");
+            error.put("error", "Password must be at least 8 characters");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+        
+        // Password complexity check
+        if (!isPasswordComplex(request.getPassword())) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Password must contain at least one uppercase letter, one lowercase letter, and one number");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
 
@@ -311,6 +318,22 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+    }
+    
+    /**
+     * Validate password complexity
+     * Requires at least: 1 uppercase, 1 lowercase, 1 number
+     */
+    private boolean isPasswordComplex(String password) {
+        if (password == null || password.length() < 8) {
+            return false;
+        }
+        
+        boolean hasUppercase = password.chars().anyMatch(Character::isUpperCase);
+        boolean hasLowercase = password.chars().anyMatch(Character::isLowerCase);
+        boolean hasDigit = password.chars().anyMatch(Character::isDigit);
+        
+        return hasUppercase && hasLowercase && hasDigit;
     }
 
     @PostMapping("/logout")

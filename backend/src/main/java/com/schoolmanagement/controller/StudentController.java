@@ -32,9 +32,24 @@ public class StudentController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT')")
-    public ResponseEntity<Student> getStudent(@PathVariable UUID id) {
+    public ResponseEntity<Student> getStudent(
+            @PathVariable UUID id,
+            @RequestHeader("Authorization") String authHeader) {
+        
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
+        
+        // Authorization check: Students can only view their own data
+        String token = authHeader.replace("Bearer ", "");
+        String role = jwtUtil.extractRole(token);
+        
+        if ("STUDENT".equalsIgnoreCase(role)) {
+            UUID userId = UUID.fromString(jwtUtil.extractUserId(token));
+            if (!student.getUserId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+        }
+        
         return ResponseEntity.ok(student);
     }
 
@@ -80,11 +95,35 @@ public class StudentController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
-    public ResponseEntity<Student> updateStudent(@PathVariable UUID id, @RequestBody Student student) {
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT')")
+    public ResponseEntity<Student> updateStudent(
+            @PathVariable UUID id, 
+            @RequestBody Student student,
+            @RequestHeader("Authorization") String authHeader) {
+        
         if (!studentRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
+        
+        // Authorization check: Students can only update their own data
+        String token = authHeader.replace("Bearer ", "");
+        String role = jwtUtil.extractRole(token);
+        
+        if ("STUDENT".equalsIgnoreCase(role)) {
+            UUID userId = UUID.fromString(jwtUtil.extractUserId(token));
+            Student existing = studentRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Student not found"));
+            
+            if (!existing.getUserId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            
+            // Prevent students from modifying critical fields
+            student.setUserId(existing.getUserId());
+            student.setSchoolId(existing.getSchoolId());
+            student.setClassId(existing.getClassId());
+        }
+        
         student.setId(id);
         Student updated = studentRepository.save(student);
         return ResponseEntity.ok(updated);
