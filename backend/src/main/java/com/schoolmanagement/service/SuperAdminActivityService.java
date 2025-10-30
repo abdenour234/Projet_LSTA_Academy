@@ -7,6 +7,7 @@ import com.schoolmanagement.entity.School;
 import com.schoolmanagement.repository.ActivityRepository;
 import com.schoolmanagement.repository.ActivityAssignmentRepository;
 import com.schoolmanagement.repository.SchoolRepository;
+import com.schoolmanagement.util.InputSanitizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ public class SuperAdminActivityService {
     private final ActivityRepository activityRepository;
     private final ActivityAssignmentRepository activityAssignmentRepository;
     private final SchoolRepository schoolRepository;
+    private final InputSanitizer sanitizer;
 
     @Transactional
     public Activity createAndDistributeActivity(ActivityCreationDTO dto) {
@@ -41,6 +43,10 @@ public class SuperAdminActivityService {
         activity.setCreatedBy(null); // superadmin UUID if available
         activity.setCreatedAt(LocalDateTime.now());
         activity.setUpdatedAt(LocalDateTime.now());
+        dto.setTitle(sanitizer.sanitizeText(dto.getTitle()));
+        dto.setDescription(sanitizer.sanitizeText(dto.getDescription()));
+        dto.setContent(sanitizer.sanitizeForHtml(dto.getContent())); // if content contains HTML
+        dto.setSubject(sanitizer.sanitizeText(dto.getSubject()));
         
         Activity savedActivity = activityRepository.save(activity);
 

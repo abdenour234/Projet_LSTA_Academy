@@ -11,6 +11,7 @@ import com.schoolmanagement.repository.StudentRepository;
 import com.schoolmanagement.repository.UserRoleRepository;
 import com.schoolmanagement.util.JwtUtil;
 import com.schoolmanagement.util.InputSanitizer;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -108,7 +109,7 @@ public class AuthController {
 
     @PostMapping("/signup-admin")
     @Transactional(rollbackFor = Exception.class)
-    public ResponseEntity<Map<String, Object>> signupAdmin(@RequestBody AdminSignupRequest request) {
+    public ResponseEntity<Map<String, Object>> signupAdmin(@Valid @RequestBody AdminSignupRequest request) {
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "Email is required");
@@ -145,23 +146,26 @@ public class AuthController {
             error.put("error", "An account with this email already exists");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
-
+        String sanitizedEmail = inputSanitizer.sanitizeEmail(request.getEmail());
+        String sanitizedSchoolName = inputSanitizer.sanitizeText(request.getSchoolName());
+        String sanitizedFullName = request.getFullName() != null ?
+                inputSanitizer.sanitizeText(request.getFullName()) : sanitizedEmail.split("@")[0];
         try {
             School school = new School();
-            school.setName(request.getSchoolName());
-            school.setCity(request.getSchoolCity() != null ? request.getSchoolCity() : "");
-            school.setRegion(request.getSchoolRegion() != null ? request.getSchoolRegion() : "");
+            school.setName(sanitizedSchoolName);
+            school.setCity(request.getSchoolCity() != null ? inputSanitizer.sanitizeText(request.getSchoolCity()) : "");
+            school.setRegion(request.getSchoolRegion() != null ? inputSanitizer.sanitizeText(request.getSchoolRegion()) : "");
             school.setLevel(request.getSchoolLevel() != null ? request.getSchoolLevel() : "Primaire");
             school.setStatus(request.getSchoolStatus() != null ? request.getSchoolStatus() : "Public");
-            school.setAddress(request.getSchoolAddress() != null ? request.getSchoolAddress() : "");
+            school.setAddress(request.getSchoolAddress() != null ? inputSanitizer.sanitizeText(request.getSchoolAddress()) : "");
             school.setStudents(request.getSchoolStudents() != null ? request.getSchoolStudents() : 0);
 
             School savedSchool = schoolRepository.save(school);
 
             Profile profile = new Profile();
-            profile.setEmail(request.getEmail());
+            profile.setEmail(sanitizedEmail);
             profile.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-            profile.setFullName(request.getFullName() != null ? request.getFullName() : request.getEmail().split("@")[0]);
+            profile.setFullName(sanitizedFullName);
             profile.setSchoolId(String.valueOf(savedSchool.getId()));
 
             Profile savedProfile = profileRepository.save(profile);

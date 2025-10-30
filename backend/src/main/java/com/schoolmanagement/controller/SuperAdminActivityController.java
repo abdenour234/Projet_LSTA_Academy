@@ -3,6 +3,7 @@ package com.schoolmanagement.controller;
 import com.schoolmanagement.dto.ActivityCreationDTO;
 import com.schoolmanagement.entity.Activity;
 import com.schoolmanagement.service.SuperAdminActivityService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,7 +21,7 @@ public class SuperAdminActivityController {
     private final SuperAdminActivityService activityService;
 
     @PostMapping
-    public ResponseEntity<Activity> createActivity(@RequestBody ActivityCreationDTO activityDTO) {
+    public ResponseEntity<Activity> createActivity(@Valid @RequestBody ActivityCreationDTO activityDTO) {
         Activity activity = activityService.createAndDistributeActivity(activityDTO);
         return ResponseEntity.ok(activity);
     }
