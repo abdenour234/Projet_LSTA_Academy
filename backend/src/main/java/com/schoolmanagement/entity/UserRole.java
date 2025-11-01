@@ -22,7 +22,7 @@ public class UserRole {
     private UUID userId;
 
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = RoleAttributeConverter.class)
     private Role role;
 
     /**

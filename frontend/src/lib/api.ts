@@ -3,12 +3,43 @@
  * Base configuration and HTTP methods for interacting with the backend
  */
 
+import { toast } from '@/hooks/use-toast';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 // Token management
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'current_user';
+
+/**
+ * Handle 401 Unauthorized responses globally
+ * - Shows user-friendly toast notification
+ * - Clears authentication state
+ * - Redirects to appropriate login page
+ */
+function handleUnauthorized(): void {
+  const currentUser = auth.getUser();
+  const schoolId = currentUser?.schoolId;
+
+  // Clear authentication state
+  auth.removeToken();
+
+  // Show user-friendly notification
+  toast({
+    title: 'Session expirée',
+    description: 'Votre session a expiré. Veuillez vous reconnecter.',
+    variant: 'destructive',
+  });
+
+  // Redirect to appropriate login page
+  if (schoolId) {
+    // Redirect to school-specific login
+    window.location.href = `/school/${schoolId}/login`;
+  } else {
+    // Fallback to general login
+    window.location.href = '/login';
+  }
+}
 
 export const auth = {
   getToken: (): string | null => {
@@ -85,9 +116,8 @@ async function request<T>(
 
     // Handle 401 Unauthorized - token expired or invalid
     if (response.status === 401 && !skipAuth) {
-      auth.removeToken();
-      window.location.href = '/login';
-      throw new ApiError(401, 'Authentication required');
+      handleUnauthorized();
+      throw new ApiError(401, 'Session expirée - Authentification requise');
     }
 
     // Parse response
@@ -180,10 +210,10 @@ export const api = {
       body: formData,
     });
 
+    // Handle 401 Unauthorized in file uploads
     if (response.status === 401) {
-      auth.removeToken();
-      window.location.href = '/login';
-      throw new ApiError(401, 'Authentication required');
+      handleUnauthorized();
+      throw new ApiError(401, 'Session expirée - Authentification requise');
     }
 
     if (!response.ok) {
@@ -236,12 +266,17 @@ createStudentRecord: async (studentData: {
   return api.post('/students', studentData);
 },
   login: async (email: string, password: string) => {
+    // ✅ CRITICAL: Clear ALL old data before login
+    console.log('[AUTH] Clearing old session data before new login');
+    localStorage.clear();
+    
     const response = await api.post<{ token: string; user: any }>(
       '/auth/login',
       { email, password },
       { skipAuth: true }
     );
     
+    console.log('[AUTH] Login successful, storing new session data');
     // Store token and user info
     auth.setToken(response.token);
     auth.setUser(response.user);
@@ -250,26 +285,32 @@ createStudentRecord: async (studentData: {
   },
 
   logout: async () => {
+    // ✅ CRITICAL: Clear ALL localStorage data FIRST
+    console.log('[AUTH] Clearing all authentication data');
+    localStorage.clear(); // Clear everything to prevent stale data
+    
     try {
       await api.post('/auth/logout');
     } catch (error) {
-      // Ignore logout errors
-      console.error('Logout error:', error);
-    } finally {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      // Ignore logout errors - we've already cleared local data
+      console.error('[AUTH] Logout API error (ignored):', error);
     }
+    
+    // ✅ CRITICAL: Hard redirect to login page to clear navigation history
+    console.log('[AUTH] Redirecting to login page (hard redirect)');
+    window.location.href = '/login';
+    
+    // Return a promise that never resolves to prevent further execution
+    return new Promise(() => {});
   },
 
   getCurrentUser: async () => {
-    // First check local storage
-    const cachedUser = auth.getUser();
-    if (cachedUser) {
-      return cachedUser;
-    }
-
-    // Otherwise fetch from server
+    // ✅ ALWAYS fetch fresh data from server, don't use cache
+    console.log('[AUTH] Fetching current user from server');
     const user = await api.get<any>('/auth/me');
+    console.log('[AUTH] Current user fetched:', user);
+    
+    // Update cache with fresh data
     auth.setUser(user);
     return user;
   },

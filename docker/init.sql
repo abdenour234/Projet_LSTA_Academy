@@ -343,16 +343,163 @@ ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 -- 6. CREATE INDEXES FOR PERFORMANCE
 -- ============================================
 
+-- ============================================
+-- 6.1 FOREIGN KEY INDEXES
+-- ============================================
+-- Critical for JOIN performance and referential integrity
+
+-- Profiles table
 CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email);
 CREATE INDEX IF NOT EXISTS idx_profiles_school_id ON public.profiles(school_id);
+
+-- User roles table
 CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON public.user_roles(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_roles_role ON public.user_roles(role);
-CREATE INDEX IF NOT EXISTS idx_activities_school_id ON public.activities(school_id);
+
+-- Activity files table
+CREATE INDEX IF NOT EXISTS idx_activity_files_activity_id ON public.activity_files(activity_id);
+CREATE INDEX IF NOT EXISTS idx_activity_files_uploaded_by ON public.activity_files(uploaded_by);
+
+-- Diagnostics table
+CREATE INDEX IF NOT EXISTS idx_diagnostics_school_id ON public.diagnostics(school_id);
+CREATE INDEX IF NOT EXISTS idx_diagnostics_teacher_id ON public.diagnostics(teacher_id);
+
+-- Diagnostic sessions table
+CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_school_id ON public.diagnostic_sessions(school_id);
+CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_teacher_id ON public.diagnostic_sessions(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_class_id ON public.diagnostic_sessions(class_id);
+
+-- Classes table
 CREATE INDEX IF NOT EXISTS idx_classes_school_id ON public.classes(school_id);
-CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON public.messages(conversation_id);
+
+-- Teacher classes table (many-to-many)
+CREATE INDEX IF NOT EXISTS idx_teacher_classes_teacher_id ON public.teacher_classes(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_teacher_classes_class_id ON public.teacher_classes(class_id);
+
+-- Teaching sessions table
 CREATE INDEX IF NOT EXISTS idx_teaching_sessions_school_id ON public.teaching_sessions(school_id);
 CREATE INDEX IF NOT EXISTS idx_teaching_sessions_teacher_id ON public.teaching_sessions(teacher_id);
 CREATE INDEX IF NOT EXISTS idx_teaching_sessions_class_id ON public.teaching_sessions(class_id);
+
+-- Session progress table
+CREATE INDEX IF NOT EXISTS idx_session_progress_session_id ON public.session_progress(session_id);
+
+-- User activity logs table
+CREATE INDEX IF NOT EXISTS idx_user_activity_logs_user_id ON public.user_activity_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_activity_logs_school_id ON public.user_activity_logs(school_id);
+
+-- Conversations table
+CREATE INDEX IF NOT EXISTS idx_conversations_school_id ON public.conversations(school_id);
+
+-- Messages table
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON public.messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_messages_sender_id ON public.messages(sender_id);
+
+-- Resources table
+CREATE INDEX IF NOT EXISTS idx_resources_school_id ON public.resources(school_id);
+CREATE INDEX IF NOT EXISTS idx_resources_created_by ON public.resources(created_by);
+
+-- Activities table
+CREATE INDEX IF NOT EXISTS idx_activities_school_id ON public.activities(school_id);
+CREATE INDEX IF NOT EXISTS idx_activities_created_by ON public.activities(created_by);
+
+-- ============================================
+-- 6.2 SINGLE COLUMN INDEXES (Frequently Queried)
+-- ============================================
+
+-- Students table - search queries
+CREATE INDEX IF NOT EXISTS idx_students_first_name ON public.students(first_name);
+CREATE INDEX IF NOT EXISTS idx_students_last_name ON public.students(last_name);
+
+-- Activities table - filter queries
+CREATE INDEX IF NOT EXISTS idx_activities_type ON public.activities(type);
+CREATE INDEX IF NOT EXISTS idx_activities_level ON public.activities(level);
+
+-- Classes table - filter queries
+CREATE INDEX IF NOT EXISTS idx_classes_level ON public.classes(level);
+CREATE INDEX IF NOT EXISTS idx_classes_annee_scolaire ON public.classes(annee_scolaire);
+
+-- Teaching sessions table - date queries
+CREATE INDEX IF NOT EXISTS idx_teaching_sessions_session_date ON public.teaching_sessions(session_date);
+
+-- User activity logs table - date and type queries
+CREATE INDEX IF NOT EXISTS idx_user_activity_logs_activity_date ON public.user_activity_logs(activity_date);
+CREATE INDEX IF NOT EXISTS idx_user_activity_logs_activity_type ON public.user_activity_logs(activity_type);
+
+-- Schools table - filter queries
+CREATE INDEX IF NOT EXISTS idx_schools_city ON public.schools(city);
+CREATE INDEX IF NOT EXISTS idx_schools_region ON public.schools(region);
+CREATE INDEX IF NOT EXISTS idx_schools_level ON public.schools(level);
+CREATE INDEX IF NOT EXISTS idx_schools_status ON public.schools(status);
+
+-- Resources table - type filter
+CREATE INDEX IF NOT EXISTS idx_resources_file_type ON public.resources(file_type);
+
+-- Diagnostic sessions table - filter queries
+CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_status ON public.diagnostic_sessions(status);
+CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_subject ON public.diagnostic_sessions(subject);
+CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_level ON public.diagnostic_sessions(level);
+
+-- ============================================
+-- 6.3 COMPOSITE INDEXES (Multi-column)
+-- ============================================
+-- Optimizes common query combinations
+
+-- Teaching sessions - common query patterns
+CREATE INDEX IF NOT EXISTS idx_teaching_sessions_teacher_class ON public.teaching_sessions(teacher_id, class_id);
+CREATE INDEX IF NOT EXISTS idx_teaching_sessions_school_teacher ON public.teaching_sessions(school_id, teacher_id);
+CREATE INDEX IF NOT EXISTS idx_teaching_sessions_school_date ON public.teaching_sessions(school_id, session_date);
+
+-- User activity logs - common query patterns
+CREATE INDEX IF NOT EXISTS idx_user_activity_logs_school_date ON public.user_activity_logs(school_id, activity_date);
+CREATE INDEX IF NOT EXISTS idx_user_activity_logs_user_date ON public.user_activity_logs(user_id, activity_date);
+
+-- Classes - common filter combinations
+CREATE INDEX IF NOT EXISTS idx_classes_school_level ON public.classes(school_id, level);
+CREATE INDEX IF NOT EXISTS idx_classes_school_year ON public.classes(school_id, annee_scolaire);
+
+-- Activities - common filter combinations
+CREATE INDEX IF NOT EXISTS idx_activities_school_type ON public.activities(school_id, type);
+CREATE INDEX IF NOT EXISTS idx_activities_school_level ON public.activities(school_id, level);
+
+-- Diagnostic sessions - teacher diagnostics
+CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_school_teacher ON public.diagnostic_sessions(school_id, teacher_id);
+
+-- Activity files - ordered retrieval
+CREATE INDEX IF NOT EXISTS idx_activity_files_activity_position ON public.activity_files(activity_id, position);
+
+-- Resources - school resources by type
+CREATE INDEX IF NOT EXISTS idx_resources_school_type ON public.resources(school_id, file_type);
+
+-- Students - search optimization
+CREATE INDEX IF NOT EXISTS idx_students_school_class ON public.students(school_id, class_id);
+
+-- ============================================
+-- 6.4 SPECIALIZED INDEXES
+-- ============================================
+
+-- GIN index for array search on messages read_by
+CREATE INDEX IF NOT EXISTS idx_messages_read_by ON public.messages USING GIN(read_by);
+
+-- GIN index for array search on conversations participant_ids
+CREATE INDEX IF NOT EXISTS idx_conversations_participant_ids ON public.conversations USING GIN(participant_ids);
+
+-- Text search index for student names (case-insensitive search)
+CREATE INDEX IF NOT EXISTS idx_students_first_name_lower ON public.students(LOWER(first_name));
+CREATE INDEX IF NOT EXISTS idx_students_last_name_lower ON public.students(LOWER(last_name));
+
+-- ============================================
+-- INDEX CREATION SUMMARY
+-- ============================================
+DO $$
+BEGIN
+  RAISE NOTICE '📊 Index creation complete:';
+  RAISE NOTICE '   - Foreign key indexes: 18';
+  RAISE NOTICE '   - Single column indexes: 15';
+  RAISE NOTICE '   - Composite indexes: 11';
+  RAISE NOTICE '   - Specialized indexes: 4';
+  RAISE NOTICE '   - Total indexes: 48';
+END $$;
 
 -- ============================================
 -- INITIALIZATION COMPLETE

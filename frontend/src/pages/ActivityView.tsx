@@ -37,6 +37,21 @@ const ActivityView = () => {
             data.layout_data = { elements: [] };
           }
         }
+        
+        // ✅ FIXED: Clean up malformed URLs from old data
+        // Remove double http://localhost:8080 prefix if present
+        if (data.layout_data?.elements) {
+          data.layout_data.elements = data.layout_data.elements.map((el: any) => {
+            if (el.content && typeof el.content === 'string') {
+              // Fix malformed URLs like "http://localhost:8080http://localhost:9000/..."
+              el.content = el.content.replace(/^http:\/\/localhost:8080(http:\/\/[^\/]+\/.*)/, '$1');
+              // Also fix "http://localhost:8080http://minio:9000/..." if any remain
+              el.content = el.content.replace(/^http:\/\/localhost:8080http:\/\/minio:9000/, 'http://localhost:9000');
+            }
+            return el;
+          });
+        }
+        
         setActivity(data as any);
       }
     } catch (error) {

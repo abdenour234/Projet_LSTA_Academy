@@ -40,6 +40,19 @@ const ActivityEditor = () => {
             layoutData = { elements: [] };
           }
           
+          // ✅ FIXED: Clean up malformed URLs from old data
+          if (layoutData?.elements) {
+            layoutData.elements = layoutData.elements.map((el: any) => {
+              if (el.content && typeof el.content === 'string') {
+                // Fix malformed URLs like "http://localhost:8080http://localhost:9000/..."
+                el.content = el.content.replace(/^http:\/\/localhost:8080(http:\/\/[^\/]+\/.*)/, '$1');
+                // Also fix "http://localhost:8080http://minio:9000/..." if any remain
+                el.content = el.content.replace(/^http:\/\/localhost:8080http:\/\/minio:9000/, 'http://localhost:9000');
+              }
+              return el;
+            });
+          }
+          
           setActivityData({
             title: activity.title,
             description: activity.description || '',
