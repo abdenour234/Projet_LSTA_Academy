@@ -7,7 +7,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { authApi } from '@/lib/api';
+import { authApi, auth } from '@/lib/api';
+import { normalizeRole, getRoleDashboardRoute } from '@/lib/roleUtils';
 
 interface GlobalStats {
   totalSchools: number;
@@ -47,9 +48,45 @@ const SuperAdminDashboard = () => {
   const [stats, setStats] = useState<SuperAdminStats | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // ✅ SECURITY: Validate access to this page
   useEffect(() => {
-    loadStats();
-  }, []);
+    const validateAccess = () => {
+      const user = auth.getUser();
+      console.log('[SUPERADMIN_DASHBOARD] Access validation:', user);
+      
+      if (!user) {
+        console.error('[SUPERADMIN_DASHBOARD] No user found, redirecting to login');
+        toast({
+          title: 'Accès refusé',
+          description: 'Vous devez être connecté.',
+          variant: 'destructive',
+        });
+        navigate('/login', { replace: true });
+        return false;
+      }
+
+      const userRole = normalizeRole(user.role);
+      console.log('[SUPERADMIN_DASHBOARD] Role check:', { original: user.role, normalized: userRole });
+      
+      if (userRole !== 'SUPERADMIN') {
+        console.error('[SUPERADMIN_DASHBOARD] Invalid role, redirecting:', userRole);
+        toast({
+          title: 'Accès refusé',
+          description: 'Cette page est réservée aux super administrateurs.',
+          variant: 'destructive',
+        });
+        const correctDashboard = getRoleDashboardRoute(userRole, user.schoolId);
+        navigate(correctDashboard, { replace: true });
+        return false;
+      }
+
+      return true;
+    };
+
+    if (validateAccess()) {
+      loadStats();
+    }
+  }, [navigate, toast]);
 
   const loadStats = async () => {
     setLoading(true);
@@ -79,8 +116,20 @@ const SuperAdminDashboard = () => {
   };
 
   const handleLogout = async () => {
-    await authApi.logout();
-    navigate('/superadmin/login');
+    try {
+      await authApi.logout();
+      toast({
+        title: 'Déconnexion réussie',
+        description: 'À bientôt !',
+      });
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force logout même en cas d'erreur
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate('/login');
+    }
   };
 
   if (loading) {

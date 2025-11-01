@@ -99,14 +99,14 @@ public class DataInitializer implements CommandLineRunner {
             // Create UserRole
             UserRole userRole = new UserRole();
             userRole.setUserId(savedProfile.getId());
-            userRole.setRole(UserRole.Role.superadmin);
+            userRole.setRole(UserRole.Role.SUPERADMIN);
             
             userRoleRepository.save(userRole);
             
             log.info("✅ SuperAdmin account created successfully!");
             log.info("   Email: {}", superAdminEmail);
             log.info("   Password: admin");
-            log.info("   Role: superadmin");
+            log.info("   Role: SUPERADMIN");
         } else {
             log.info("SuperAdmin account already exists. Skipping creation.");
         }

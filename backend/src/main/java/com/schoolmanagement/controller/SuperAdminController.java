@@ -51,13 +51,13 @@ public class SuperAdminController {
             
             // Count by role
             long adminCount = roles.stream()
-                .filter(r -> r.getRole() == UserRole.Role.admin)
+                .filter(r -> r.getRole() == UserRole.Role.ADMIN)
                 .count();
             long teacherCount = roles.stream()
-                .filter(r -> r.getRole() == UserRole.Role.teacher)
+                .filter(r -> r.getRole() == UserRole.Role.TEACHER)
                 .count();
             long studentCount = roles.stream()
-                .filter(r -> r.getRole() == UserRole.Role.student)
+                .filter(r -> r.getRole() == UserRole.Role.STUDENT)
                 .count();
             
             globalStats.put("totalAdmins", adminCount);
@@ -98,7 +98,7 @@ public class SuperAdminController {
                     
                     long schoolTeachers = roles.stream()
                         .filter(r -> schoolUserIds.contains(r.getUserId()))
-                        .filter(r -> r.getRole() == UserRole.Role.teacher)
+                        .filter(r -> r.getRole() == UserRole.Role.TEACHER)
                         .count();
                     stat.put("teachers", schoolTeachers);
 
@@ -180,12 +180,12 @@ public class SuperAdminController {
                     
                     long admins = roles.stream()
                         .filter(r -> schoolUserIds.contains(r.getUserId()))
-                        .filter(r -> r.getRole() == UserRole.Role.admin)
+                        .filter(r -> r.getRole() == UserRole.Role.ADMIN)
                         .count();
                     
                     long teachers = roles.stream()
                         .filter(r -> schoolUserIds.contains(r.getUserId()))
-                        .filter(r -> r.getRole() == UserRole.Role.teacher)
+                        .filter(r -> r.getRole() == UserRole.Role.TEACHER)
                         .count();
 
                     detail.put("admins", admins);
@@ -228,17 +228,17 @@ public class SuperAdminController {
             // Count by role
             long admins = roles.stream()
                 .filter(r -> schoolUserIds.contains(r.getUserId()))
-                .filter(r -> r.getRole() == UserRole.Role.admin)
+                .filter(r -> r.getRole() == UserRole.Role.ADMIN)
                 .count();
             
             long teachers = roles.stream()
                 .filter(r -> schoolUserIds.contains(r.getUserId()))
-                .filter(r -> r.getRole() == UserRole.Role.teacher)
+                .filter(r -> r.getRole() == UserRole.Role.TEACHER)
                 .count();
             
             long students = roles.stream()
                 .filter(r -> schoolUserIds.contains(r.getUserId()))
-                .filter(r -> r.getRole() == UserRole.Role.student)
+                .filter(r -> r.getRole() == UserRole.Role.STUDENT)
                 .count();
 
             Map<String, Object> response = new HashMap<>();

@@ -22,10 +22,14 @@ public class UserRole {
     private UUID userId;
 
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = RoleAttributeConverter.class)
     private Role role;
 
+    /**
+     * Role enum - stored in UPPERCASE in database for consistency
+     * Matches Spring Security conventions and frontend expectations
+     */
     public enum Role {
-        superadmin, admin, teacher, student
+        SUPERADMIN, ADMIN, TEACHER, STUDENT
     }
 }

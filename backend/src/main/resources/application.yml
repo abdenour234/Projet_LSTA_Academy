@@ -25,10 +25,14 @@ spring:
 
 # MinIO Configuration
 minio:
-  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  url: ${MINIO_URL:http://minio:9000}  # Internal Docker network URL
   access-key: ${MINIO_ACCESS_KEY:minioadmin}
   secret-key: ${MINIO_SECRET_KEY:minioadmin}
   bucket-name: ${MINIO_BUCKET_NAME:school-management}
+
+# Application Configuration
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8080}  # Public URL for file download links
 
 # JWT Configuration
 jwt:

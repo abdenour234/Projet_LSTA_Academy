@@ -2,6 +2,9 @@ package com.schoolmanagement.controller;
 
 import com.schoolmanagement.entity.Activity;
 import com.schoolmanagement.repository.ActivityRepository;
+import com.schoolmanagement.security.ResourceOwnershipValidator;
+import com.schoolmanagement.security.ResourceOwnershipValidator.UserContext;
+import com.schoolmanagement.util.InputSanitizer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,9 +19,15 @@ import java.util.UUID;
 public class ActivityController {
 
     private final ActivityRepository activityRepository;
+    private final ResourceOwnershipValidator ownershipValidator;
+    private final InputSanitizer inputSanitizer;
 
-    public ActivityController(ActivityRepository activityRepository) {
+    public ActivityController(ActivityRepository activityRepository,
+                            ResourceOwnershipValidator ownershipValidator,
+                            InputSanitizer inputSanitizer) {
         this.activityRepository = activityRepository;
+        this.ownershipValidator = ownershipValidator;
+        this.inputSanitizer = inputSanitizer;
     }
 
     @GetMapping
@@ -28,10 +37,20 @@ public class ActivityController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Activity> getActivity(@PathVariable UUID id) {
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT')")
+    public ResponseEntity<Activity> getActivity(
+            @PathVariable UUID id,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        
         Activity activity = activityRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Activity not found"));
+        
+        // Ownership validation
+        UserContext user = ownershipValidator.extractUserContext(authHeader);
+        if (!ownershipValidator.canAccessActivity(user, id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
         return ResponseEntity.ok(activity);
     }
 
@@ -49,7 +68,7 @@ public class ActivityController {
 
     // UPDATED: Accept optional classId for filtering
     @GetMapping("/published")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT')")
     public ResponseEntity<List<Activity>> getPublishedActivities(
             @RequestParam String schoolId,
             @RequestParam(required = false) UUID classId) {
@@ -62,18 +81,53 @@ public class ActivityController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
-    public ResponseEntity<Activity> createActivity(@RequestBody Activity activity) {
-        // NEW: Validate classId if provided (optional logic)
+    public ResponseEntity<Activity> createActivity(
+            @RequestBody Activity activity,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        
+        // Sanitize text inputs
+        if (activity.getTitle() != null) {
+            activity.setTitle(inputSanitizer.sanitizeText(activity.getTitle()));
+        }
+        if (activity.getDescription() != null) {
+            activity.setDescription(inputSanitizer.sanitizeForHtml(activity.getDescription()));
+        }
+        
+        // Ownership validation - ensure user can create in this school
+        UserContext user = ownershipValidator.extractUserContext(authHeader);
+        if (!ownershipValidator.belongsToSchool(user, activity.getSchoolId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
         Activity saved = activityRepository.save(activity);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
-    public ResponseEntity<Activity> updateActivity(@PathVariable UUID id, @RequestBody Activity activity) {
+    public ResponseEntity<Activity> updateActivity(
+            @PathVariable UUID id, 
+            @RequestBody Activity activity,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        
         if (!activityRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
+        
+        // Ownership validation
+        UserContext user = ownershipValidator.extractUserContext(authHeader);
+        if (!ownershipValidator.canModifyActivity(user, id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
+        // Sanitize text inputs
+        if (activity.getTitle() != null) {
+            activity.setTitle(inputSanitizer.sanitizeText(activity.getTitle()));
+        }
+        if (activity.getDescription() != null) {
+            activity.setDescription(inputSanitizer.sanitizeForHtml(activity.getDescription()));
+        }
+        
         activity.setId(id);
         Activity updated = activityRepository.save(activity);
         return ResponseEntity.ok(updated);
@@ -81,10 +135,20 @@ public class ActivityController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
-    public ResponseEntity<Void> deleteActivity(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteActivity(
+            @PathVariable UUID id,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        
         if (!activityRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
+        
+        // Ownership validation
+        UserContext user = ownershipValidator.extractUserContext(authHeader);
+        if (!ownershipValidator.canModifyActivity(user, id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
         activityRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }

@@ -14,7 +14,6 @@ import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -54,11 +53,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Validate token
                 if (jwtUtil.validateToken(jwt, userEmail)) {
                     
-                    // Extract role from token
+                    // Extract all claims from token
                     String role = jwtUtil.extractRole(jwt);
+                    String userId = jwtUtil.extractUserId(jwt);
+                    String schoolId = jwtUtil.extractSchoolId(jwt);
                     
                     // Create authority with ROLE_ prefix (Spring Security convention)
-                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role.toUpperCase());
+                    // Role is already uppercase from database
+                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
+                    
+                    // Create custom authentication details with userId
+                    UserAuthenticationDetails userDetails = new UserAuthenticationDetails(
+                            java.util.UUID.fromString(userId),
+                            userEmail,
+                            role,
+                            schoolId
+                    );
                     
                     // Create authentication token
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
@@ -67,13 +77,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             Collections.singletonList(authority)
                     );
                     
-                    // Set additional details
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    // Set custom details containing userId
+                    authToken.setDetails(userDetails);
                     
                     // Set authentication in security context
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                     
-                    log.debug("JWT Authentication successful for user: {} with role: {}", userEmail, role);
+                    log.debug("JWT Authentication successful for user: {} (ID: {}) with role: {}", 
+                            userEmail, userId, role);
                 } else {
                     log.warn("Invalid JWT token for user: {}", userEmail);
                 }

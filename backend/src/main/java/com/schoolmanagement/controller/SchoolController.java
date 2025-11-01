@@ -2,6 +2,7 @@ package com.schoolmanagement.controller;
 
 import com.schoolmanagement.entity.School;
 import com.schoolmanagement.repository.SchoolRepository;
+import com.schoolmanagement.util.JwtUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,9 +16,11 @@ import java.util.List;
 public class SchoolController {
 
     private final SchoolRepository schoolRepository;
+    private final JwtUtil jwtUtil;
 
-    public SchoolController(SchoolRepository schoolRepository) {
+    public SchoolController(SchoolRepository schoolRepository, JwtUtil jwtUtil) {
         this.schoolRepository = schoolRepository;
+        this.jwtUtil = jwtUtil;
     }
 
     // Public endpoint - anyone can view schools list
@@ -57,16 +60,35 @@ public class SchoolController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
-    public ResponseEntity<School> updateSchool(@PathVariable Long id, @RequestBody School school) {
+    public ResponseEntity<School> updateSchool(
+            @PathVariable Long id, 
+            @RequestBody School school,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        
         if (!schoolRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
+        
+        // Authorization check: ADMIN can only update their own school
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.replace("Bearer ", "");
+            String role = jwtUtil.extractRole(token);
+            
+            if ("ADMIN".equalsIgnoreCase(role)) {
+                String userSchoolId = jwtUtil.extractSchoolId(token);
+                if (!String.valueOf(id).equals(userSchoolId)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                }
+            }
+        }
+        
         school.setId(id);
         School updated = schoolRepository.save(school);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('SUPERADMIN')")
     public ResponseEntity<Void> deleteSchool(@PathVariable Long id) {
         if (!schoolRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
