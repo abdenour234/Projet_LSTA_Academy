@@ -53,13 +53,32 @@ const SchoolLogin = () => {
         return;
       }
 
-      // Navigate based on role
-      const role = user.role?.toLowerCase();
-      if (role === 'admin' || role === 'school_admin') {
-        navigate(`/school/${id}/admin/dashboard`);
-      } else {
-        navigate(`/school/${id}/teacher/dashboard`);
+      // Navigate based on role (normalized to UPPERCASE)
+      const role = user.role?.toUpperCase();
+      
+      let redirectPath = '';
+      switch (role) {
+        case 'ADMIN':
+          redirectPath = `/school/${id}/admin/dashboard`;
+          break;
+        case 'TEACHER':
+          redirectPath = `/school/${id}/teacher/dashboard`;
+          break;
+        case 'STUDENT':
+          redirectPath = '/student/dashboard';
+          break;
+        default:
+          toast({
+            title: 'Erreur',
+            description: `Rôle non reconnu: ${user.role}`,
+            variant: 'destructive',
+          });
+          await authApi.logout();
+          setLoading(false);
+          return;
       }
+
+      navigate(redirectPath);
 
       toast({
         title: 'Connexion réussie',

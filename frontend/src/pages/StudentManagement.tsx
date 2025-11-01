@@ -204,7 +204,7 @@ export default function StudentManagement() {
               <Button 
                 variant="ghost" 
                 size="icon"
-                onClick={() => navigate(`/admin/${schoolId}/dashboard`)}
+                onClick={() => navigate(`/school/${schoolId}/admin/dashboard`)}
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>

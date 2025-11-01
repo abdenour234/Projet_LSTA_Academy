@@ -178,7 +178,7 @@ export default function TeacherSessions() {
               <Button 
                 variant="ghost" 
                 size="icon"
-                onClick={() => navigate(`/school/${schoolId}/teacher`)}
+                onClick={() => navigate(`/school/${schoolId}/teacher/dashboard`)}
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>

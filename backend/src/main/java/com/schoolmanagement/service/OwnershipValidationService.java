@@ -27,7 +27,6 @@ public class OwnershipValidationService {
     private final ClasseRepository classeRepository;
     private final TeachingSessionRepository teachingSessionRepository;
     private final DiagnosticSessionRepository diagnosticSessionRepository;
-    private final UserRoleRepository userRoleRepository;
     private final JwtUtil jwtUtil;
 
     /**
