@@ -183,6 +183,7 @@ CREATE TABLE public.students (
     created_at timestamp(6) without time zone,
     date_of_birth timestamp(6) without time zone,
     first_name character varying(255) NOT NULL,
+    massar character varying(255) NOT NULL,
     gender character varying(255),
     last_name character varying(255) NOT NULL,
     parent_contact character varying(255),
@@ -302,7 +303,9 @@ INSERT INTO public.user_roles (id, role, user_id) VALUES
 --
 -- Migration: Add new columns if database already exists
 --
-
+-- Remplacez la ligne fautive par :
+ALTER TABLE public.profiles 
+    ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT TRUE;
 -- Add class_id to activities if not exists
 DO $$
 BEGIN

@@ -30,6 +30,8 @@ public class Profile {
 
     @Column(name = "password_hash")
     private String passwordHash;
+    @Column(name = "must_change_password", nullable = false)
+    private boolean mustChangePassword = true;   // true pour les nouveaux étudiants
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -50,5 +52,10 @@ public class Profile {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    public boolean isMustChangePassword() { return mustChangePassword; }
+    public void setMustChangePassword(boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
     }
 }

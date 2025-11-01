@@ -87,7 +87,7 @@ public class AuthController {
         user.put("fullName", profile.getFullName());
         user.put("schoolId", profile.getSchoolId());
         user.put("role", role);
-
+        user.put("mustChangePassword", profile.isMustChangePassword());
         response.put("user", user);
 
         return ResponseEntity.ok(response);
@@ -193,6 +193,7 @@ public class AuthController {
         String fullName = (String) userDto.get("fullName");
         String schoolId = (String) userDto.get("schoolId");
         String roleStr = (String) userDto.get("role");
+        String massar = (String) userDto.get("massar"); // NOUVEAU
         String dateOfBirth = (String) userDto.get("dateOfBirth"); // NEW
         String gender = (String) userDto.get("gender"); // NEW
         String parentContact = (String) userDto.get("parentContact"); // NEW
@@ -246,6 +247,8 @@ public class AuthController {
             userRoleRepository.save(userRole);
 
             if (parsedRole == UserRole.Role.student) {
+                savedProfile.setMustChangePassword(true);
+                profileRepository.save(savedProfile);
                 // Check if student already exists for this userId
                 Optional<Student> existingStudentOpt = studentRepository.findByUserId(savedProfile.getId());
                 if (!existingStudentOpt.isPresent()) {
@@ -256,10 +259,11 @@ public class AuthController {
                     student.setSchoolId(schoolId);
                     student.setClassId(classId); // NEW: Set classId if provided
                     student.setDateOfBirth(dateOfBirth != null && !dateOfBirth.trim().isEmpty()
-                            ? LocalDate.parse(dateOfBirth).atStartOfDay()
-                            : null);
+        ? LocalDate.parse(dateOfBirth)  // ← Enlever .atStartOfDay()
+        : null);
                     student.setGender(gender); // NEW
                     student.setParentContact(parentContact); // NEW
+                    student.setMassar(massar != null && !massar.trim().isEmpty() ? massar : null); // NOUVEAU
                     student.setCreatedAt(LocalDateTime.now());
                     student.setUpdatedAt(LocalDateTime.now());
                     studentRepository.save(student);
@@ -317,4 +321,32 @@ public class AuthController {
     public ResponseEntity<Void> logout() {
         return ResponseEntity.ok().build();
     }
+    @PostMapping("/change-password")
+public ResponseEntity<?> changePassword(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestBody Map<String, String> payload) {
+
+    String token = authHeader.replace("Bearer ", "");
+    String userId = jwtUtil.extractUserId(token);
+
+    Profile profile = profileRepository.findById(UUID.fromString(userId))
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+    String newPwd = payload.get("newPassword");
+    String confirm = payload.get("confirmPassword");
+
+    if (newPwd == null || newPwd.length() < 6) {
+        return ResponseEntity.badRequest().body(Map.of("error", "Le mot de passe doit contenir au moins 6 caractères"));
+    }
+    if (!newPwd.equals(confirm)) {
+        return ResponseEntity.badRequest().body(Map.of("error", "Les mots de passe ne correspondent pas"));
+    }
+
+    profile.setPasswordHash(passwordEncoder.encode(newPwd));
+    profile.setMustChangePassword(false);
+    profileRepository.save(profile);
+
+    return ResponseEntity.ok(Map.of("message", "Mot de passe mis à jour"));
+}
+
 }

@@ -17,58 +17,62 @@ const Login = () => {
     password: '',
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      const response = await authApi.login(formData.email, formData.password);
-      
-      // Stocker le token et les infos utilisateur
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+  try {
+    const response = await authApi.login(formData.email, formData.password);
+    
+    // Stockage du token et des infos utilisateur
+    localStorage.setItem('token', response.token);
+    localStorage.setItem('user', JSON.stringify(response.user));
 
-      toast({
-        title: 'Connexion réussie',
-        description: `Bienvenue ${response.user.fullName || response.user.email}!`,
-      });
+    // EXTRACTION DES DONNÉES
+    const role = response.user.role;
+    const mustChangePassword = response.user.mustChangePassword; // <-- NOUVEAU
 
-      // Redirection basée sur le rôle
-      const role = response.user.role;
-      const schoolId = response.user.schoolId;
+    toast({
+      title: 'Connexion réussie',
+      description: `Bienvenue ${response.user.fullName || response.user.email}!`,
+    });
 
-      switch (role) {
-        case 'superadmin':
-          navigate('/superadmin/dashboard');
-          break;
-        case 'admin':
-          navigate(`/school/${schoolId}/admin/dashboard`);
-          break;
-        case 'teacher':
-          navigate(`/school/${schoolId}/teacher/dashboard`);
-          break;
-        case 'student':
-          navigate('/student/dashboard');
-          break;
-        default:
-          toast({
-            title: 'Erreur',
-            description: 'Rôle utilisateur non reconnu',
-            variant: 'destructive',
-          });
-          navigate('/');
-      }
-    } catch (error: any) {
-      console.error('Login error:', error);
-      toast({
-        title: 'Erreur de connexion',
-        description: error.message || 'Email ou mot de passe incorrect',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
+    // 1. SI C'EST UN ÉTUDIANT ET QU'IL DOIT CHANGER SON MOT DE PASSE
+    if (mustChangePassword && role === 'student') {
+      navigate('/change-password'); // Redirection vers le changement de mot de passe
+      return; // On arrête ici → on ne fait pas la redirection habituelle
     }
-  };
+
+    // 2. SINON → REDIRECTION NORMALE SELON LE RÔLE
+    const schoolId = response.user.schoolId;
+
+    switch (role) {
+      case 'superadmin':
+        navigate('/superadmin/dashboard');
+        break;
+      case 'admin':
+        navigate(`/school/${schoolId}/admin/dashboard`);
+        break;
+      case 'teacher':
+        navigate(`/school/${schoolId}/teacher/dashboard`);
+        break;
+      case 'student':
+        navigate('/student/dashboard'); // ← Étudiant qui a déjà changé son mot de passe
+        break;
+      default:
+        toast({
+          title: 'Erreur',
+          description: 'Rôle utilisateur non reconnu',
+          variant: 'destructive',
+        });
+        navigate('/');
+    }
+  } catch (error: any) {
+    // ... gestion d'erreur
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({

@@ -202,6 +202,9 @@ export const api = {
 // Auth API endpoints
 export const authApi = {
   // AJOUTEZ CES 2 MÉTHODES dans authApi
+  changePassword: async (newPassword: string, confirmPassword: string) => {
+  return api.post('/auth/change-password', { newPassword, confirmPassword });
+},
 getStudentsBySchool: async (schoolId: string) => {
   const allUsers = await api.get<any[]>(`/teachers/school/${schoolId}`);
   const students = allUsers.filter(user => user.role === 'student');

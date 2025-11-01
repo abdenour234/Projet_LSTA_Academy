@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;      // ← CHANGEMENT ICI
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -25,17 +26,20 @@ public class Student {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
+    @Column(name = "massar", nullable = false)
+    private String massar;
+
     @Column(name = "class_id")
     private UUID classId;
 
     @Column(name = "school_id", nullable = false)
     private String schoolId;
 
-    @Column(name = "user_id")  // NEW: Link to profile
+    @Column(name = "user_id")
     private UUID userId;
 
     @Column(name = "date_of_birth")
-    private LocalDateTime dateOfBirth;
+    private LocalDate dateOfBirth;  // ← CHANGEMENT ICI (pas LocalDateTime)
 
     @Column
     private String gender;

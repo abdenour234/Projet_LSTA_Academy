@@ -27,6 +27,7 @@ import MessagingPage from "./pages/MessagingPage";
 import ActivityTracking from "./pages/ActivityTracking";
 import NotFound from "./pages/NotFound";
 import StudentManagement from "./pages/StudentManagement";
+import ChangePassword from "./pages/ChangePassword";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<AdminSignup />} />
+          <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/superadmin/login" element={<SuperAdminLogin />} />
           <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
           <Route path="/superadmin/schools/:schoolId" element={<SuperAdminSchoolDetails />} />
