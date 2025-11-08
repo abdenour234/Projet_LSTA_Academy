@@ -313,7 +313,7 @@ INSERT INTO public.profiles (id, email, password_hash, full_name, school_id, cre
 VALUES (
   '00000000-0000-0000-0000-000000000001'::UUID,
   'admin@admin.com',
-  '$2a$10$xvNHQYZBwlH7OzvGxkxhUOQRMlVSHIVHzLxQjz3cjKUmjGRjKWn0K',
+  '$2b$12$/B/YKPYMs8en0f06AnSRzOgrJMTsNa5zl14S4.EdXEEPslM0Cgs1a',
   'Super Admin',
   1,  -- Changed from '1' (text) to 1 (bigint)
   now(),
