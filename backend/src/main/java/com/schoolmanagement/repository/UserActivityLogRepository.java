@@ -11,9 +11,9 @@ import java.util.UUID;
 @Repository
 public interface UserActivityLogRepository extends JpaRepository<UserActivityLog, UUID> {
     List<UserActivityLog> findByUserId(UUID userId);
-    List<UserActivityLog> findBySchoolId(String schoolId);
+    List<UserActivityLog> findBySchoolId(Long schoolId);
     List<UserActivityLog> findByActivityDate(LocalDate activityDate);
     List<UserActivityLog> findByActivityDateAfter(LocalDate startDate);
-    List<UserActivityLog> findBySchoolIdAndActivityDateAfter(String schoolId, LocalDate startDate);
-    Long countBySchoolIdAndActivityDateAfter(String schoolId, LocalDate startDate);
+    List<UserActivityLog> findBySchoolIdAndActivityDateAfter(Long schoolId, LocalDate startDate);
+    Long countBySchoolIdAndActivityDateAfter(Long schoolId, LocalDate startDate);
 }

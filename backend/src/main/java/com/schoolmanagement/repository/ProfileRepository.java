@@ -9,6 +9,6 @@ import java.util.UUID;
 
 @Repository
 public interface ProfileRepository extends JpaRepository<Profile, UUID> {
-    List<Profile> findBySchoolId(String schoolId);
+    List<Profile> findBySchoolId(Long schoolId);
     Profile findByEmail(String email);
 }

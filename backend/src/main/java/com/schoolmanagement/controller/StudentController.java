@@ -55,7 +55,7 @@ public class StudentController {
 
     @GetMapping("/school/{schoolId}")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
-    public ResponseEntity<List<Student>> getStudentsBySchool(@PathVariable String schoolId) {
+    public ResponseEntity<List<Student>> getStudentsBySchool(@PathVariable Long schoolId) {
         return ResponseEntity.ok(studentRepository.findBySchoolId(schoolId));
     }
 

@@ -37,7 +37,7 @@ public class ResourceController {
 
     @GetMapping("/school/{schoolId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<Resource>> getResourcesBySchool(@PathVariable String schoolId) {
+    public ResponseEntity<List<Resource>> getResourcesBySchool(@PathVariable Long schoolId) {
         return ResponseEntity.ok(resourceRepository.findBySchoolId(schoolId));
     }
 
