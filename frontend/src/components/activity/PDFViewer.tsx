@@ -31,9 +31,17 @@ export const PDFViewer = ({ fileUrl, width = '100%', height = '600px' }: PDFView
       setLoading(true);
       setError(null);
 
-      // Check if it's a Spring Boot storage URL
-      if (fileUrl.startsWith('activity-files/') || !fileUrl.startsWith('http')) {
-        const fileName = fileUrl.replace(/^(activity-files?\/)/, '');
+      console.log('[PDF_VIEWER] Loading PDF from URL:', fileUrl);
+
+      // ✅ UPDATED: Backend now returns pre-signed URLs directly
+      // If URL is already a full HTTP(S) URL (MinIO pre-signed), use it directly
+      if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+        console.log('[PDF_VIEWER] Using direct pre-signed URL');
+        setSignedUrl(fileUrl);
+      } else if (fileUrl.startsWith('activity-files/') || fileUrl.startsWith('/api/activity-files/')) {
+        // Legacy: fetch signed URL for old-style URLs
+        console.log('[PDF_VIEWER] Fetching signed URL for legacy path');
+        const fileName = fileUrl.replace(/^(activity-files?\/|\/api\/activity-files\/download\/)/, '');
         const response = await storageApi.getSignedUrl(fileName);
         if (response?.url) {
           setSignedUrl(response.url);
@@ -41,7 +49,8 @@ export const PDFViewer = ({ fileUrl, width = '100%', height = '600px' }: PDFView
           setError('Impossible de charger le fichier PDF');
         }
       } else {
-        setSignedUrl(fileUrl);
+        console.error('[PDF_VIEWER] Invalid URL format:', fileUrl);
+        setError('Format d\'URL invalide');
       }
     } catch (err) {
       console.error('Erreur lors du chargement du PDF:', err);

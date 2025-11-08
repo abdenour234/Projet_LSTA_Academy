@@ -44,28 +44,28 @@ public class RBACIntegrationTest {
             UUID.randomUUID(),
             "superadmin@test.com",
             "SUPERADMIN",
-            "1"
+            1L
         );
 
         adminToken = jwtUtil.generateToken(
             UUID.randomUUID(),
             "admin@test.com",
             "ADMIN",
-            "1"
+            1L
         );
 
         teacherToken = jwtUtil.generateToken(
             UUID.randomUUID(),
             "teacher@test.com",
             "TEACHER",
-            "1"
+            1L
         );
 
         studentToken = jwtUtil.generateToken(
             UUID.randomUUID(),
             "student@test.com",
             "STUDENT",
-            "1"
+            1L
         );
     }
 

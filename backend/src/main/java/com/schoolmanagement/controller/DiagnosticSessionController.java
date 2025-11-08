@@ -48,7 +48,7 @@ public class DiagnosticSessionController {
 
     @GetMapping("/school/{schoolId}")
     public ResponseEntity<List<DiagnosticSession>> getDiagnosticSessionsBySchool(
-            @PathVariable String schoolId,
+            @PathVariable Long schoolId,
             Authentication authentication) {
         
         // Validate user can access this school

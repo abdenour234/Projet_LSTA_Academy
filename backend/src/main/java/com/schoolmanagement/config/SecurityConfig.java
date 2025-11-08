@@ -77,7 +77,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/messages/**").authenticated()
                 .requestMatchers("/api/resources/**").authenticated()
                 .requestMatchers("/api/activities/**").authenticated()
+                
+                // Activity files - download endpoint is public (students need access without auth)
+                .requestMatchers("/api/activity-files/download/**").permitAll()
                 .requestMatchers("/api/activity-files/**").authenticated()
+                
                 .requestMatchers("/api/storage/**").authenticated()
                 .requestMatchers("/api/sessions/**").authenticated()
                 .requestMatchers("/api/diagnostic-sessions/**").authenticated()

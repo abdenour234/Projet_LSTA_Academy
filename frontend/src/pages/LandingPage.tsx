@@ -1,12 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { BookOpen, Sparkles, ChevronDown, Menu, X } from "lucide-react";
 import { authApi } from '@/lib/api';
+import logo from "@/assets/logo-lsta.png";
+import logoPedagoria from "@/assets/logo-pedagoria.png";
+import heroImage from "@/assets/hero-transparent.png";
+import HeroSection from '@/components/HeroSection';
+import PedagoriaSection from '@/components/PedagoriaSection';
+import DedicatedSpaces from '@/components/DedicatedSpaces';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     checkAuthStatus();
@@ -25,9 +33,7 @@ const LandingPage = () => {
 
   const handleMonEspace = () => {
     if (isAuthenticated) {
-      // Redirect to user's appropriate dashboard
-      // We'll need to check user role and redirect accordingly
-      navigate('/schools'); // Default, can be customized based on role
+      navigate('/schools');
     } else {
       navigate('/login');
     }
@@ -53,180 +59,144 @@ const LandingPage = () => {
     navigate('/contact');
   };
 
+  const navItems = [
+    { label: "Accueil", href: "/" },
+    { label: "Méthode", onClick: handleMethodeClick, hasDropdown: true },
+    { label: "Espace", onClick: handleEspaceClick, hasDropdown: true },
+    { label: "Activités", href: "#activites", hasDropdown: true },
+    { label: "Clubs", onClick: handleClubsClick },
+    { label: "Contact", onClick: handleContactClick },
+  ];
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, onClick?: () => void) => {
+    if (onClick) {
+      e.preventDefault();
+      onClick();
+      setMobileMenuOpen(false);
+      return;
+    }
+    
+    if (href.startsWith("#") && href !== "#") {
+      e.preventDefault();
+      const targetId = href.substring(1);
+      const element = document.getElementById(targetId);
+      
+      if (element) {
+        const headerOffset = 80;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth"
+        });
+        
+        setMobileMenuOpen(false);
+      }
+    } else {
+      setMobileMenuOpen(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navigation Header */}
-      <header className="bg-white shadow-sm">
-        <nav className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center space-x-2">
-              <img 
-                src="/logo.png?v=2" 
-                alt="LSTA Academy Logo" 
-                className="h-12 w-auto"
-                onError={(e) => {
-                  // Fallback if image doesn't exist
-                  e.currentTarget.style.display = 'none';
-                  const parent = e.currentTarget.parentElement;
-                  if (parent) {
-                    const span = document.createElement('span');
-                    span.className = 'text-2xl font-bold text-[#0B5F7F]';
-                    span.textContent = 'LSTA ACADEMY';
-                    parent.appendChild(span);
-                  }
-                }}
-              />
-            </div>
+    <div className="min-h-screen">
+      {/* New Header with Logos */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/98 backdrop-blur-sm border-b-4 border-[hsl(var(--edu-blue))]">
+        <div className="container mx-auto px-6 py-3">
+          <nav className="flex items-center justify-between">
+            {/* Logos */}
+            <a href="/" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
+              <img src={logo} alt="L.S.T.A. ACADEMY" className="h-16 w-auto" />
+              <div className="h-14 w-px bg-[hsl(var(--edu-blue))]" />
+              <img src={logoPedagoria} alt="Pedagoria" className="h-14 w-auto" />
+            </a>
 
-            {/* Navigation Menu */}
-            <div className="hidden md:flex items-center space-x-8">
-              <a 
-                href="#" 
-                className="text-gray-900 hover:text-[#0B5F7F] font-medium transition-colors"
-              >
-                Acceuil
-              </a>
-              <button
-                onClick={handleMethodeClick}
-                className="text-gray-700 hover:text-[#0B5F7F] font-medium transition-colors"
-              >
-                Méthode ▾
-              </button>
-              <button
-                onClick={handleEspaceClick}
-                className="text-gray-700 hover:text-[#0B5F7F] font-medium transition-colors"
-              >
-                Espace ▾
-              </button>
-              <button
-                onClick={handleClubsClick}
-                className="text-gray-700 hover:text-[#0B5F7F] font-medium transition-colors"
-              >
-                Clubs ▾
-              </button>
-              <button
-                onClick={handleContactClick}
-                className="text-gray-700 hover:text-[#0B5F7F] font-medium transition-colors"
-              >
-                Contact
-              </button>
-            </div>
+            {/* Desktop Navigation */}
+            <ul className="hidden lg:flex items-center gap-8">
+              {navItems.map((item) => (
+                <li key={item.label}>
+                  <a
+                    href={item.href || "#"}
+                    onClick={(e) => handleNavClick(e, item.href || "#", item.onClick)}
+                    className="flex items-center gap-1 text-foreground hover:text-[hsl(var(--edu-blue))] transition-colors font-bold text-lg cursor-pointer"
+                  >
+                    {item.label}
+                    {item.hasDropdown && <ChevronDown className="h-4 w-4" />}
+                  </a>
+                </li>
+              ))}
+            </ul>
 
-            {/* Auth Buttons */}
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
+            {/* CTA Buttons */}
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                className="hidden sm:inline-flex border-2 border-[hsl(var(--edu-blue))] text-[hsl(var(--edu-blue))] hover:bg-[hsl(var(--edu-blue))] hover:text-white font-bold"
                 onClick={handleConnexion}
-                className="border-[#0B5F7F] text-[#0B5F7F] hover:bg-[#0B5F7F] hover:text-white"
               >
                 Connexion
               </Button>
-              <Button
+              <Button 
+                className="hidden sm:inline-flex bg-[hsl(var(--edu-blue))] hover:bg-[hsl(200_90%_45%)] text-white font-bold shadow-[var(--shadow-button)]"
                 onClick={handleMonEspace}
-                className="bg-[#0B5F7F] hover:bg-[#094A63] text-white"
               >
                 Mon espace
               </Button>
+              
+              {/* Mobile Menu Button */}
+              <button
+                className="lg:hidden p-2 hover:bg-accent rounded-lg transition-colors"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label="Menu"
+              >
+                {mobileMenuOpen ? (
+                  <X className="h-6 w-6 text-foreground" />
+                ) : (
+                  <Menu className="h-6 w-6 text-foreground" />
+                )}
+              </button>
             </div>
-          </div>
-        </nav>
+          </nav>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="lg:hidden mt-4 pb-4 space-y-4 animate-in slide-in-from-top">
+              <ul className="space-y-3">
+                {navItems.map((item) => (
+                  <li key={item.label}>
+                    <a
+                      href={item.href || "#"}
+                      onClick={(e) => handleNavClick(e, item.href || "#", item.onClick)}
+                      className="flex items-center gap-1 text-foreground hover:text-primary transition-colors font-medium py-2 cursor-pointer"
+                    >
+                      {item.label}
+                      {item.hasDropdown && <ChevronDown className="h-4 w-4" />}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-col gap-2 pt-4 border-t border-border">
+                <Button variant="outline" className="w-full" onClick={handleConnexion}>
+                  Connexion
+                </Button>
+                <Button className="w-full" onClick={handleMonEspace}>Mon espace</Button>
+              </div>
+            </div>
+          )}
+        </div>
       </header>
 
-      {/* Hero Section */}
-      <main className="container mx-auto px-6 py-20">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          {/* Left Content */}
-          <div className="space-y-6">
-            <h1 className="text-5xl font-bold text-gray-900 leading-tight">
-              <span className="font-handwriting text-6xl text-[#0B5F7F]">Une</span>{' '}
-              <span className="relative">
-                pédagogie qui 
-                <span className="absolute -right-8 -top-4 text-4xl">💡</span>
-              </span>
-              <br />
-              s'adapte à chaque élève
-            </h1>
-            
-            <p className="text-lg text-gray-600 leading-relaxed">
-              Diagnostic personnalisé, coaching enseignant,<br />
-              suivi familial et activités interactives.
-            </p>
-
-            <div className="flex space-x-4 pt-4">
-              <Button
-                onClick={() => navigate('/schools')}
-                className="bg-[#0B5F7F] hover:bg-[#094A63] text-white px-8 py-6 text-lg"
-              >
-                Découvrez notre plateforme
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleMethodeClick}
-                className="border-2 border-[#0B5F7F] text-[#0B5F7F] hover:bg-[#0B5F7F] hover:text-white px-8 py-6 text-lg"
-              >
-                Notre méthode
-              </Button>
-            </div>
-          </div>
-
-          {/* Right Image */}
-          <div className="relative">
-            <div className="relative z-10">
-              <img 
-                src="/image.png?v=2" 
-                alt="Students learning" 
-                className="w-full h-auto rounded-3xl shadow-2xl"
-                onError={(e) => {
-                  // Fallback placeholder if image doesn't exist
-                  e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="600"%3E%3Crect fill="%230B5F7F" width="800" height="600"/%3E%3Ctext fill="white" font-family="Arial" font-size="40" x="50%25" y="50%25" text-anchor="middle" dominant-baseline="middle"%3EImage will be here%3C/text%3E%3C/svg%3E';
-                }}
-              />
-            </div>
-            
-            {/* Decorative waves at the bottom */}
-            <div className="absolute -bottom-10 left-0 right-0 z-0">
-              <svg viewBox="0 0 1440 320" className="w-full">
-                <path 
-                  fill="#B8E6F5" 
-                  fillOpacity="0.3" 
-                  d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,165.3C1248,171,1344,149,1392,138.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
+      {/* Main Content with New UI Components */}
+      <main>
+        <HeroSection />
+        <PedagoriaSection />
+        <DedicatedSpaces />
       </main>
 
-      {/* Features Section (Optional) */}
-      <section className="bg-gradient-to-br from-[#E8F5F9] to-white py-20">
-        <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="text-5xl mb-4">📊</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Diagnostic personnalisé</h3>
-              <p className="text-gray-600">Évaluation adaptée aux besoins de chaque élève</p>
-            </div>
-            
-            <div className="text-center p-6">
-              <div className="text-5xl mb-4">👨‍🏫</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Coaching enseignant</h3>
-              <p className="text-gray-600">Accompagnement professionnel et personnalisé</p>
-            </div>
-            
-            <div className="text-center p-6">
-              <div className="text-5xl mb-4">🎮</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Activités interactives</h3>
-              <p className="text-gray-600">Apprentissage ludique et engageant</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
-      <footer className="bg-[#0B5F7F] text-white py-8">
+      <footer className="bg-[hsl(var(--edu-blue))] text-white py-8">
         <div className="container mx-auto px-6 text-center">
-          <p>&copy; 2025 LSTA Academy. Tous droits réservés.</p>
+          <p className="font-medium">&copy; 2025 LSTA Academy & Pedagoria. Tous droits réservés.</p>
         </div>
       </footer>
     </div>

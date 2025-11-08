@@ -167,18 +167,20 @@ public class AuthController {
             profile.setPasswordHash(passwordEncoder.encode(request.getPassword()));
             profile.setFullName(sanitizedFullName);
             profile.setSchoolId(String.valueOf(savedSchool.getId()));
+            profile.setFullName(request.getFullName() != null ? request.getFullName() : request.getEmail().split("@")[0]);
+            profile.setSchoolId(savedSchool.getId());
 
             Profile savedProfile = profileRepository.save(profile);
 
             UserRole userRole = new UserRole();
             userRole.setUserId(savedProfile.getId());
-            userRole.setRole(UserRole.Role.admin);
+            userRole.setRole(UserRole.Role.ADMIN);
             userRoleRepository.save(userRole);
 
             String token = jwtUtil.generateToken(
                     savedProfile.getId(),
                     savedProfile.getEmail(),
-                    "admin",
+                    "ADMIN",
                     savedProfile.getSchoolId()
             );
 
@@ -190,7 +192,7 @@ public class AuthController {
             user.put("email", savedProfile.getEmail());
             user.put("fullName", savedProfile.getFullName());
             user.put("schoolId", savedProfile.getSchoolId());
-            user.put("role", "admin");
+            user.put("role", "ADMIN");
 
             Map<String, Object> schoolData = new HashMap<>();
             schoolData.put("id", savedSchool.getId());
@@ -215,7 +217,7 @@ public class AuthController {
         String email = (String) userDto.get("email");
         String password = (String) userDto.get("password");
         String fullName = (String) userDto.get("fullName");
-        String schoolId = (String) userDto.get("schoolId");
+        Long schoolId = userDto.get("schoolId") != null ? Long.parseLong(userDto.get("schoolId").toString()) : null;
         String roleStr = (String) userDto.get("role");
         String dateOfBirth = (String) userDto.get("dateOfBirth"); // NEW
         String gender = (String) userDto.get("gender"); // NEW
@@ -234,7 +236,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
 
-        if (schoolId == null || schoolId.trim().isEmpty()) {
+        if (schoolId == null) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "School ID is required");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
@@ -258,18 +260,19 @@ public class AuthController {
             UserRole userRole = new UserRole();
             userRole.setUserId(savedProfile.getId());
 
-            UserRole.Role parsedRole = UserRole.Role.teacher;
+            UserRole.Role parsedRole = UserRole.Role.TEACHER;
             if (roleStr != null && !roleStr.trim().isEmpty()) {
                 try {
-                    parsedRole = UserRole.Role.valueOf(roleStr.toLowerCase().trim());
+                    // Role enum is now UPPERCASE, so convert input to uppercase
+                    parsedRole = UserRole.Role.valueOf(roleStr.toUpperCase().trim());
                 } catch (IllegalArgumentException e) {
-                    parsedRole = UserRole.Role.teacher;
+                    parsedRole = UserRole.Role.TEACHER;
                 }
             }
             userRole.setRole(parsedRole);
             userRoleRepository.save(userRole);
 
-            if (parsedRole == UserRole.Role.student) {
+            if (parsedRole == UserRole.Role.STUDENT) {
                 // Check if student already exists for this userId
                 Optional<Student> existingStudentOpt = studentRepository.findByUserId(savedProfile.getId());
                 if (!existingStudentOpt.isPresent()) {

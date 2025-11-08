@@ -56,7 +56,7 @@ public class ActivityController {
 
     @GetMapping("/school/{schoolId}")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
-    public ResponseEntity<List<Activity>> getActivitiesBySchool(@PathVariable String schoolId) {
+    public ResponseEntity<List<Activity>> getActivitiesBySchool(@PathVariable Long schoolId) {
         return ResponseEntity.ok(activityRepository.findBySchoolId(schoolId));
     }
 
@@ -70,7 +70,7 @@ public class ActivityController {
     @GetMapping("/published")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT')")
     public ResponseEntity<List<Activity>> getPublishedActivities(
-            @RequestParam String schoolId,
+            @RequestParam Long schoolId,
             @RequestParam(required = false) UUID classId) {
         if (classId != null) {
             return ResponseEntity.ok(activityRepository.findBySchoolIdAndClassIdAndIsPublished(schoolId, classId, true));

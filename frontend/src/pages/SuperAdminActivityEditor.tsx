@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
+import { normalizeRole } from '@/lib/roleUtils';
 
 interface School {
   id: number;
@@ -48,13 +49,15 @@ const SuperAdminActivityEditor = () => {
     try {
       // Verify superadmin role
       const user = await authApi.getCurrentUser();
-      if (!user || user.role !== 'superadmin') {
+      const userRole = normalizeRole(user?.role);
+      
+      if (!user || userRole !== 'SUPERADMIN') {
         toast({
           title: 'Accès refusé',
           description: 'Seuls les superadmins peuvent accéder à cette page',
           variant: 'destructive',
         });
-        navigate('/');
+        navigate('/superadmin/dashboard');
         return;
       }
 

@@ -209,14 +209,14 @@ public class ResourceOwnershipValidator {
     /**
      * Check if user belongs to school
      */
-    public boolean belongsToSchool(UserContext user, String schoolId) {
+    public boolean belongsToSchool(UserContext user, Long schoolId) {
         if (user == null) return false;
         
         if ("SUPERADMIN".equalsIgnoreCase(user.role)) {
             return true;
         }
         
-        return user.schoolId != null && user.schoolId.equals(schoolId);
+        return user.schoolId != null && user.schoolId.equals(schoolId != null ? schoolId.toString() : null);
     }
 
     /**

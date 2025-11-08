@@ -34,7 +34,7 @@ public class TeacherController {
 
     @GetMapping("/school/{schoolId}")
     public ResponseEntity<List<Profile>> getTeachersBySchool(
-            @PathVariable String schoolId,
+            @PathVariable Long schoolId,
             Authentication authentication) {
         
         // Validate user can access this school's data
@@ -45,7 +45,7 @@ public class TeacherController {
         
         // Filter only teachers
         List<UUID> profileIds = allProfiles.stream().map(Profile::getId).collect(Collectors.toList());
-        List<UserRole> teacherRoles = userRoleRepository.findByUserIdInAndRole(profileIds, UserRole.Role.teacher);
+        List<UserRole> teacherRoles = userRoleRepository.findByUserIdInAndRole(profileIds, UserRole.Role.TEACHER);
         List<UUID> teacherIds = teacherRoles.stream().map(UserRole::getUserId).collect(Collectors.toList());
         
         List<Profile> teachers = allProfiles.stream()

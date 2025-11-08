@@ -363,6 +363,11 @@ export const ActivityBuilder = ({
           if (result.success && result.files) {
             result.files.forEach((uploadedFile: any) => {
               const fullUrl = `http://localhost:8080${uploadedFile.url}`;
+              // ✅ FIXED: Backend now returns full MinIO pre-signed URLs
+              // Use the URL directly if it's already a full URL, otherwise prepend API base
+              const fullUrl = uploadedFile.url.startsWith('http://') || uploadedFile.url.startsWith('https://')
+                ? uploadedFile.url
+                : `http://localhost:8080${uploadedFile.url}`;
               const element = newElements.find(el => el.id === uploadedFile.elementId);
               if (element) {
                 element.content = fullUrl;

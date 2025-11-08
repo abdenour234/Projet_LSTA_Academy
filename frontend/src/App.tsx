@@ -5,13 +5,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PrivateRoute } from "@/components/PrivateRoute";
+import { NavigationProgressBar } from "@/components/NavigationProgressBar";
 import LandingPage from "./pages/LandingPage";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import SchoolDashboard from "./pages/SchoolDashboard";
-import SchoolLogin from "./pages/SchoolLogin";
 import AdminSignup from "./pages/AdminSignup";
-import SuperAdminLogin from "./pages/SuperAdminLogin";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import SuperAdminSchoolDetails from "./pages/SuperAdminSchoolDetails";
 import SuperAdminActivityEditor from "./pages/SuperAdminActivityEditor";
@@ -31,6 +30,8 @@ import ActivityTracking from "./pages/ActivityTracking";
 import NotFound from "./pages/NotFound";
 import StudentManagement from "./pages/StudentManagement";
 import UnderConstruction from "./pages/UnderConstruction";
+import Methode from "./pages/Methode";
+import Clubs from "./pages/Clubs";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <NavigationProgressBar />
         <AuthProvider>
           <Routes>
             {/* Public Routes */}
@@ -48,15 +50,16 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<AdminSignup />} />
             
-            {/* Under Construction Pages - Public */}
-            <Route path="/methode" element={<UnderConstruction pageName="Méthode" />} />
+            {/* Legacy routes - redirect to unified login */}
+            <Route path="/superadmin/login" element={<Login />} />
+            <Route path="/school/:id/login" element={<Login />} />
+            
+            {/* Public Pages with New UI */}
+            <Route path="/methode" element={<Methode />} />
+            <Route path="/clubs" element={<Clubs />} />
             <Route path="/espace" element={<UnderConstruction pageName="Espace" />} />
-            <Route path="/clubs" element={<UnderConstruction pageName="Clubs" />} />
             <Route path="/contact" element={<UnderConstruction pageName="Contact" />} />
             
-            {/* Public Login Pages */}
-            <Route path="/superadmin/login" element={<SuperAdminLogin />} />
-            <Route path="/school/:id/login" element={<SchoolLogin />} />
             <Route path="/school/:id" element={<SchoolDashboard />} />
             
             {/* SUPERADMIN Routes - Protected */}

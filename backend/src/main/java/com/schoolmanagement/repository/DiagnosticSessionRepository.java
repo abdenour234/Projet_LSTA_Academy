@@ -9,10 +9,10 @@ import java.util.UUID;
 
 @Repository
 public interface DiagnosticSessionRepository extends JpaRepository<DiagnosticSession, UUID> {
-    List<DiagnosticSession> findBySchoolId(String schoolId);
+    List<DiagnosticSession> findBySchoolId(Long schoolId);
     List<DiagnosticSession> findByTeacherId(UUID teacherId);
     List<DiagnosticSession> findByClassId(UUID classId);
-    List<DiagnosticSession> findBySchoolIdAndTeacherId(String schoolId, UUID teacherId);
+    List<DiagnosticSession> findBySchoolIdAndTeacherId(Long schoolId, UUID teacherId);
     List<DiagnosticSession> findBySubject(String subject);
     List<DiagnosticSession> findByLevel(String level);
     List<DiagnosticSession> findByGridType(String gridType);

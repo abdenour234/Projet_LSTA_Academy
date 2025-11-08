@@ -9,10 +9,10 @@ import java.util.UUID;
 
 @Repository
 public interface ResourceRepository extends JpaRepository<Resource, UUID> {
-    List<Resource> findBySchoolId(String schoolId);
+    List<Resource> findBySchoolId(Long schoolId);
     List<Resource> findByType(String type);
     List<Resource> findByCategory(String category);
-    List<Resource> findBySchoolIdAndType(String schoolId, String type);
-    List<Resource> findBySchoolIdAndCategory(String schoolId, String category);
+    List<Resource> findBySchoolIdAndType(Long schoolId, String type);
+    List<Resource> findBySchoolIdAndCategory(Long schoolId, String category);
     List<Resource> findByUploadedBy(UUID uploadedBy);
 }

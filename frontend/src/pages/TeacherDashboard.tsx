@@ -4,8 +4,9 @@ import { LogOut, BookOpen, ClipboardList, Plus, ArrowRight, BarChart3, Eye, Cale
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { authApi, schoolApi, activityApi } from '@/lib/api';
+import { authApi, schoolApi, activityApi, auth } from '@/lib/api';
 import { DIAGNOSTIC_GRIDS } from '@/config/diagnosticGrids';
+import { normalizeRole, getRoleDashboardRoute } from '@/lib/roleUtils';
 
 const TeacherDashboard = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,10 +22,60 @@ const TeacherDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const user = await authApi.getCurrentUser();
+        // 🔒 SECURITY: Validate user access
+        const user = auth.getUser();
+        console.log('[TEACHER_DASHBOARD] Access validation:', { user, schoolId: id });
+        
         if (!user) {
-          navigate(`/school/${id}/login`);
+          console.error('[TEACHER_DASHBOARD] No user found');
+          toast({
+            title: 'Accès refusé',
+            description: 'Vous devez être connecté.',
+            variant: 'destructive',
+          });
+          navigate('/login', { replace: true });
           return;
+        }
+
+        // Validate role
+        const userRole = normalizeRole(user.role);
+        console.log('[TEACHER_DASHBOARD] Role check:', { original: user.role, normalized: userRole });
+        
+        if (userRole !== 'TEACHER' && userRole !== 'ADMIN' && userRole !== 'SUPERADMIN') {
+          console.error('[TEACHER_DASHBOARD] Invalid role:', userRole);
+          toast({
+            title: 'Accès refusé',
+            description: 'Cette page est réservée aux enseignants.',
+            variant: 'destructive',
+          });
+          const correctDashboard = getRoleDashboardRoute(userRole, user.schoolId);
+          navigate(correctDashboard, { replace: true });
+          return;
+        }
+
+        // Validate schoolId for TEACHER role
+        if (userRole === 'TEACHER') {
+          if (!user.schoolId) {
+            console.error('[TEACHER_DASHBOARD] Teacher missing schoolId');
+            toast({
+              title: 'Erreur de configuration',
+              description: 'Aucune école associée à votre compte.',
+              variant: 'destructive',
+            });
+            navigate('/login', { replace: true });
+            return;
+          }
+          
+          if (user.schoolId !== id) {
+            console.error('[TEACHER_DASHBOARD] School ID mismatch:', { userSchoolId: user.schoolId, urlSchoolId: id });
+            toast({
+              title: 'Accès refusé',
+              description: 'Vous ne pouvez pas accéder aux données d\'une autre école.',
+              variant: 'destructive',
+            });
+            navigate(`/school/${user.schoolId}/teacher/dashboard`, { replace: true });
+            return;
+          }
         }
 
         setUserName(user.fullName || user.email?.split('@')[0] || 'Professeur');
@@ -44,13 +95,17 @@ const TeacherDashboard = () => {
         setDiagnosticSessions([]);
         setHasDiagnostic(false);
       } catch (error) {
-        console.error('Error fetching data:', error);
-        navigate(`/school/${id}/login`);
+        console.error('[TEACHER_DASHBOARD] Error fetching data:', error);
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de charger les données',
+          variant: 'destructive',
+        });
       }
     };
 
     fetchData();
-  }, [id, navigate]);
+  }, [id, navigate, toast]);
 
   const handleCreateNewDiagnostic = () => {
     navigate(`/school/${id}/teacher/diagnostic/new`);
@@ -61,7 +116,20 @@ const TeacherDashboard = () => {
   };
 
   const handleLogout = async () => {
-    await authApi.logout();
+    try {
+      await authApi.logout();
+      toast({
+        title: 'Déconnexion réussie',
+        description: 'À bientôt !',
+      });
+      navigate(`/school/${id}/login`);
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force logout même en cas d'erreur
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate(`/school/${id}/login`);
+    }
   };
 
   return (

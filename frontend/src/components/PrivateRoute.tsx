@@ -1,6 +1,9 @@
-import React, { ReactNode } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import React, { ReactNode, useEffect, useRef } from 'react';
+import { Navigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { PageLoadingSpinner } from '@/components/ui/loading-spinner';
+import { normalizeRole, getRoleDashboardRoute } from '@/lib/roleUtils';
 
 /**
  * Props for PrivateRoute component
@@ -31,51 +34,119 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
 }) => {
   const { user, loading, isAuthenticated, hasRole } = useAuth();
   const location = useLocation();
+  const params = useParams();
+  const { toast } = useToast();
+  
+  // Track if we've already shown a toast to avoid duplicates
+  const toastShownRef = useRef(false);
+
+  console.log('[PRIVATE_ROUTE] Check:', { 
+    path: location.pathname, 
+    user: user?.email, 
+    role: user?.role, 
+    requiredRole, 
+    loading, 
+    isAuthenticated 
+  });
 
   // Show loading spinner while checking authentication
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-      </div>
-    );
+    return <PageLoadingSpinner text="Vérification de l'authentification..." />;
   }
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
+    console.log('[PRIVATE_ROUTE] Not authenticated, redirecting to login');
+    // Show toast notification for unauthenticated access
+    if (!toastShownRef.current) {
+      toastShownRef.current = true;
+      toast({
+        title: 'Authentification requise',
+        description: 'Veuillez vous connecter pour accéder à cette page.',
+        variant: 'destructive',
+      });
+    }
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
+  }
+
+  // ✅ SECURITY: Check if route requires school context
+  const requiresSchoolContext = location.pathname.includes('/school/');
+  const urlSchoolId = params.id; // From route parameter :id
+  
+  if (requiresSchoolContext) {
+    console.log('[PRIVATE_ROUTE] School context check:', { 
+      urlSchoolId, 
+      userSchoolId: user?.schoolId,
+      userRole: user?.role 
+    });
+
+    // ✅ Verify user has a schoolId
+    if (!user?.schoolId) {
+      console.error('[PRIVATE_ROUTE] User missing schoolId for school route');
+      if (!toastShownRef.current) {
+        toastShownRef.current = true;
+        toast({
+          title: 'Accès refusé',
+          description: 'Aucune école associée à votre compte. Contactez un administrateur.',
+          variant: 'destructive',
+        });
+      }
+      return <Navigate to="/" replace />;
+    }
+
+    // ✅ Verify URL schoolId matches user's schoolId (except for SUPERADMIN)
+    const userRole = normalizeRole(user.role);
+    if (userRole !== 'SUPERADMIN' && urlSchoolId && urlSchoolId !== user.schoolId) {
+      console.error('[PRIVATE_ROUTE] School ID mismatch:', { 
+        urlSchoolId, 
+        userSchoolId: user.schoolId 
+      });
+      if (!toastShownRef.current) {
+        toastShownRef.current = true;
+        toast({
+          title: 'Accès refusé',
+          description: 'Vous ne pouvez pas accéder aux données d\'une autre école.',
+          variant: 'destructive',
+        });
+      }
+      // Redirect to user's own school dashboard
+      const correctDashboard = getRoleDashboardRoute(user.role, user.schoolId);
+      return <Navigate to={correctDashboard} replace />;
+    }
   }
 
   // Check role-based access if required
   if (requiredRole && !hasRole(requiredRole)) {
-    // Determine appropriate redirect based on user role
-    const userRole = user?.role.toUpperCase();
-    let unauthorizedRedirect = '/';
+    console.error('[PRIVATE_ROUTE] Role check failed:', { 
+      userRole: user?.role, 
+      requiredRole 
+    });
     
-    switch (userRole) {
-      case 'SUPERADMIN':
-        unauthorizedRedirect = '/superadmin/dashboard';
-        break;
-      case 'ADMIN':
-        unauthorizedRedirect = user?.schoolId 
-          ? `/school/${user.schoolId}/admin/dashboard` 
-          : '/';
-        break;
-      case 'TEACHER':
-        unauthorizedRedirect = user?.schoolId 
-          ? `/school/${user.schoolId}/teacher/dashboard` 
-          : '/';
-        break;
-      case 'STUDENT':
-        unauthorizedRedirect = '/student/dashboard';
-        break;
-      default:
-        unauthorizedRedirect = '/';
+    // Show toast notification for unauthorized access
+    if (!toastShownRef.current) {
+      toastShownRef.current = true;
+      const requiredRoleText = Array.isArray(requiredRole) 
+        ? requiredRole.join(', ') 
+        : requiredRole;
+      
+      toast({
+        title: 'Accès refusé',
+        description: `Vous n'avez pas les permissions nécessaires. Rôle requis: ${requiredRoleText}`,
+        variant: 'destructive',
+      });
     }
     
-    return <Navigate to={unauthorizedRedirect} replace />;
+    // Redirect to user's appropriate dashboard
+    const userRole = normalizeRole(user?.role);
+    const correctDashboard = userRole && user?.schoolId
+      ? getRoleDashboardRoute(userRole, user.schoolId)
+      : '/';
+    
+    console.log('[PRIVATE_ROUTE] Redirecting to correct dashboard:', correctDashboard);
+    return <Navigate to={correctDashboard} replace />;
   }
 
+  console.log('[PRIVATE_ROUTE] Access granted');
   // User is authenticated and authorized - render protected content
   return <>{children}</>;
 };

@@ -45,7 +45,7 @@ public class ClasseController {
     @GetMapping("/school/{schoolId}")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
     public ResponseEntity<List<Classe>> getClassesBySchool(
-            @PathVariable String schoolId,
+            @PathVariable Long schoolId,
             Authentication authentication) {
         
         // Validate user can access this school

@@ -29,7 +29,7 @@ public class Student {
     private UUID classId;
 
     @Column(name = "school_id", nullable = false)
-    private String schoolId;
+    private Long schoolId;
 
     @Column(name = "user_id")  // NEW: Link to profile
     private UUID userId;

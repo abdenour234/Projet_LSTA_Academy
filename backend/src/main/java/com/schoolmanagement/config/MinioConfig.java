@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * Configuration class for MinIO client.
- * Initializes the MinioClient bean with connection parameters.
+ * MinIO is used for object storage with backend proxy for file access.
  */
 @Configuration
 @Slf4j
@@ -24,10 +24,11 @@ public class MinioConfig {
     private String secretKey;
 
     /**
-     * Creates and configures MinioClient bean.
+     * MinIO client for all operations (upload, download, delete).
+     * Uses internal Docker network endpoint for direct communication.
      * @return Configured MinioClient instance
      */
-    @Bean
+    @Bean(name = "minioClient")
     public MinioClient minioClient() {
         log.info("Initializing MinIO client with URL: {}", minioUrl);
         
