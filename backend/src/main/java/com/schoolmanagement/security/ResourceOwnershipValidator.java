@@ -62,7 +62,9 @@ public class ResourceOwnershipValidator {
         
         // Admin/Teacher can access students in their school
         if ("ADMIN".equalsIgnoreCase(user.role) || "TEACHER".equalsIgnoreCase(user.role)) {
-            return user.schoolId != null && user.schoolId.equals(student.getSchoolId());
+            // Convert Long schoolId to String for comparison with JWT-stored String schoolId
+            return user.schoolId != null && student.getSchoolId() != null 
+                && user.schoolId.equals(student.getSchoolId().toString());
         }
         
         return false;
@@ -89,7 +91,9 @@ public class ResourceOwnershipValidator {
         
         // Admin/Teacher can modify students in their school
         if ("ADMIN".equalsIgnoreCase(user.role) || "TEACHER".equalsIgnoreCase(user.role)) {
-            return user.schoolId != null && user.schoolId.equals(student.getSchoolId());
+            // Convert Long schoolId to String for comparison with JWT-stored String schoolId
+            return user.schoolId != null && student.getSchoolId() != null 
+                && user.schoolId.equals(student.getSchoolId().toString());
         }
         
         return false;
@@ -109,7 +113,9 @@ public class ResourceOwnershipValidator {
         if (activity == null) return false;
         
         // Users can access activities in their school
-        return user.schoolId != null && user.schoolId.equals(activity.getSchoolId());
+        // Convert Long schoolId to String for comparison with JWT-stored String schoolId
+        return user.schoolId != null && activity.getSchoolId() != null 
+            && user.schoolId.equals(activity.getSchoolId().toString());
     }
 
     /**
@@ -127,7 +133,9 @@ public class ResourceOwnershipValidator {
         
         // Only Admin/Teacher in same school can modify
         if ("ADMIN".equalsIgnoreCase(user.role) || "TEACHER".equalsIgnoreCase(user.role)) {
-            return user.schoolId != null && user.schoolId.equals(activity.getSchoolId());
+            // Convert Long schoolId to String for comparison with JWT-stored String schoolId
+            return user.schoolId != null && activity.getSchoolId() != null 
+                && user.schoolId.equals(activity.getSchoolId().toString());
         }
         
         return false;
@@ -165,7 +173,9 @@ public class ResourceOwnershipValidator {
         if (resource == null) return false;
         
         // Users can access resources in their school
-        return user.schoolId != null && user.schoolId.equals(resource.getSchoolId());
+        // Convert Long schoolId to String for comparison with JWT-stored String schoolId
+        return user.schoolId != null && resource.getSchoolId() != null 
+            && user.schoolId.equals(resource.getSchoolId().toString());
     }
 
     /**
@@ -183,7 +193,9 @@ public class ResourceOwnershipValidator {
         
         // Only Admin/Teacher in same school can modify
         if ("ADMIN".equalsIgnoreCase(user.role) || "TEACHER".equalsIgnoreCase(user.role)) {
-            return user.schoolId != null && user.schoolId.equals(resource.getSchoolId());
+            // Convert Long schoolId to String for comparison with JWT-stored String schoolId
+            return user.schoolId != null && resource.getSchoolId() != null 
+                && user.schoolId.equals(resource.getSchoolId().toString());
         }
         
         return false;
@@ -203,7 +215,9 @@ public class ResourceOwnershipValidator {
         if (classe == null) return false;
         
         // Users can access classes in their school
-        return user.schoolId != null && user.schoolId.equals(classe.getSchoolId());
+        // Convert Long schoolId to String for comparison with JWT-stored String schoolId
+        return user.schoolId != null && classe.getSchoolId() != null 
+            && user.schoolId.equals(classe.getSchoolId().toString());
     }
 
     /**

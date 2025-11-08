@@ -45,8 +45,8 @@ export async function validateSchoolAccess(schoolId: string): Promise<{
       };
     }
 
-    // Other roles must match their assigned school
-    if (user.schoolId !== schoolId) {
+    // Other roles must match their assigned school - convert both to strings for type-safe comparison
+    if (String(user.schoolId) !== String(schoolId)) {
       return {
         isValid: false,
         user,

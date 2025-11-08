@@ -66,7 +66,8 @@ const AdminDashboard = () => {
             return;
           }
           
-          if (user.schoolId !== id) {
+          // Convert both to strings for comparison to handle type mismatch
+          if (String(user.schoolId) !== String(id)) {
             console.error('[ADMIN_DASHBOARD] School ID mismatch:', { userSchoolId: user.schoolId, urlSchoolId: id });
             toast({
               title: 'Accès refusé',
@@ -120,8 +121,8 @@ const AdminDashboard = () => {
   const loadActivities = async () => {
     try {
       const data = await activityApi.getAll();
-      // Filter by school_id on frontend until backend supports it
-      const schoolActivities = data?.filter((a: any) => a.schoolId === id) || [];
+      // Filter by school_id on frontend - convert both to strings for type-safe comparison
+      const schoolActivities = data?.filter((a: any) => String(a.schoolId) === String(id)) || [];
       setActivities(schoolActivities);
     } catch (error) {
       console.error('Error loading activities:', error);

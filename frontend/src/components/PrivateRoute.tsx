@@ -96,7 +96,7 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
 
     // ✅ Verify URL schoolId matches user's schoolId (except for SUPERADMIN)
     const userRole = normalizeRole(user.role);
-    if (userRole !== 'SUPERADMIN' && urlSchoolId && urlSchoolId !== user.schoolId) {
+    if (userRole !== 'SUPERADMIN' && urlSchoolId && String(urlSchoolId) !== String(user.schoolId)) {
       console.error('[PRIVATE_ROUTE] School ID mismatch:', { 
         urlSchoolId, 
         userSchoolId: user.schoolId 

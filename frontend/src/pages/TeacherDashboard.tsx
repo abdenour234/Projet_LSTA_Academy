@@ -66,7 +66,8 @@ const TeacherDashboard = () => {
             return;
           }
           
-          if (user.schoolId !== id) {
+          // Convert both to strings for comparison to handle type mismatch
+          if (String(user.schoolId) !== String(id)) {
             console.error('[TEACHER_DASHBOARD] School ID mismatch:', { userSchoolId: user.schoolId, urlSchoolId: id });
             toast({
               title: 'Accès refusé',
@@ -87,7 +88,8 @@ const TeacherDashboard = () => {
         }
 
         const activitiesData = await activityApi.getAll();
-        const schoolActivities = activitiesData?.filter((a: any) => a.schoolId === id) || [];
+        // Convert both to strings for type-safe comparison
+        const schoolActivities = activitiesData?.filter((a: any) => String(a.schoolId) === String(id)) || [];
         setActivities(schoolActivities);
 
         // TODO: Load diagnostic sessions
