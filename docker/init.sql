@@ -75,7 +75,7 @@ CREATE INDEX IF NOT EXISTS idx_students_class_id ON public.students(class_id);
 CREATE TABLE IF NOT EXISTS public.activities (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   school_id BIGINT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,  -- Changed from TEXT to BIGINT
-  type TEXT NOT NULL CHECK (type IN ('Orale', 'Lecture', 'Écriture')),
+  type TEXT NOT NULL,  -- Removed CHECK constraint to allow any activity type
   title TEXT NOT NULL,
   description TEXT,
   level TEXT NOT NULL,
