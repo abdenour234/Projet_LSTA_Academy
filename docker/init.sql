@@ -454,8 +454,7 @@ CREATE INDEX IF NOT EXISTS idx_activities_school_level ON public.activities(scho
 -- Diagnostic sessions - teacher diagnostics
 CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_school_teacher ON public.diagnostic_sessions(school_id, teacher_id);
 
--- Activity files - ordered retrieval
-CREATE INDEX IF NOT EXISTS idx_activity_files_activity_position ON public.activity_files(activity_id, position);
+
 
 -- Resources - school resources by type
 CREATE INDEX IF NOT EXISTS idx_resources_school_type ON public.resources(school_id, file_type);
