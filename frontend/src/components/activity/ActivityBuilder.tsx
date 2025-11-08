@@ -256,6 +256,13 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
         // Ajouter les elementIds
         elementIds.forEach(id => formData.append('elementIds', id));
 
+        console.log('[ACTIVITY_BUILDER] Uploading files:', {
+          activityId: currentActivityId,
+          fileCount: Array.from(pendingFiles.values()).length,
+          elementIds: elementIds,
+          newElements: newElements
+        });
+
         const response = await fetch(`http://localhost:8080/api/activity-files/upload/${currentActivityId}`, {
           method: 'POST',
           headers: {
@@ -264,8 +271,15 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
           body: formData,
         });
 
+        console.log('[ACTIVITY_BUILDER] Upload response:', {
+          ok: response.ok,
+          status: response.status,
+          statusText: response.statusText
+        });
+
         if (response.ok) {
           const result = await response.json();
+          console.log('[ACTIVITY_BUILDER] Upload result:', result);
           
           // Mettre à jour les nouveaux éléments avec les vraies URLs
           if (result.success && result.files) {
@@ -288,8 +302,16 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
             const uploadedElementIds = new Set(result.files.map((f: any) => f.elementId));
             const filteredElements = elements.filter(el => !uploadedElementIds.has(el.id));
             
+            console.log('[ACTIVITY_BUILDER] Before merge:', {
+              existingElements: elements.length,
+              filteredElements: filteredElements.length,
+              newElements: newElements.length,
+              newElementsWithUrls: newElements.filter(el => el.content).length
+            });
+            
             // Combiner les éléments filtrés avec les nouveaux (qui ont maintenant les vraies URLs)
             const allElements = [...filteredElements, ...newElements];
+            console.log('[ACTIVITY_BUILDER] After merge - allElements:', allElements);
             setElements(allElements);
             
             // RE-SAUVEGARDER l'activité avec les vraies URLs
@@ -304,7 +326,9 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
               isPublished: publish,
             };
             
+            console.log('[ACTIVITY_BUILDER] Saving activity with layoutData:', updatedActivityData.layoutData);
             await activityApi.update(currentActivityId, updatedActivityData);
+            console.log('[ACTIVITY_BUILDER] Activity saved successfully');
           }
 
           // Nettoyer les previews et vider les fichiers en attente

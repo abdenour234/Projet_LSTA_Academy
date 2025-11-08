@@ -69,6 +69,7 @@ public class ActivityFileService {
             activityFile.setActivityId(activityId);
             activityFile.setFileName(file.getOriginalFilename());
             activityFile.setMinioKey(minioKey);
+            activityFile.setFilePath(minioKey); // Set file_path to the minioKey (can be used to construct URL)
             activityFile.setFileSize(file.getSize());
             activityFile.setMimeType(file.getContentType());
             activityFile.setFileType(determineFileType(file.getContentType()));
