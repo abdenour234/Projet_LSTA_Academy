@@ -73,23 +73,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/superadmin/schools/:schoolId" 
-              element={
-                <PrivateRoute requiredRole="SUPERADMIN">
-                  <SchoolDetails />
-                </PrivateRoute>
-              } 
-            />
-            <Route 
               path="/superadmin/activities/new"
-              element={
-                <PrivateRoute requiredRole="SUPERADMIN">
-                  <SuperAdminSchoolDetails />
-                </PrivateRoute>
-              } 
-            />
-            <Route 
-              path="/superadmin/activities/new" 
               element={
                 <PrivateRoute requiredRole="SUPERADMIN">
                   <SuperAdminActivityEditor />
@@ -101,6 +85,14 @@ const App = () => (
               element={
                 <PrivateRoute requiredRole="SUPERADMIN">
                   <SuperAdminActivityEditor />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/superadmin/schools/:schoolId" 
+              element={
+                <PrivateRoute requiredRole="SUPERADMIN">
+                  <SchoolDetails />
                 </PrivateRoute>
               } 
             />
