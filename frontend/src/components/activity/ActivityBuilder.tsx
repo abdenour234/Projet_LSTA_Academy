@@ -283,19 +283,12 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
               }
             });
             
-            // Filtrer les éléments existants pour supprimer ceux qui ont des URLs blob ou vides
-            // correspondant aux elementIds des fichiers uploadés
+            // ✅ FIX: Remove elements that are being replaced by newly uploaded files
+            // We want to keep existing elements that are NOT being uploaded
             const uploadedElementIds = new Set(result.files.map((f: any) => f.elementId));
-            const filteredElements = elements.filter(el => {
-              // Garder les éléments qui ne sont pas dans la liste des uploadés
-              // ou qui ont déjà une vraie URL (pas blob: ni vide)
-              if (uploadedElementIds.has(el.id)) {
-                return el.content && !el.content.startsWith('blob:');
-              }
-              return true;
-            });
+            const filteredElements = elements.filter(el => !uploadedElementIds.has(el.id));
             
-            // Combiner les éléments filtrés avec les nouveaux
+            // Combiner les éléments filtrés avec les nouveaux (qui ont maintenant les vraies URLs)
             const allElements = [...filteredElements, ...newElements];
             setElements(allElements);
             
