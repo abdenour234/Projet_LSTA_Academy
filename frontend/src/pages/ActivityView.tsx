@@ -19,8 +19,11 @@ const ActivityView = () => {
 
   const loadActivity = async () => {
     try {
+      console.log('[ACTIVITY_VIEW] Loading activity:', activityId);
       const data = await activityApi.getById(activityId!);
-      if (data && data.isPublished) {
+      console.log('[ACTIVITY_VIEW] Activity data received:', data);
+      
+      if (data) {
         // Parse layoutData if it's a JSON string
         if (data.layoutData && typeof data.layoutData === 'string') {
           try {
@@ -52,10 +55,14 @@ const ActivityView = () => {
           });
         }
         
+        console.log('[ACTIVITY_VIEW] Activity processed:', data);
+        console.log('[ACTIVITY_VIEW] isPublished:', data.isPublished);
         setActivity(data as any);
+      } else {
+        console.warn('[ACTIVITY_VIEW] No activity data received');
       }
     } catch (error) {
-      console.error('Error loading activity:', error);
+      console.error('[ACTIVITY_VIEW] Error loading activity:', error);
     } finally {
       setLoading(false);
     }
