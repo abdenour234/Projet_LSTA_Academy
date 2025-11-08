@@ -8,9 +8,10 @@
 -- 1. CREATE ENUMS
 -- ============================================
 
+-- Note: app_role enum is no longer used, roles are stored as TEXT
 -- Create enum for user roles (with all 4 roles: SUPERADMIN, ADMIN, TEACHER, STUDENT)
-DROP TYPE IF EXISTS public.app_role CASCADE;
-CREATE TYPE public.app_role AS ENUM ('SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT');
+-- DROP TYPE IF EXISTS public.app_role CASCADE;
+-- CREATE TYPE public.app_role AS ENUM ('SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT');
 
 -- ============================================
 -- 2. CREATE TABLES
@@ -47,7 +48,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 CREATE TABLE IF NOT EXISTS public.user_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL UNIQUE,
-  role app_role NOT NULL
+  role TEXT NOT NULL
 );
 
 -- TABLE: students (with user_id for authentication)
@@ -219,7 +220,7 @@ CREATE TABLE IF NOT EXISTS public.resources (
 -- ============================================
 
 -- Function to check user roles
-CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role app_role)
+CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role TEXT)
 RETURNS BOOLEAN
 LANGUAGE SQL
 STABLE
