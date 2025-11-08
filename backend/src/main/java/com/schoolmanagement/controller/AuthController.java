@@ -54,6 +54,8 @@ public class AuthController {
         this.inputSanitizer = inputSanitizer;
     }
 
+   
+
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials) {
         String email = credentials.get("email");
@@ -74,8 +76,10 @@ public class AuthController {
             error.put("error", "Invalid credentials");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
+        
+        boolean passwordMatches = profile.getPasswordHash() != null && passwordEncoder.matches(password, profile.getPasswordHash());
 
-        if (profile.getPasswordHash() == null || !passwordEncoder.matches(password, profile.getPasswordHash())) {
+        if (!passwordMatches) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "Invalid credentials");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);

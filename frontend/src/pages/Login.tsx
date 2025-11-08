@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { authApi } from '@/lib/api';
 import { Shield, GraduationCap, UserCheck, BookOpen, LogIn } from 'lucide-react';
 import { normalizeRole, getRoleDashboardRoute } from '@/lib/roleUtils';
@@ -12,6 +13,7 @@ import { normalizeRole, getRoleDashboardRoute } from '@/lib/roleUtils';
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { checkAuth } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -71,22 +73,10 @@ const Login = () => {
       localStorage.setItem('user', JSON.stringify(normalizedUser));
       console.log('[LOGIN] User data stored:', normalizedUser);
 
-      // ✅ STEP 4: Verify token is valid before redirecting
-      try {
-        await authApi.getCurrentUser();
-        console.log('[LOGIN] Token verified successfully');
-      } catch (error: any) {
-        console.error('[LOGIN] Token verification failed:', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        toast({
-          title: 'Erreur d\'authentification',
-          description: 'Token invalide. Veuillez réessayer.',
-          variant: 'destructive',
-        });
-        setLoading(false);
-        return;
-      }
+      // ✅ STEP 4: Update AuthContext to synchronize authentication state
+      console.log('[LOGIN] Updating AuthContext...');
+      await checkAuth();
+      console.log('[LOGIN] AuthContext updated successfully');
 
       // ✅ STEP 5: Show success message
       toast({
