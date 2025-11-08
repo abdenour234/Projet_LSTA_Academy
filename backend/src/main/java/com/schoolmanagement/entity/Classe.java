@@ -23,7 +23,7 @@ public class Classe {
     private String name;
 
     @Column(name = "school_id", nullable = false)
-    private String schoolId;
+    private Long schoolId;
 
     @Column
     private String level;

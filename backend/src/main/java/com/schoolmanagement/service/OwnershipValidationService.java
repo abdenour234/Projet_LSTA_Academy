@@ -149,7 +149,7 @@ public class OwnershipValidationService {
      * Validates that a user can only access data from their own school.
      * Used for filtering lists by schoolId.
      */
-    public void validateSchoolAccess(String schoolId, Authentication auth) {
+    public void validateSchoolAccess(Long schoolId, Authentication auth) {
         if (auth == null) {
             log.warn("❌ Access denied: No authentication provided for school access");
             throw new AccessDeniedException("Authentication required");

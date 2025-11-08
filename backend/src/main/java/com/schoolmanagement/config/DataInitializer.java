@@ -90,7 +90,7 @@ public class DataInitializer implements CommandLineRunner {
             superAdminProfile.setFullName("Super Admin");
             superAdminProfile.setEmail(superAdminEmail);
             superAdminProfile.setPasswordHash(passwordEncoder.encode("admin"));
-            superAdminProfile.setSchoolId(String.valueOf(firstSchool.getId()));
+            superAdminProfile.setSchoolId(firstSchool.getId());
             superAdminProfile.setCreatedAt(LocalDateTime.now());
             superAdminProfile.setUpdatedAt(LocalDateTime.now());
             

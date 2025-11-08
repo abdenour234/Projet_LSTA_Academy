@@ -18,7 +18,7 @@ CREATE TYPE public.app_role AS ENUM ('SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT'
 
 -- TABLE: schools
 CREATE TABLE IF NOT EXISTS public.schools (
-  id TEXT PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   city TEXT NOT NULL,
   region TEXT NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT,
   full_name TEXT,
-  school_id TEXT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
+  school_id BIGINT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,  -- Changed from TEXT to BIGINT
   matiere TEXT,
   phone TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
 CREATE TABLE IF NOT EXISTS public.students (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID UNIQUE,
-  school_id TEXT NOT NULL,
+  school_id BIGINT NOT NULL,  -- Changed from TEXT to BIGINT
   class_id UUID,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
@@ -73,7 +73,7 @@ CREATE INDEX IF NOT EXISTS idx_students_class_id ON public.students(class_id);
 -- TABLE: activities
 CREATE TABLE IF NOT EXISTS public.activities (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id TEXT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
+  school_id BIGINT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,  -- Changed from TEXT to BIGINT
   type TEXT NOT NULL CHECK (type IN ('Orale', 'Lecture', 'Écriture')),
   title TEXT NOT NULL,
   description TEXT,
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS public.activity_files (
 -- TABLE: diagnostics
 CREATE TABLE IF NOT EXISTS public.diagnostics (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id TEXT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
+  school_id BIGINT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,  -- Changed from TEXT to BIGINT
   teacher_id UUID NOT NULL,
   subject TEXT NOT NULL,
   level TEXT NOT NULL,
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS public.diagnostics (
 -- TABLE: diagnostic_sessions
 CREATE TABLE IF NOT EXISTS public.diagnostic_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id TEXT NOT NULL,
+  school_id BIGINT NOT NULL,  -- Changed from TEXT to BIGINT
   teacher_id UUID NOT NULL,
   class_id UUID,
   subject TEXT NOT NULL,
@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS public.diagnostic_sessions (
 -- TABLE: classes
 CREATE TABLE IF NOT EXISTS public.classes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id TEXT NOT NULL,
+  school_id BIGINT NOT NULL,  -- Changed from TEXT to BIGINT
   name TEXT NOT NULL,
   level TEXT NOT NULL,
   filiere TEXT,
@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS public.teaching_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   teacher_id UUID NOT NULL,
   class_id UUID NOT NULL REFERENCES public.classes(id) ON DELETE CASCADE,
-  school_id TEXT NOT NULL,
+  school_id BIGINT NOT NULL,  -- Changed from TEXT to BIGINT
   session_date DATE NOT NULL,
   duration_minutes INTEGER,
   activities_realized TEXT[],
@@ -172,7 +172,7 @@ CREATE TABLE IF NOT EXISTS public.session_progress (
 CREATE TABLE IF NOT EXISTS public.user_activity_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL,
-  school_id TEXT NOT NULL,
+  school_id BIGINT NOT NULL,  -- Changed from TEXT to BIGINT
   activity_type TEXT NOT NULL,
   duration_seconds INTEGER DEFAULT 0,
   activity_date DATE NOT NULL,
@@ -183,7 +183,7 @@ CREATE TABLE IF NOT EXISTS public.user_activity_logs (
 -- TABLE: conversations
 CREATE TABLE IF NOT EXISTS public.conversations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id TEXT NOT NULL,
+  school_id BIGINT NOT NULL,  -- Changed from TEXT to BIGINT
   participant_ids UUID[] NOT NULL,
   subject TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
@@ -204,7 +204,7 @@ CREATE TABLE IF NOT EXISTS public.messages (
 -- TABLE: resources
 CREATE TABLE IF NOT EXISTS public.resources (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id TEXT NOT NULL,
+  school_id BIGINT NOT NULL,  -- Changed from TEXT to BIGINT
   title TEXT NOT NULL,
   description TEXT,
   file_url TEXT,
@@ -296,15 +296,14 @@ CREATE TRIGGER update_diagnostic_sessions_updated_at
 -- 5. SEED DATA
 -- ============================================
 
--- Insert demo schools
-INSERT INTO public.schools (id, name, city, region, level, status, address, students, last_diagnostic) VALUES
-  ('1', 'École Ibn Battuta', 'Oujda', 'Oriental', 'Primaire', 'Public', 'Quartier Al Qods, Oujda', 320, '2025-09-15'),
-  ('2', 'Collège Al Andalous', 'Fès', 'Fès-Meknès', 'Collège', 'Public', 'Avenue Hassan II, Fès', 580, '2025-08-22'),
-  ('3', 'Lycée Pasteur', 'Casablanca', 'Casablanca-Settat', 'Lycée', 'Privé', 'Boulevard Zerktouni, Casablanca', 450, '2025-10-01'),
-  ('4', 'École Al Farabi', 'Rabat', 'Rabat-Salé-Kénitra', 'Primaire', 'Public', 'Hay Riad, Rabat', 280, '2025-09-28'),
-  ('5', 'Collège Ibn Khaldoun', 'Marrakech', 'Marrakech-Safi', 'Collège', 'Public', 'Gueliz, Marrakech', 620, '2025-09-10'),
-  ('6', 'Lycée Excellence', 'Tanger', 'Tanger-Tétouan-Al Hoceïma', 'Lycée', 'Privé', 'Avenue Mohammed VI, Tanger', 380, '2025-09-25')
-ON CONFLICT (id) DO NOTHING;
+-- Insert demo schools (remove explicit IDs, let BIGSERIAL auto-generate)
+INSERT INTO public.schools (name, city, region, level, status, address, students, last_diagnostic) VALUES
+  ('École Ibn Battuta', 'Oujda', 'Oriental', 'Primaire', 'Public', 'Quartier Al Qods, Oujda', 320, '2025-09-15'),
+  ('Collège Al Andalous', 'Fès', 'Fès-Meknès', 'Collège', 'Public', 'Avenue Hassan II, Fès', 580, '2025-08-22'),
+  ('Lycée Pasteur', 'Casablanca', 'Casablanca-Settat', 'Lycée', 'Privé', 'Boulevard Zerktouni, Casablanca', 450, '2025-10-01'),
+  ('École Al Farabi', 'Rabat', 'Rabat-Salé-Kénitra', 'Primaire', 'Public', 'Hay Riad, Rabat', 280, '2025-09-28'),
+  ('Collège Ibn Khaldoun', 'Marrakech', 'Marrakech-Safi', 'Collège', 'Public', 'Gueliz, Marrakech', 620, '2025-09-10'),
+  ('Lycée Excellence', 'Tanger', 'Tanger-Tétouan-Al Hoceïma', 'Lycée', 'Privé', 'Avenue Mohammed VI, Tanger', 380, '2025-09-25');
 
 -- Create SUPERADMIN account
 -- Email: admin@admin.com
@@ -315,7 +314,7 @@ VALUES (
   'admin@admin.com',
   '$2a$10$xvNHQYZBwlH7OzvGxkxhUOQRMlVSHIVHzLxQjz3cjKUmjGRjKWn0K',
   'Super Admin',
-  '1',
+  1,  -- Changed from '1' (text) to 1 (bigint)
   now(),
   now()
 )

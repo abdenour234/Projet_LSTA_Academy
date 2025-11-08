@@ -36,7 +36,7 @@ public class SuperAdminActivityService {
         activity.setDescription(dto.getDescription());
         activity.setType(dto.getType() != null ? dto.getType() : "lesson");
         activity.setLevel(dto.getDifficulty() != null ? dto.getDifficulty() : "medium");
-        activity.setSchoolId(String.valueOf(dto.getSchoolIds().get(0))); // Use first school as owner
+        activity.setSchoolId(dto.getSchoolIds().get(0)); // Use first school as owner
         activity.setIsPublished(true);
         activity.setCreatedBy(null); // superadmin UUID if available
         activity.setCreatedAt(LocalDateTime.now());

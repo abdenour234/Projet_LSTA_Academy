@@ -162,7 +162,7 @@ public class AuthController {
             profile.setEmail(request.getEmail());
             profile.setPasswordHash(passwordEncoder.encode(request.getPassword()));
             profile.setFullName(request.getFullName() != null ? request.getFullName() : request.getEmail().split("@")[0]);
-            profile.setSchoolId(String.valueOf(savedSchool.getId()));
+            profile.setSchoolId(savedSchool.getId());
 
             Profile savedProfile = profileRepository.save(profile);
 
@@ -211,7 +211,7 @@ public class AuthController {
         String email = (String) userDto.get("email");
         String password = (String) userDto.get("password");
         String fullName = (String) userDto.get("fullName");
-        String schoolId = (String) userDto.get("schoolId");
+        Long schoolId = userDto.get("schoolId") != null ? Long.parseLong(userDto.get("schoolId").toString()) : null;
         String roleStr = (String) userDto.get("role");
         String dateOfBirth = (String) userDto.get("dateOfBirth"); // NEW
         String gender = (String) userDto.get("gender"); // NEW
@@ -230,7 +230,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
 
-        if (schoolId == null || schoolId.trim().isEmpty()) {
+        if (schoolId == null) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "School ID is required");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);

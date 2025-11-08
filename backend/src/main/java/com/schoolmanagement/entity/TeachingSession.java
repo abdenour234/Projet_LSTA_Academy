@@ -21,7 +21,7 @@ public class TeachingSession {
     private UUID id;
 
     @Column(name = "school_id", nullable = false)
-    private String schoolId;
+    private Long schoolId;
 
     @Column(name = "teacher_id", nullable = false)
     private UUID teacherId;

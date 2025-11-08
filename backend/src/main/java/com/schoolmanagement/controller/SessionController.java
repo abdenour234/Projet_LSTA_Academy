@@ -63,7 +63,7 @@ public class SessionController {
 
     @GetMapping("/school/{schoolId}")
     public ResponseEntity<List<TeachingSession>> getSessionsBySchool(
-            @PathVariable String schoolId,
+            @PathVariable Long schoolId,
             Authentication authentication) {
         
         // Validate user can access this school

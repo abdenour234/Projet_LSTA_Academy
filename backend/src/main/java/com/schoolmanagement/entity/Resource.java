@@ -20,7 +20,7 @@ public class Resource {
     private UUID id;
 
     @Column(name = "school_id", nullable = false)
-    private String schoolId;
+    private Long schoolId;
 
     @Column(nullable = false)
     private String title;
