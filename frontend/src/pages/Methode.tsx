@@ -1,111 +1,40 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Sparkles, ChevronDown, Menu, X } from "lucide-react";
-import { authApi } from '@/lib/api';
+import { ChevronDown, Menu, X } from "lucide-react";
+import { useState } from 'react';
 import logo from "@/assets/logo-lsta.png";
 import logoPedagoria from "@/assets/logo-pedagoria.png";
-import heroImage from "@/assets/hero-transparent.png";
-import HeroSection from '@/components/HeroSection';
-import PedagoriaSection from '@/components/PedagoriaSection';
-import DedicatedSpaces from '@/components/DedicatedSpaces';
+import MethodeSection from "@/components/MethodeSection";
 
-const LandingPage = () => {
+const Methode = () => {
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  const checkAuthStatus = async () => {
-    try {
-      const user = await authApi.getCurrentUser();
-      setIsAuthenticated(!!user);
-    } catch (error) {
-      setIsAuthenticated(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleMonEspace = () => {
-    if (isAuthenticated) {
-      navigate('/schools');
-    } else {
-      navigate('/login');
-    }
-  };
-
-  const handleConnexion = () => {
-    navigate('/login');
-  };
-
-  const handleMethodeClick = () => {
-    navigate('/methode');
-  };
-
-  const handleEspaceClick = () => {
-    navigate('/espace');
-  };
-
-  const handleClubsClick = () => {
-    navigate('/clubs');
-  };
-
-  const handleContactClick = () => {
-    navigate('/contact');
-  };
-
   const navItems = [
-    { label: "Accueil", href: "/" },
-    { label: "Méthode", onClick: handleMethodeClick, hasDropdown: true },
-    { label: "Espace", onClick: handleEspaceClick, hasDropdown: true },
+    { label: "Accueil", onClick: () => navigate('/') },
+    { label: "Méthode", onClick: () => navigate('/methode'), hasDropdown: true },
+    { label: "Espace", onClick: () => navigate('/espace'), hasDropdown: true },
     { label: "Activités", href: "#activites", hasDropdown: true },
-    { label: "Clubs", onClick: handleClubsClick },
-    { label: "Contact", onClick: handleContactClick },
+    { label: "Clubs", onClick: () => navigate('/clubs') },
+    { label: "Contact", onClick: () => navigate('/contact') },
   ];
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, onClick?: () => void) => {
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, onClick?: () => void) => {
     if (onClick) {
       e.preventDefault();
       onClick();
-      setMobileMenuOpen(false);
-      return;
-    }
-    
-    if (href.startsWith("#") && href !== "#") {
-      e.preventDefault();
-      const targetId = href.substring(1);
-      const element = document.getElementById(targetId);
-      
-      if (element) {
-        const headerOffset = 80;
-        const elementPosition = element.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: "smooth"
-        });
-        
-        setMobileMenuOpen(false);
-      }
-    } else {
       setMobileMenuOpen(false);
     }
   };
 
   return (
     <div className="min-h-screen">
-      {/* New Header with Logos */}
+      {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/98 backdrop-blur-sm border-b-4 border-[hsl(var(--edu-blue))]">
         <div className="container mx-auto px-6 py-3">
           <nav className="flex items-center justify-between">
             {/* Logos */}
-            <a href="/" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
+            <a href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }} className="flex items-center gap-4 hover:opacity-80 transition-opacity cursor-pointer">
               <img src={logo} alt="L.S.T.A. ACADEMY" className="h-16 w-auto" />
               <div className="h-14 w-px bg-[hsl(var(--edu-blue))]" />
               <img src={logoPedagoria} alt="Pedagoria" className="h-14 w-auto" />
@@ -117,7 +46,7 @@ const LandingPage = () => {
                 <li key={item.label}>
                   <a
                     href={item.href || "#"}
-                    onClick={(e) => handleNavClick(e, item.href || "#", item.onClick)}
+                    onClick={(e) => handleNavClick(e, item.onClick)}
                     className="flex items-center gap-1 text-foreground hover:text-[hsl(var(--edu-blue))] transition-colors font-bold text-lg cursor-pointer"
                   >
                     {item.label}
@@ -132,13 +61,13 @@ const LandingPage = () => {
               <Button 
                 variant="outline" 
                 className="hidden sm:inline-flex border-2 border-[hsl(var(--edu-blue))] text-[hsl(var(--edu-blue))] hover:bg-[hsl(var(--edu-blue))] hover:text-white font-bold"
-                onClick={handleConnexion}
+                onClick={() => navigate('/login')}
               >
                 Connexion
               </Button>
               <Button 
                 className="hidden sm:inline-flex bg-[hsl(var(--edu-blue))] hover:bg-[hsl(200_90%_45%)] text-white font-bold shadow-[var(--shadow-button)]"
-                onClick={handleMonEspace}
+                onClick={() => navigate('/schools')}
               >
                 Mon espace
               </Button>
@@ -166,7 +95,7 @@ const LandingPage = () => {
                   <li key={item.label}>
                     <a
                       href={item.href || "#"}
-                      onClick={(e) => handleNavClick(e, item.href || "#", item.onClick)}
+                      onClick={(e) => handleNavClick(e, item.onClick)}
                       className="flex items-center gap-1 text-foreground hover:text-primary transition-colors font-medium py-2 cursor-pointer"
                     >
                       {item.label}
@@ -176,31 +105,21 @@ const LandingPage = () => {
                 ))}
               </ul>
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                <Button variant="outline" className="w-full" onClick={handleConnexion}>
+                <Button variant="outline" className="w-full" onClick={() => navigate('/login')}>
                   Connexion
                 </Button>
-                <Button className="w-full" onClick={handleMonEspace}>Mon espace</Button>
+                <Button className="w-full" onClick={() => navigate('/schools')}>Mon espace</Button>
               </div>
             </div>
           )}
         </div>
       </header>
 
-      {/* Main Content with New UI Components */}
-      <main>
-        <HeroSection />
-        <PedagoriaSection />
-        <DedicatedSpaces />
+      <main className="pt-20">
+        <MethodeSection />
       </main>
-
-      {/* Footer */}
-      <footer className="bg-[hsl(var(--edu-blue))] text-white py-8">
-        <div className="container mx-auto px-6 text-center">
-          <p className="font-medium">&copy; 2025 LSTA Academy & Pedagoria. Tous droits réservés.</p>
-        </div>
-      </footer>
     </div>
   );
 };
 
-export default LandingPage;
+export default Methode;

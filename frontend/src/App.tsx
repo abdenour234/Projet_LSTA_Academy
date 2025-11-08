@@ -30,6 +30,8 @@ import ActivityTracking from "./pages/ActivityTracking";
 import NotFound from "./pages/NotFound";
 import StudentManagement from "./pages/StudentManagement";
 import UnderConstruction from "./pages/UnderConstruction";
+import Methode from "./pages/Methode";
+import Clubs from "./pages/Clubs";
 
 const queryClient = new QueryClient();
 
@@ -52,10 +54,10 @@ const App = () => (
             <Route path="/superadmin/login" element={<Login />} />
             <Route path="/school/:id/login" element={<Login />} />
             
-            {/* Under Construction Pages - Public */}
-            <Route path="/methode" element={<UnderConstruction pageName="Méthode" />} />
+            {/* Public Pages with New UI */}
+            <Route path="/methode" element={<Methode />} />
+            <Route path="/clubs" element={<Clubs />} />
             <Route path="/espace" element={<UnderConstruction pageName="Espace" />} />
-            <Route path="/clubs" element={<UnderConstruction pageName="Clubs" />} />
             <Route path="/contact" element={<UnderConstruction pageName="Contact" />} />
             
             <Route path="/school/:id" element={<SchoolDashboard />} />
