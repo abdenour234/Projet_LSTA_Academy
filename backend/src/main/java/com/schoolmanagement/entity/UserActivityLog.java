@@ -23,7 +23,7 @@ public class UserActivityLog {
     private UUID userId;
 
     @Column(name = "school_id", nullable = false)
-    private String schoolId;
+    private Long schoolId;
 
     @Column(name = "activity_date", nullable = false)
     private LocalDate activityDate;

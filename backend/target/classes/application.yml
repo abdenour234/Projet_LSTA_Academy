@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: school-management
+  
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/schoolmanagement}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+# MinIO Configuration
+minio:
+  url: ${MINIO_URL:http://minio:9000}  # Internal Docker network URL
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket-name: ${MINIO_BUCKET_NAME:school-management}
+
+# Application Configuration
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8080}  # Public URL for file download links
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-very-secure-secret-key-change-this-in-production-minimum-512-bits}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+# Server Configuration
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.schoolmanagement: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG

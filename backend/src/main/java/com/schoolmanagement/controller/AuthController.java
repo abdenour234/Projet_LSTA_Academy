@@ -162,7 +162,7 @@ public class AuthController {
             profile.setEmail(request.getEmail());
             profile.setPasswordHash(passwordEncoder.encode(request.getPassword()));
             profile.setFullName(request.getFullName() != null ? request.getFullName() : request.getEmail().split("@")[0]);
-            profile.setSchoolId(String.valueOf(savedSchool.getId()));
+            profile.setSchoolId(savedSchool.getId());
 
             Profile savedProfile = profileRepository.save(profile);
 
