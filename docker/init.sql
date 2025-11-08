@@ -1,23 +1,12 @@
--- ============================================-- Simple initialization script for PostgreSQL database
+-- ============================================
+-- School Management System - Complete Database Initialization
+-- Version: 2.0 (RBAC Fixed)
+-- Date: October 29, 2025
+-- ============================================
 
--- School Management System - Complete Database Initialization-- Creates app_role enum type needed by JPA entities
-
--- Unified schema with RBAC fixes applied
-
--- Version: 2.0 (RBAC Fixed)DO $$ 
-
--- Date: October 29, 2025BEGIN
-
--- ============================================    -- Create app_role enum if it doesn't exist
-
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'app_role') THEN
-
--- ============================================        CREATE TYPE app_role AS ENUM ('admin', 'teacher', 'superadmin', 'student');
-
--- 1. CREATE ENUMS    END IF;
-
--- ============================================END $$;
-
+-- ============================================
+-- 1. CREATE ENUMS
+-- ============================================
 
 -- Create enum for user roles (with all 4 roles: SUPERADMIN, ADMIN, TEACHER, STUDENT)
 DROP TYPE IF EXISTS public.app_role CASCADE;
