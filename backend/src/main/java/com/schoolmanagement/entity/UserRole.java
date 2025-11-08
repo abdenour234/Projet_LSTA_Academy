@@ -21,8 +21,8 @@ public class UserRole {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Convert(converter = RoleAttributeConverter.class)
     private Role role;
 
     /**
