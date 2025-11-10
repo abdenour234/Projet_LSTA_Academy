@@ -310,7 +310,7 @@ export default function ClassManagement() {
             email,
             password,
             fullName,
-            role: 'student',
+            role: 'STUDENT',
             schoolId: schoolId!,
             dateOfBirth: student.dateOfBirth,
             gender: student.gender,
@@ -368,7 +368,7 @@ export default function ClassManagement() {
         email,
         password,
         fullName,
-        role: 'student',
+        role: 'STUDENT',
         schoolId: schoolId!,
         dateOfBirth: parsedDate,
         gender: newStudent.gender,
@@ -479,34 +479,37 @@ export default function ClassManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-      <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => navigate(`/school/${schoolId}/admin/dashboard`)}
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold">Gestion des Classes</h1>
-                <p className="text-sm text-muted-foreground">Gérez les classes et leurs effectifs</p>
-              </div>
-            </div>
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Déconnexion
+  <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
+    {/* Header with navigation and logout */}
+    <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate(`/school/${schoolId}/admin/dashboard`)}
+            >
+              <ArrowLeft className="h-5 w-5" />
             </Button>
+            <div>
+              <h1 className="text-2xl font-bold">Gestion des Classes</h1>
+              <p className="text-sm text-muted-foreground">Gérez les classes et leurs effectifs</p>
+            </div>
           </div>
+          <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Déconnexion
+          </Button>
         </div>
-      </header>
+      </div>
+    </header>
 
-      <main className="container mx-auto p-8">
-        <div className="flex justify-end items-center mb-8">
-          <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
+    {/* Main content */}
+    <main className="container mx-auto p-8">
+      {/* Create Class Button */}
+      <div className="flex justify-end items-center mb-8">
+        <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
@@ -520,7 +523,13 @@ export default function ClassManagement() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="name">Nom de la classe</Label>
-                <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="6ème A" required />
+                <Input 
+                  id="name" 
+                  value={formData.name} 
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                  placeholder="6ème A" 
+                  required 
+                />
               </div>
               <div>
                 <Label htmlFor="level">Niveau</Label>
@@ -535,12 +544,23 @@ export default function ClassManagement() {
               </div>
               <div>
                 <Label htmlFor="annee">Année scolaire</Label>
-                <Input id="annee" value={formData.academicYear} onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })} placeholder="2024-2025" required />
+                <Input 
+                  id="annee" 
+                  value={formData.academicYear} 
+                  onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })} 
+                  placeholder="2024-2025" 
+                  required 
+                />
               </div>
               {!editingClass && (
                 <div>
                   <Label htmlFor="csv">Importer CSV Étudiants (optionnel)</Label>
-                  <Input id="csv" type="file" accept=".csv" onChange={handleFileUpload} />
+                  <Input 
+                    id="csv" 
+                    type="file" 
+                    accept=".csv" 
+                    onChange={handleFileUpload} 
+                  />
                   <p className="text-sm text-muted-foreground mt-1">
                     Colonnes acceptées: Prénom, Nom, Date de naissance, Genre, Contact parent, Massar (formats flexibles)
                   </p>
@@ -548,7 +568,15 @@ export default function ClassManagement() {
               )}
               <div>
                 <Label htmlFor="studentCount">Effectif</Label>
-                <Input id="studentCount" type="number" min="0" value={formData.studentCount} onChange={(e) => setFormData({ ...formData, studentCount: parseInt(e.target.value) || 0 })} disabled={importedStudents.length > 0} required />
+                <Input 
+                  id="studentCount" 
+                  type="number" 
+                  min="0" 
+                  value={formData.studentCount} 
+                  onChange={(e) => setFormData({ ...formData, studentCount: parseInt(e.target.value) || 0 })} 
+                  disabled={importedStudents.length > 0} 
+                  required 
+                />
               </div>
               <div className="flex gap-2">
                 <Button type="submit" className="flex-1" disabled={submitting}>
@@ -563,6 +591,7 @@ export default function ClassManagement() {
         </Dialog>
       </div>
 
+      {/* Classes Table */}
       <Card className="p-6">
         <Table>
           <TableHeader>
@@ -577,7 +606,9 @@ export default function ClassManagement() {
           <TableBody>
             {classes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">Aucune classe enregistrée</TableCell>
+                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  Aucune classe enregistrée
+                </TableCell>
               </TableRow>
             ) : (
               classes.map((classItem) => (
@@ -587,11 +618,18 @@ export default function ClassManagement() {
                   <TableCell>{classItem.academicYear}</TableCell>
                   <TableCell>{classItem.studentCount}</TableCell>
                   <TableCell className="text-right">
-                    <div className="flex gap-1 justify-end">
+                    <div className="flex gap-2 justify-end">
                       <Button size="sm" variant="outline" onClick={() => handleExportClass(classItem)}>
                         <Download className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => { setSelectedClass(classItem); setIsStudentDialogOpen(true); }}>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => { 
+                          setSelectedClass(classItem); 
+                          setIsStudentDialogOpen(true); 
+                        }}
+                      >
                         <UserPlus className="w-4 h-4" />
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => handleEdit(classItem)}>
@@ -608,7 +646,120 @@ export default function ClassManagement() {
           </TableBody>
         </Table>
       </Card>
-      </main>
-    </div>
-  );
+
+      {/* Add Student Dialog */}
+      <Dialog open={isStudentDialogOpen} onOpenChange={setIsStudentDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ajouter un étudiant à {selectedClass?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Prénom *</Label>
+              <Input 
+                value={newStudent.firstName} 
+                onChange={(e) => setNewStudent({ ...newStudent, firstName: e.target.value })} 
+                placeholder="Jean" 
+              />
+            </div>
+            <div>
+              <Label>Nom *</Label>
+              <Input 
+                value={newStudent.lastName} 
+                onChange={(e) => setNewStudent({ ...newStudent, lastName: e.target.value })} 
+                placeholder="Dupont" 
+              />
+            </div>
+            <div>
+              <Label>Date de naissance (JJ/MM/AAAA) *</Label>
+              <Input 
+                value={newStudent.dateOfBirth} 
+                onChange={(e) => setNewStudent({ ...newStudent, dateOfBirth: e.target.value })} 
+                placeholder="15/03/2010" 
+              />
+            </div>
+            <div>
+              <Label>Genre *</Label>
+              <Select 
+                value={newStudent.gender} 
+                onValueChange={(v) => setNewStudent({ ...newStudent, gender: v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="M">Masculin</SelectItem>
+                  <SelectItem value="F">Féminin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Contact parent (optionnel)</Label>
+              <Input 
+                value={newStudent.parentContact} 
+                onChange={(e) => setNewStudent({ ...newStudent, parentContact: e.target.value })} 
+                placeholder="06..." 
+              />
+            </div>
+            <div>
+              <Label>Massar (optionnel)</Label>
+              <Input 
+                value={newStudent.massar} 
+                onChange={(e) => setNewStudent({ ...newStudent, massar: e.target.value })} 
+                placeholder="Massar de l'étudiant" 
+              />
+            </div>
+
+            {generatedCredentials && (
+              <Card className="p-4 bg-green-50 border-green-200">
+                <p className="text-sm font-semibold mb-2">Identifiants générés :</p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span>Email :</span>
+                    <div className="flex items-center gap-1">
+                      <code className="bg-white px-2 py-1 rounded">{generatedCredentials.email}</code>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => copyToClipboard(generatedCredentials.email)}
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Mot de passe :</span>
+                    <div className="flex items-center gap-1">
+                      <code className="bg-white px-2 py-1 rounded">{generatedCredentials.password}</code>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => copyToClipboard(generatedCredentials.password)}
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            <div className="flex gap-2">
+              <Button onClick={handleAddStudent} className="flex-1">
+                Ajouter l'étudiant
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => { 
+                  setIsStudentDialogOpen(false); 
+                  setGeneratedCredentials(null); 
+                }}
+              >
+                Annuler
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </main>
+  </div>
+);
 }

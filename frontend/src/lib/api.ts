@@ -237,7 +237,7 @@ export const authApi = {
 },
 getStudentsBySchool: async (schoolId: string) => {
   const allUsers = await api.get<any[]>(`/teachers/school/${schoolId}`);
-  const students = allUsers.filter(user => user.role === 'student');
+  const students = allUsers.filter(user => user.role === 'STUDENT');
   
   // Get student details from /students endpoint
   const studentDetails = await api.get<any[]>(`/students/school/${schoolId}`);
