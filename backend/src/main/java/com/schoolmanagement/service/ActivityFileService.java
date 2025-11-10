@@ -6,8 +6,8 @@ import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,9 +19,10 @@ import java.util.UUID;
 
 /**
  * Service for managing activity files with MinIO storage.
+ * Uses MinIO for object storage and PostgreSQL for metadata.
+ * Files are accessed through backend proxy endpoints for security and authentication.
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class ActivityFileService {
 
@@ -32,6 +33,16 @@ public class ActivityFileService {
     private String bucketName;
 
     private static final String FILE_PREFIX = "activity-files/";
+
+    /**
+     * Constructor with dependency injection for MinIO client.
+     */
+    public ActivityFileService(
+            ActivityFileRepository activityFileRepository,
+            @Qualifier("minioClient") MinioClient minioClient) {
+        this.activityFileRepository = activityFileRepository;
+        this.minioClient = minioClient;
+    }
 
     /**
      * Upload a file and associate it with an activity.
@@ -58,6 +69,7 @@ public class ActivityFileService {
             activityFile.setActivityId(activityId);
             activityFile.setFileName(file.getOriginalFilename());
             activityFile.setMinioKey(minioKey);
+            activityFile.setFilePath(minioKey); // Set file_path to the minioKey (can be used to construct URL)
             activityFile.setFileSize(file.getSize());
             activityFile.setMimeType(file.getContentType());
             activityFile.setFileType(determineFileType(file.getContentType()));

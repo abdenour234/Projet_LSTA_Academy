@@ -4,9 +4,10 @@ import { LogOut, Plus, Trash2, BarChart3, Eye, Edit, Users, GraduationCap, Clock
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { authApi, schoolApi, activityApi } from '@/lib/api';
+import { authApi, schoolApi, activityApi, auth } from '@/lib/api';
 import { DIAGNOSTIC_GRIDS } from '@/config/diagnosticGrids';
 import { AdminStatsCards } from '@/components/admin/AdminStatsCards';
+import { normalizeRole, getRoleDashboardRoute } from '@/lib/roleUtils';
 
 const AdminDashboard = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,10 +22,61 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const user = await authApi.getCurrentUser();
+        // 🔒 SECURITY: Validate user access
+        const user = auth.getUser();
+        console.log('[ADMIN_DASHBOARD] Access validation:', { user, schoolId: id });
+        
         if (!user) {
-          navigate(`/school/${id}/login`);
+          console.error('[ADMIN_DASHBOARD] No user found');
+          toast({
+            title: 'Accès refusé',
+            description: 'Vous devez être connecté.',
+            variant: 'destructive',
+          });
+          navigate('/login', { replace: true });
           return;
+        }
+
+        // Validate role
+        const userRole = normalizeRole(user.role);
+        console.log('[ADMIN_DASHBOARD] Role check:', { original: user.role, normalized: userRole });
+        
+        if (userRole !== 'ADMIN' && userRole !== 'SUPERADMIN') {
+          console.error('[ADMIN_DASHBOARD] Invalid role:', userRole);
+          toast({
+            title: 'Accès refusé',
+            description: 'Cette page est réservée aux administrateurs.',
+            variant: 'destructive',
+          });
+          const correctDashboard = getRoleDashboardRoute(userRole, user.schoolId);
+          navigate(correctDashboard, { replace: true });
+          return;
+        }
+
+        // Validate schoolId for ADMIN role
+        if (userRole === 'ADMIN') {
+          if (!user.schoolId) {
+            console.error('[ADMIN_DASHBOARD] Admin missing schoolId');
+            toast({
+              title: 'Erreur de configuration',
+              description: 'Aucune école associée à votre compte.',
+              variant: 'destructive',
+            });
+            navigate('/login', { replace: true });
+            return;
+          }
+          
+          // Convert both to strings for comparison to handle type mismatch
+          if (String(user.schoolId) !== String(id)) {
+            console.error('[ADMIN_DASHBOARD] School ID mismatch:', { userSchoolId: user.schoolId, urlSchoolId: id });
+            toast({
+              title: 'Accès refusé',
+              description: 'Vous ne pouvez pas accéder aux données d\'une autre école.',
+              variant: 'destructive',
+            });
+            navigate(`/school/${user.schoolId}/admin/dashboard`, { replace: true });
+            return;
+          }
         }
 
         setUserName(user.fullName || user.email?.split('@')[0] || 'Administrateur');
@@ -38,13 +90,17 @@ const AdminDashboard = () => {
         loadDiagnosticSessions();
         loadActivities();
       } catch (error) {
-        console.error('Error fetching data:', error);
-        navigate(`/school/${id}/login`);
+        console.error('[ADMIN_DASHBOARD] Error fetching data:', error);
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de charger les données',
+          variant: 'destructive',
+        });
       }
     };
 
     fetchData();
-  }, [id, navigate]);
+  }, [id, navigate, toast]);
 
   const loadDiagnosticSessions = async () => {
     try {
@@ -65,8 +121,8 @@ const AdminDashboard = () => {
   const loadActivities = async () => {
     try {
       const data = await activityApi.getAll();
-      // Filter by school_id on frontend until backend supports it
-      const schoolActivities = data?.filter((a: any) => a.schoolId === id) || [];
+      // Filter by school_id on frontend - convert both to strings for type-safe comparison
+      const schoolActivities = data?.filter((a: any) => String(a.schoolId) === String(id)) || [];
       setActivities(schoolActivities);
     } catch (error) {
       console.error('Error loading activities:', error);
@@ -93,7 +149,20 @@ const AdminDashboard = () => {
   };
 
   const handleLogout = async () => {
-    await authApi.logout();
+    try {
+      await authApi.logout();
+      toast({
+        title: 'Déconnexion réussie',
+        description: 'À bientôt !',
+      });
+      navigate(`/school/${id}/login`);
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force logout même en cas d'erreur
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate(`/school/${id}/login`);
+    }
   };
 
   return (

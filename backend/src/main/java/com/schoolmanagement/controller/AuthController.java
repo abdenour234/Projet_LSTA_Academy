@@ -10,6 +10,7 @@ import com.schoolmanagement.repository.SchoolRepository;
 import com.schoolmanagement.repository.StudentRepository;
 import com.schoolmanagement.repository.UserRoleRepository;
 import com.schoolmanagement.util.JwtUtil;
+import com.schoolmanagement.util.InputSanitizer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,25 +36,39 @@ public class AuthController {
     private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final InputSanitizer inputSanitizer;
 
     public AuthController(ProfileRepository profileRepository,
                           UserRoleRepository userRoleRepository,
                           SchoolRepository schoolRepository,
                           StudentRepository studentRepository,
                           PasswordEncoder passwordEncoder,
-                          JwtUtil jwtUtil) {
+                          JwtUtil jwtUtil,
+                          InputSanitizer inputSanitizer) {
         this.profileRepository = profileRepository;
         this.userRoleRepository = userRoleRepository;
         this.schoolRepository = schoolRepository;
         this.studentRepository = studentRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.inputSanitizer = inputSanitizer;
     }
+
+   
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials) {
         String email = credentials.get("email");
         String password = credentials.get("password");
+        
+        // Sanitize email input
+        try {
+            email = inputSanitizer.sanitizeEmail(email);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Invalid email format");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
 
         Profile profile = profileRepository.findByEmail(email);
         if (profile == null) {
@@ -61,8 +76,10 @@ public class AuthController {
             error.put("error", "Invalid credentials");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
+        
+        boolean passwordMatches = profile.getPasswordHash() != null && passwordEncoder.matches(password, profile.getPasswordHash());
 
-        if (profile.getPasswordHash() == null || !passwordEncoder.matches(password, profile.getPasswordHash())) {
+        if (!passwordMatches) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "Invalid credentials");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
@@ -108,9 +125,16 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
 
-        if (request.getPassword().length() < 6) {
+        if (request.getPassword().length() < 8) {
             Map<String, Object> error = new HashMap<>();
-            error.put("error", "Password must be at least 6 characters");
+            error.put("error", "Password must be at least 8 characters");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+        
+        // Password complexity check
+        if (!isPasswordComplex(request.getPassword())) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Password must contain at least one uppercase letter, one lowercase letter, and one number");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
 
@@ -142,19 +166,19 @@ public class AuthController {
             profile.setEmail(request.getEmail());
             profile.setPasswordHash(passwordEncoder.encode(request.getPassword()));
             profile.setFullName(request.getFullName() != null ? request.getFullName() : request.getEmail().split("@")[0]);
-            profile.setSchoolId(String.valueOf(savedSchool.getId()));
+            profile.setSchoolId(savedSchool.getId());
 
             Profile savedProfile = profileRepository.save(profile);
 
             UserRole userRole = new UserRole();
             userRole.setUserId(savedProfile.getId());
-            userRole.setRole(UserRole.Role.admin);
+            userRole.setRole(UserRole.Role.ADMIN);
             userRoleRepository.save(userRole);
 
             String token = jwtUtil.generateToken(
                     savedProfile.getId(),
                     savedProfile.getEmail(),
-                    "admin",
+                    "ADMIN",
                     savedProfile.getSchoolId()
             );
 
@@ -166,7 +190,7 @@ public class AuthController {
             user.put("email", savedProfile.getEmail());
             user.put("fullName", savedProfile.getFullName());
             user.put("schoolId", savedProfile.getSchoolId());
-            user.put("role", "admin");
+            user.put("role", "ADMIN");
 
             Map<String, Object> schoolData = new HashMap<>();
             schoolData.put("id", savedSchool.getId());
@@ -191,7 +215,7 @@ public class AuthController {
         String email = (String) userDto.get("email");
         String password = (String) userDto.get("password");
         String fullName = (String) userDto.get("fullName");
-        String schoolId = (String) userDto.get("schoolId");
+        Long schoolId = userDto.get("schoolId") != null ? Long.parseLong(userDto.get("schoolId").toString()) : null;
         String roleStr = (String) userDto.get("role");
         String massar = (String) userDto.get("massar"); // NOUVEAU
         String dateOfBirth = (String) userDto.get("dateOfBirth"); // NEW
@@ -211,7 +235,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
 
-        if (schoolId == null || schoolId.trim().isEmpty()) {
+        if (schoolId == null) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "School ID is required");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
@@ -235,18 +259,19 @@ public class AuthController {
             UserRole userRole = new UserRole();
             userRole.setUserId(savedProfile.getId());
 
-            UserRole.Role parsedRole = UserRole.Role.teacher;
+            UserRole.Role parsedRole = UserRole.Role.TEACHER;
             if (roleStr != null && !roleStr.trim().isEmpty()) {
                 try {
-                    parsedRole = UserRole.Role.valueOf(roleStr.toLowerCase().trim());
+                    // Role enum is now UPPERCASE, so convert input to uppercase
+                    parsedRole = UserRole.Role.valueOf(roleStr.toUpperCase().trim());
                 } catch (IllegalArgumentException e) {
-                    parsedRole = UserRole.Role.teacher;
+                    parsedRole = UserRole.Role.TEACHER;
                 }
             }
             userRole.setRole(parsedRole);
             userRoleRepository.save(userRole);
 
-            if (parsedRole == UserRole.Role.student) {
+            if (parsedRole == UserRole.Role.STUDENT) {
                 savedProfile.setMustChangePassword(true);
                 profileRepository.save(savedProfile);
                 // Check if student already exists for this userId
@@ -315,6 +340,22 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+    }
+    
+    /**
+     * Validate password complexity
+     * Requires at least: 1 uppercase, 1 lowercase, 1 number
+     */
+    private boolean isPasswordComplex(String password) {
+        if (password == null || password.length() < 8) {
+            return false;
+        }
+        
+        boolean hasUppercase = password.chars().anyMatch(Character::isUpperCase);
+        boolean hasLowercase = password.chars().anyMatch(Character::isLowerCase);
+        boolean hasDigit = password.chars().anyMatch(Character::isDigit);
+        
+        return hasUppercase && hasLowercase && hasDigit;
     }
 
     @PostMapping("/logout")

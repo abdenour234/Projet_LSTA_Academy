@@ -9,10 +9,10 @@ import java.util.UUID;
 
 @Repository
 public interface MessageRepository extends JpaRepository<Message, UUID> {
-    List<Message> findBySchoolId(String schoolId);
+    List<Message> findBySchoolId(Long schoolId);
     List<Message> findBySenderId(UUID senderId);
     List<Message> findByRecipientId(UUID recipientId);
     List<Message> findByRecipientIdAndIsRead(UUID recipientId, Boolean isRead);
-    List<Message> findBySchoolIdAndRecipientId(String schoolId, UUID recipientId);
+    List<Message> findBySchoolIdAndRecipientId(Long schoolId, UUID recipientId);
     Long countByRecipientIdAndIsRead(UUID recipientId, Boolean isRead);
 }

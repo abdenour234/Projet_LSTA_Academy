@@ -3,13 +3,16 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { PrivateRoute } from "@/components/PrivateRoute";
+import { NavigationProgressBar } from "@/components/NavigationProgressBar";
+import LandingPage from "./pages/LandingPage";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import SchoolDashboard from "./pages/SchoolDashboard";
-import SchoolLogin from "./pages/SchoolLogin";
 import AdminSignup from "./pages/AdminSignup";
-import SuperAdminLogin from "./pages/SuperAdminLogin";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+import SchoolDetails from "./pages/SchoolDetails";
 import SuperAdminSchoolDetails from "./pages/SuperAdminSchoolDetails";
 import SuperAdminActivityEditor from "./pages/SuperAdminActivityEditor";
 import StudentDashboard from "./pages/StudentDashboard";
@@ -27,6 +30,9 @@ import MessagingPage from "./pages/MessagingPage";
 import ActivityTracking from "./pages/ActivityTracking";
 import NotFound from "./pages/NotFound";
 import StudentManagement from "./pages/StudentManagement";
+import UnderConstruction from "./pages/UnderConstruction";
+import Methode from "./pages/Methode";
+import Clubs from "./pages/Clubs";
 import ChangePassword from "./pages/ChangePassword";
 
 const queryClient = new QueryClient();
@@ -37,37 +43,202 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<AdminSignup />} />
+        <NavigationProgressBar />
+        <AuthProvider>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/schools" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<AdminSignup />} />
           <Route path="/change-password" element={<ChangePassword />} />
-          <Route path="/superadmin/login" element={<SuperAdminLogin />} />
-          <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
-          <Route path="/superadmin/schools/:schoolId" element={<SuperAdminSchoolDetails />} />
-          <Route path="/superadmin/activities/new" element={<SuperAdminActivityEditor />} />
-          <Route path="/superadmin/activities/new/:schoolId" element={<SuperAdminActivityEditor />} />
-          <Route path="/superadmin/activities/edit/:schoolId/:activityId" element={<SuperAdminActivityEditor />} />
-          <Route path="/student/dashboard" element={<StudentDashboard />} />
-          <Route path="/school/:id" element={<SchoolDashboard />} />
-          <Route path="/school/:id/login" element={<SchoolLogin />} />
-          <Route path="/school/:id/teacher/dashboard" element={<TeacherDashboard />} />
-          <Route path="/school/:id/teacher/diagnostic/new" element={<DiagnosticNewSession />} />
-          <Route path="/school/:id/teacher/diagnostic/:sessionId" element={<DiagnosticSession />} />
-          <Route path="/school/:id/teacher/diagnostic/:sessionId/results" element={<DiagnosticSessionResults />} />
-          <Route path="/school/:id/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/activity/editor" element={<ActivityEditor />} />
-          <Route path="/activity/editor/:activityId" element={<ActivityEditor />} />
-          <Route path="/activity/:activityId" element={<ActivityView />} />
-          <Route path="/school/:id/admin/classes" element={<ClassManagement />} />
-          <Route path="/school/:id/admin/teachers" element={<TeacherManagement />} />
-          <Route path="/school/:id/admin/activity-tracking" element={<ActivityTracking />} />
-          <Route path="/school/:id/teacher/sessions" element={<TeacherSessions />} />
-          <Route path="/school/:id/messages" element={<MessagingPage />} />
-          <Route path="/school/:id/students" element={<StudentManagement />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            
+            {/* Legacy routes - redirect to unified login */}
+            <Route path="/superadmin/login" element={<Login />} />
+            <Route path="/school/:id/login" element={<Login />} />
+            
+            {/* Public Pages with New UI */}
+            <Route path="/methode" element={<Methode />} />
+            <Route path="/clubs" element={<Clubs />} />
+            <Route path="/espace" element={<UnderConstruction pageName="Espace" />} />
+            <Route path="/contact" element={<UnderConstruction pageName="Contact" />} />
+            
+            <Route path="/school/:id" element={<SchoolDashboard />} />
+            
+            {/* SUPERADMIN Routes - Protected */}
+            <Route 
+              path="/superadmin/dashboard" 
+              element={
+                <PrivateRoute requiredRole="SUPERADMIN">
+                  <SuperAdminDashboard />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/superadmin/activities/new"
+              element={
+                <PrivateRoute requiredRole="SUPERADMIN">
+                  <SuperAdminActivityEditor />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/superadmin/activities/new/:schoolId" 
+              element={
+                <PrivateRoute requiredRole="SUPERADMIN">
+                  <SuperAdminActivityEditor />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/superadmin/schools/:schoolId" 
+              element={
+                <PrivateRoute requiredRole="SUPERADMIN">
+                  <SchoolDetails />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/superadmin/activities/edit/:schoolId/:activityId" 
+              element={
+                <PrivateRoute requiredRole="SUPERADMIN">
+                  <SuperAdminActivityEditor />
+                </PrivateRoute>
+              } 
+            />
+            
+            {/* STUDENT Routes - Protected */}
+            <Route 
+              path="/student/dashboard" 
+              element={
+                <PrivateRoute requiredRole="STUDENT">
+                  <StudentDashboard />
+                </PrivateRoute>
+              } 
+            />
+            
+            {/* TEACHER Routes - Protected */}
+            <Route 
+              path="/school/:id/teacher/dashboard" 
+              element={
+                <PrivateRoute requiredRole="TEACHER">
+                  <TeacherDashboard />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/school/:id/teacher/diagnostic/new" 
+              element={
+                <PrivateRoute requiredRole="TEACHER">
+                  <DiagnosticNewSession />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/school/:id/teacher/diagnostic/:sessionId" 
+              element={
+                <PrivateRoute requiredRole="TEACHER">
+                  <DiagnosticSession />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/school/:id/teacher/diagnostic/:sessionId/results" 
+              element={
+                <PrivateRoute requiredRole="TEACHER">
+                  <DiagnosticSessionResults />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/school/:id/teacher/sessions" 
+              element={
+                <PrivateRoute requiredRole="TEACHER">
+                  <TeacherSessions />
+                </PrivateRoute>
+              } 
+            />
+            
+            {/* ADMIN Routes - Protected */}
+            <Route 
+              path="/school/:id/admin/dashboard" 
+              element={
+                <PrivateRoute requiredRole="ADMIN">
+                  <AdminDashboard />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/school/:id/admin/classes" 
+              element={
+                <PrivateRoute requiredRole="ADMIN">
+                  <ClassManagement />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/school/:id/admin/teachers" 
+              element={
+                <PrivateRoute requiredRole="ADMIN">
+                  <TeacherManagement />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/school/:id/admin/activity-tracking" 
+              element={
+                <PrivateRoute requiredRole="ADMIN">
+                  <ActivityTracking />
+                </PrivateRoute>
+              } 
+            />
+            
+            {/* Multi-Role Routes - Protected */}
+            <Route 
+              path="/school/:id/students" 
+              element={
+                <PrivateRoute requiredRole={["ADMIN", "TEACHER"]}>
+                  <StudentManagement />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/school/:id/messages" 
+              element={
+                <PrivateRoute>
+                  <MessagingPage />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/activity/editor" 
+              element={
+                <PrivateRoute>
+                  <ActivityEditor />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/activity/editor/:activityId" 
+              element={
+                <PrivateRoute>
+                  <ActivityEditor />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/activity/:activityId" 
+              element={
+                <PrivateRoute>
+                  <ActivityView />
+                </PrivateRoute>
+              } 
+            />
+            
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

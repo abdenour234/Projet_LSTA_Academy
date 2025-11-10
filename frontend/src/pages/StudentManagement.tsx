@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit, Users, Mail, Phone, Key, Copy, Calendar, User } from "lucide-react";
+import { Plus, Edit, Users, Mail, Phone, Key, Copy, Calendar, User, ArrowLeft, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { authApi, auth, ApiError } from "@/lib/api";
 import {
@@ -57,6 +57,11 @@ export default function StudentManagement() {
     parentContact: "",
   });
   const [generatedCredentials, setGeneratedCredentials] = useState<{email: string, password: string} | null>(null);
+
+  const handleLogout = async () => {
+    await authApi.logout();
+    navigate(`/school/${schoolId}/login`);
+  };
 
   useEffect(() => {
     checkAuth();
@@ -191,15 +196,33 @@ export default function StudentManagement() {
   }
 
   return (
-    <div className="container mx-auto p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Gestion des Étudiants</h1>
-        <p className="text-muted-foreground mt-2">
-          Gérez les étudiants et leurs informations
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
+      <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => navigate(`/school/${schoolId}/admin/dashboard`)}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold">Gestion des Étudiants</h1>
+                <p className="text-sm text-muted-foreground">Gérez les étudiants et leurs informations</p>
+              </div>
+            </div>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Déconnexion
+            </Button>
+          </div>
+        </div>
+      </header>
 
-      <Card className="p-6">
+      <main className="container mx-auto p-8">
+        <Card className="p-6">
         <div className="flex justify-end mb-4">
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
@@ -393,6 +416,7 @@ export default function StudentManagement() {
           </TableBody>
         </Table>
       </Card>
+      </main>
     </div>
   );
 }

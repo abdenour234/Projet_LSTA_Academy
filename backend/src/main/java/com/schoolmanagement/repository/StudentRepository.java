@@ -10,11 +10,11 @@ import java.util.UUID;
 
 @Repository
 public interface StudentRepository extends JpaRepository<Student, UUID> {
-    List<Student> findBySchoolId(String schoolId);
+    List<Student> findBySchoolId(Long schoolId);
 
     List<Student> findByClassId(UUID classId);
 
-    List<Student> findBySchoolIdAndClassId(String schoolId, UUID classId);
+    List<Student> findBySchoolIdAndClassId(Long schoolId, UUID classId);
 
     List<Student> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(String firstName, String lastName);
 

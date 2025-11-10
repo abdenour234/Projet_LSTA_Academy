@@ -25,9 +25,17 @@ export const VideoViewer = ({ fileUrl, width = '100%', height = '400px', onFulls
       setLoading(true);
       setError(null);
 
-      // Check if it's a Spring Boot storage URL
-      if (fileUrl.startsWith('activity-files/') || !fileUrl.startsWith('http')) {
-        const fileName = fileUrl.replace(/^(activity-files?\/)/, '');
+      console.log('[VIDEO_VIEWER] Loading video from URL:', fileUrl);
+
+      // ✅ UPDATED: Backend now returns pre-signed URLs directly
+      // If URL is already a full HTTP(S) URL (MinIO pre-signed), use it directly
+      if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+        console.log('[VIDEO_VIEWER] Using direct pre-signed URL');
+        setSignedUrl(fileUrl);
+      } else if (fileUrl.startsWith('activity-files/') || fileUrl.startsWith('/api/activity-files/')) {
+        // Legacy: fetch signed URL for old-style URLs
+        console.log('[VIDEO_VIEWER] Fetching signed URL for legacy path');
+        const fileName = fileUrl.replace(/^(activity-files?\/|\/api\/activity-files\/download\/)/, '');
         const response = await storageApi.getSignedUrl(fileName);
         if (response?.url) {
           setSignedUrl(response.url);
@@ -35,7 +43,8 @@ export const VideoViewer = ({ fileUrl, width = '100%', height = '400px', onFulls
           setError('Impossible de charger la vidéo');
         }
       } else {
-        setSignedUrl(fileUrl);
+        console.error('[VIDEO_VIEWER] Invalid URL format:', fileUrl);
+        setError('Format d\'URL invalide');
       }
     } catch (err) {
       console.error('Erreur lors du chargement de la vidéo:', err);

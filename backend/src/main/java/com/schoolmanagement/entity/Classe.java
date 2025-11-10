@@ -23,13 +23,19 @@ public class Classe {
     private String name;
 
     @Column(name = "school_id", nullable = false)
-    private String schoolId;
+    private Long schoolId;
 
     @Column
     private String level;
 
-    @Column(name = "academic_year")
+    @Column(name = "filiere")
+    private String filiere;
+
+    @Column(name = "annee_scolaire", nullable = false)
     private String academicYear;
+
+    @Column(name = "effectif")
+    private Integer effectif;
 
     @Column(name = "student_count")
     private Integer studentCount;

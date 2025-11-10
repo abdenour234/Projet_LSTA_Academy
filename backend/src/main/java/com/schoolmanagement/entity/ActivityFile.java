@@ -35,6 +35,9 @@ public class ActivityFile {
     @Column(name = "minio_key", nullable = false, unique = true)
     private String minioKey; // Unique key in MinIO bucket (UUID-based)
 
+    @Column(name = "file_path", nullable = false)
+    private String filePath; // Full path/URL to access the file
+
     @Column(name = "file_size")
     private Long fileSize; // Size in bytes
 

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, LogOut, Calendar as CalendarIcon } from 'lucide-react';
 import { authApi, activityApi, studentApi } from '@/lib/api';
+// @ts-ignore - react-calendar types
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { useToast } from '@/hooks/use-toast';
@@ -36,7 +37,37 @@ const StudentDashboard = () => {
       try {
         const currentUser = await authApi.getCurrentUser();
         console.log('Current User:', currentUser);
+        
+        if (!currentUser) {
+          navigate('/');
+          return;
+        }
+
+        // 🔒 SECURITY: Validate user role is STUDENT
+        const userRole = currentUser.role?.toUpperCase();
+        if (userRole !== 'STUDENT' && userRole !== 'SUPERADMIN') {
+          toast({
+            title: 'Accès refusé',
+            description: 'Cette page est réservée aux étudiants',
+            variant: 'destructive',
+          });
+          navigate('/');
+          return;
+        }
+
+        // 🔒 SECURITY: Ensure student has a schoolId before fetching data
+        if (!currentUser.schoolId) {
+          toast({
+            title: 'Erreur de configuration',
+            description: 'Aucune école associée à votre compte. Contactez un administrateur.',
+            variant: 'destructive',
+          });
+          navigate('/');
+          return;
+        }
+
         setUser(currentUser);
+        
         if (currentUser?.id) {
           const studentDetails = await studentApi.getCurrentStudent();
           console.log('Student Details:', studentDetails);
@@ -79,11 +110,30 @@ const StudentDashboard = () => {
       }
     };
     loadData();
-  }, [toast]);
+  }, [navigate, toast]);
 
   const handleLogout = async () => {
-    await authApi.logout();
-    navigate('/login');
+    try {
+      await authApi.logout();
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      toast({
+        title: 'Déconnexion réussie',
+        description: 'À bientôt !',
+      });
+      navigate('/login');
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      toast({
+        title: 'Erreur de déconnexion',
+        description: error.message || 'Une erreur est survenue',
+        variant: 'destructive',
+      });
+      // Force logout même en cas d'erreur
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate('/login');
+    }
   };
 
   const getEventsForDate = (date: Date) => {

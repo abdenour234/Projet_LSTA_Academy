@@ -26,7 +26,7 @@ public class Profile {
     private String fullName;
 
     @Column(name = "school_id", nullable = false)
-    private String schoolId;
+    private Long schoolId;
 
     @Column(name = "password_hash")
     private String passwordHash;

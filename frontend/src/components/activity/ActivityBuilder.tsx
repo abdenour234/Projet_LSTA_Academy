@@ -256,6 +256,13 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
         // Ajouter les elementIds
         elementIds.forEach(id => formData.append('elementIds', id));
 
+        console.log('[ACTIVITY_BUILDER] Uploading files:', {
+          activityId: currentActivityId,
+          fileCount: Array.from(pendingFiles.values()).length,
+          elementIds: elementIds,
+          newElements: newElements
+        });
+
         const response = await fetch(`http://localhost:8080/api/activity-files/upload/${currentActivityId}`, {
           method: 'POST',
           headers: {
@@ -264,14 +271,24 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
           body: formData,
         });
 
+        console.log('[ACTIVITY_BUILDER] Upload response:', {
+          ok: response.ok,
+          status: response.status,
+          statusText: response.statusText
+        });
+
         if (response.ok) {
           const result = await response.json();
+          console.log('[ACTIVITY_BUILDER] Upload result:', result);
           
           // Mettre à jour les nouveaux éléments avec les vraies URLs
           if (result.success && result.files) {
             result.files.forEach((uploadedFile: any) => {
-              // Ajouter l'URL complète du backend pour les fichiers
-              const fullUrl = `http://localhost:8080${uploadedFile.url}`;
+              // ✅ FIXED: Backend now returns full MinIO pre-signed URLs
+              // Use the URL directly if it's already a full URL, otherwise prepend API base
+              const fullUrl = uploadedFile.url.startsWith('http://') || uploadedFile.url.startsWith('https://')
+                ? uploadedFile.url
+                : `http://localhost:8080${uploadedFile.url}`;
               const element = newElements.find(el => el.id === uploadedFile.elementId);
               if (element) {
                 element.content = fullUrl;
@@ -280,20 +297,21 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
               }
             });
             
-            // Filtrer les éléments existants pour supprimer ceux qui ont des URLs blob ou vides
-            // correspondant aux elementIds des fichiers uploadés
+            // ✅ FIX: Remove elements that are being replaced by newly uploaded files
+            // We want to keep existing elements that are NOT being uploaded
             const uploadedElementIds = new Set(result.files.map((f: any) => f.elementId));
-            const filteredElements = elements.filter(el => {
-              // Garder les éléments qui ne sont pas dans la liste des uploadés
-              // ou qui ont déjà une vraie URL (pas blob: ni vide)
-              if (uploadedElementIds.has(el.id)) {
-                return el.content && !el.content.startsWith('blob:');
-              }
-              return true;
+            const filteredElements = elements.filter(el => !uploadedElementIds.has(el.id));
+            
+            console.log('[ACTIVITY_BUILDER] Before merge:', {
+              existingElements: elements.length,
+              filteredElements: filteredElements.length,
+              newElements: newElements.length,
+              newElementsWithUrls: newElements.filter(el => el.content).length
             });
             
-            // Combiner les éléments filtrés avec les nouveaux
+            // Combiner les éléments filtrés avec les nouveaux (qui ont maintenant les vraies URLs)
             const allElements = [...filteredElements, ...newElements];
+            console.log('[ACTIVITY_BUILDER] After merge - allElements:', allElements);
             setElements(allElements);
             
             // RE-SAUVEGARDER l'activité avec les vraies URLs
@@ -308,7 +326,9 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
               isPublished: publish,
             };
             
+            console.log('[ACTIVITY_BUILDER] Saving activity with layoutData:', updatedActivityData.layoutData);
             await activityApi.update(currentActivityId, updatedActivityData);
+            console.log('[ACTIVITY_BUILDER] Activity saved successfully');
           }
 
           // Nettoyer les previews et vider les fichiers en attente

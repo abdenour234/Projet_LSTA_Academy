@@ -5,12 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { authApi } from '@/lib/api';
 import { Shield, GraduationCap, UserCheck, BookOpen, LogIn } from 'lucide-react';
+import { normalizeRole, getRoleDashboardRoute } from '@/lib/roleUtils';
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { checkAuth } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -21,58 +24,89 @@ const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setLoading(true);
 
-  try {
-    const response = await authApi.login(formData.email, formData.password);
-    
-    // Stockage du token et des infos utilisateur
-    localStorage.setItem('token', response.token);
-    localStorage.setItem('user', JSON.stringify(response.user));
+    try {
+      const response = await authApi.login(formData.email, formData.password);
+      
+      console.log('[LOGIN] Response received:', { 
+        email: response.user.email, 
+        role: response.user.role,
+        schoolId: response.user.schoolId 
+      });
 
-    // EXTRACTION DES DONNÉES
-    const role = response.user.role;
-    const mustChangePassword = response.user.mustChangePassword; // <-- NOUVEAU
+      // ✅ STEP 1: Validate and normalize role
+      const userRole = normalizeRole(response.user.role);
+      console.log('[LOGIN] Normalized role:', userRole);
 
-    toast({
-      title: 'Connexion réussie',
-      description: `Bienvenue ${response.user.fullName || response.user.email}!`,
-    });
-
-    // 1. SI C'EST UN ÉTUDIANT ET QU'IL DOIT CHANGER SON MOT DE PASSE
-    if (mustChangePassword && role === 'student') {
-      navigate('/change-password'); // Redirection vers le changement de mot de passe
-      return; // On arrête ici → on ne fait pas la redirection habituelle
-    }
-
-    // 2. SINON → REDIRECTION NORMALE SELON LE RÔLE
-    const schoolId = response.user.schoolId;
-
-    switch (role) {
-      case 'superadmin':
-        navigate('/superadmin/dashboard');
-        break;
-      case 'admin':
-        navigate(`/school/${schoolId}/admin/dashboard`);
-        break;
-      case 'teacher':
-        navigate(`/school/${schoolId}/teacher/dashboard`);
-        break;
-      case 'student':
-        navigate('/student/dashboard'); // ← Étudiant qui a déjà changé son mot de passe
-        break;
-      default:
+      if (!userRole) {
+        console.error('[LOGIN] Invalid role detected:', response.user.role);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         toast({
-          title: 'Erreur',
-          description: 'Rôle utilisateur non reconnu',
+          title: 'Erreur de configuration',
+          description: `Rôle utilisateur invalide: ${response.user.role}. Contactez un administrateur.`,
           variant: 'destructive',
         });
-        navigate('/');
+        setLoading(false);
+        return;
+      }
+
+      // ✅ STEP 2: Verify schoolId for roles that require it
+      if ((userRole === 'ADMIN' || userRole === 'TEACHER') && !response.user.schoolId) {
+        console.error('[LOGIN] Missing schoolId for role:', userRole);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        toast({
+          title: 'Erreur de configuration',
+          description: 'Aucune école associée à votre compte. Contactez un administrateur.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      // ✅ STEP 3: Store token and normalized user data
+      localStorage.setItem('token', response.token);
+      const normalizedUser = {
+        ...response.user,
+        role: userRole, // Always UPPERCASE
+      };
+      localStorage.setItem('user', JSON.stringify(normalizedUser));
+      console.log('[LOGIN] User data stored:', normalizedUser);
+
+      // ✅ STEP 4: Update AuthContext to synchronize authentication state
+      console.log('[LOGIN] Updating AuthContext...');
+      await checkAuth();
+      console.log('[LOGIN] AuthContext updated successfully');
+
+      // ✅ STEP 5: Show success message
+      toast({
+        title: 'Connexion réussie',
+        description: `Bienvenue ${response.user.fullName || response.user.email}!`,
+      });
+
+      // ✅ STEP 6: Get correct dashboard route and redirect
+      const dashboardRoute = getRoleDashboardRoute(userRole, response.user.schoolId);
+      console.log('[LOGIN] Redirecting to:', dashboardRoute);
+      
+      // Use replace: true to prevent back button issues
+      navigate(dashboardRoute, { replace: true });
+      
+    } catch (error: any) {
+      console.error('[LOGIN] Login error:', error);
+      
+      // Clear any partial authentication data
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      toast({
+        title: 'Erreur de connexion',
+        description: error.message || 'Email ou mot de passe incorrect',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
-  } catch (error: any) {
-    // ... gestion d'erreur
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({

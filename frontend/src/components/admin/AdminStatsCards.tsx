@@ -31,14 +31,14 @@ export const AdminStatsCards = ({ schoolId }: AdminStatsCardsProps) => {
       const teachers = await teacherApi.getBySchoolId(schoolId);
       const teacherCount = teachers.length;
 
-      // Total activities
+      // Total activities - convert both to strings for type-safe comparison
       const activities = await activityApi.getAll();
-      const schoolActivities = activities.filter((a: any) => a.schoolId === schoolId);
+      const schoolActivities = activities.filter((a: any) => String(a.schoolId) === String(schoolId));
       const activityCount = schoolActivities.length;
 
-      // Total sessions - get all sessions and filter by school
+      // Total sessions - get all sessions and filter by school (convert to strings)
       const allSessions = await sessionApi.getAll();
-      const sessions = allSessions.filter((s: any) => s.schoolId === schoolId);
+      const sessions = allSessions.filter((s: any) => String(s.schoolId) === String(schoolId));
       const sessionCount = sessions.length;
 
       // Average progress
