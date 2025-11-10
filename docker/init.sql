@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS public.students (
   class_id UUID,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
+  massar character varying(255) NOT NULL,
   date_of_birth TIMESTAMP WITH TIME ZONE,
   gender TEXT CHECK (gender IN ('M', 'F')),
   phone TEXT,
@@ -292,6 +293,11 @@ CREATE TRIGGER update_diagnostic_sessions_updated_at
   BEFORE UPDATE ON public.diagnostic_sessions
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
+
+  -- Remplacez la ligne fautive par :
+ALTER TABLE public.profiles 
+    ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT TRUE;
+-- Add class_id to activities if not exists
 
 -- ============================================
 -- 5. SEED DATA

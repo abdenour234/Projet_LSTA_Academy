@@ -20,93 +20,112 @@ const Login = () => {
     password: '',
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  
+  try {
+    const response = await authApi.login(formData.email, formData.password);
+    
+    console.log('[LOGIN] Response received:', { 
+      email: response.user.email, 
+      role: response.user.role,
+      schoolId: response.user.schoolId,
+      mustChangePassword: response.user.mustChangePassword
+    });
 
-    try {
-      const response = await authApi.login(formData.email, formData.password);
-      
-      console.log('[LOGIN] Response received:', { 
-        email: response.user.email, 
-        role: response.user.role,
-        schoolId: response.user.schoolId 
-      });
-
-      // ✅ STEP 1: Validate and normalize role
-      const userRole = normalizeRole(response.user.role);
-      console.log('[LOGIN] Normalized role:', userRole);
-
-      if (!userRole) {
-        console.error('[LOGIN] Invalid role detected:', response.user.role);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        toast({
-          title: 'Erreur de configuration',
-          description: `Rôle utilisateur invalide: ${response.user.role}. Contactez un administrateur.`,
-          variant: 'destructive',
-        });
-        setLoading(false);
-        return;
-      }
-
-      // ✅ STEP 2: Verify schoolId for roles that require it
-      if ((userRole === 'ADMIN' || userRole === 'TEACHER') && !response.user.schoolId) {
-        console.error('[LOGIN] Missing schoolId for role:', userRole);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        toast({
-          title: 'Erreur de configuration',
-          description: 'Aucune école associée à votre compte. Contactez un administrateur.',
-          variant: 'destructive',
-        });
-        setLoading(false);
-        return;
-      }
-
-      // ✅ STEP 3: Store token and normalized user data
-      localStorage.setItem('token', response.token);
-      const normalizedUser = {
-        ...response.user,
-        role: userRole, // Always UPPERCASE
-      };
-      localStorage.setItem('user', JSON.stringify(normalizedUser));
-      console.log('[LOGIN] User data stored:', normalizedUser);
-
-      // ✅ STEP 4: Update AuthContext to synchronize authentication state
-      console.log('[LOGIN] Updating AuthContext...');
-      await checkAuth();
-      console.log('[LOGIN] AuthContext updated successfully');
-
-      // ✅ STEP 5: Show success message
-      toast({
-        title: 'Connexion réussie',
-        description: `Bienvenue ${response.user.fullName || response.user.email}!`,
-      });
-
-      // ✅ STEP 6: Get correct dashboard route and redirect
-      const dashboardRoute = getRoleDashboardRoute(userRole, response.user.schoolId);
-      console.log('[LOGIN] Redirecting to:', dashboardRoute);
-      
-      // Use replace: true to prevent back button issues
-      navigate(dashboardRoute, { replace: true });
-      
-    } catch (error: any) {
-      console.error('[LOGIN] Login error:', error);
-      
-      // Clear any partial authentication data
+    // ✅ STEP 1: Validate and normalize role
+    const userRole = normalizeRole(response.user.role);
+    console.log('[LOGIN] Normalized role:', userRole);
+    
+    if (!userRole) {
+      console.error('[LOGIN] Invalid role detected:', response.user.role);
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      
       toast({
-        title: 'Erreur de connexion',
-        description: error.message || 'Email ou mot de passe incorrect',
+        title: 'Erreur de configuration',
+        description: `Rôle utilisateur invalide: ${response.user.role}. Contactez un administrateur.`,
         variant: 'destructive',
       });
-    } finally {
       setLoading(false);
+      return;
     }
-  };
+
+    // ✅ STEP 2: Verify schoolId for roles that require it
+    if ((userRole === 'ADMIN' || userRole === 'TEACHER') && !response.user.schoolId) {
+      console.error('[LOGIN] Missing schoolId for role:', userRole);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      toast({
+        title: 'Erreur de configuration',
+        description: 'Aucune école associée à votre compte. Contactez un administrateur.',
+        variant: 'destructive',
+      });
+      setLoading(false);
+      return;
+    }
+
+    // ✅ STEP 3: Store token and normalized user data
+    localStorage.setItem('token', response.token);
+    const normalizedUser = {
+      ...response.user,
+      role: userRole, // Always UPPERCASE
+    };
+    localStorage.setItem('user', JSON.stringify(normalizedUser));
+    console.log('[LOGIN] User data stored:', normalizedUser);
+
+    // ✅ STEP 4: Verify token is valid before redirecting
+    try {
+      await authApi.getCurrentUser();
+      console.log('[LOGIN] Token verified successfully');
+    } catch (error: any) {
+      console.error('[LOGIN] Token verification failed:', error);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      toast({
+        title: 'Erreur d\'authentification',
+        description: 'Token invalide. Veuillez réessayer.',
+        variant: 'destructive',
+      });
+      setLoading(false);
+      return;
+    }
+
+    // ✅ STEP 5: Show success message
+    toast({
+      title: 'Connexion réussie',
+      description: `Bienvenue ${response.user.fullName || response.user.email}!`,
+    });
+
+    // ✅ STEP 6: Check if password change is required (for students)
+    if (response.user.mustChangePassword && userRole === 'STUDENT') {
+      console.log('[LOGIN] Redirecting to password change');
+      navigate('/change-password', { replace: true });
+      return;
+    }
+
+    // ✅ STEP 7: Get correct dashboard route and redirect
+    const dashboardRoute = getRoleDashboardRoute(userRole, response.user.schoolId);
+    console.log('[LOGIN] Redirecting to:', dashboardRoute);
+    
+    navigate(dashboardRoute, { replace: true });
+    
+  } catch (error: any) {
+    console.error('[LOGIN] Login error:', error);
+    
+    // Clear any partial authentication data
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    toast({
+      title: 'Erreur de connexion',
+      description: error.message || 'Email ou mot de passe incorrect',
+      variant: 'destructive',
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({

@@ -33,6 +33,7 @@ import StudentManagement from "./pages/StudentManagement";
 import UnderConstruction from "./pages/UnderConstruction";
 import Methode from "./pages/Methode";
 import Clubs from "./pages/Clubs";
+import ChangePassword from "./pages/ChangePassword";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/schools" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<AdminSignup />} />
+          <Route path="/change-password" element={<ChangePassword />} />
             
             {/* Legacy routes - redirect to unified login */}
             <Route path="/superadmin/login" element={<Login />} />

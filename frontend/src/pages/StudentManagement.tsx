@@ -140,7 +140,7 @@ export default function StudentManagement() {
       email,
       password,
       fullName,
-      role: 'student',
+      role: 'STUDENT',
       schoolId,
     });
 
