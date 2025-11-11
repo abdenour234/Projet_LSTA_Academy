@@ -135,23 +135,16 @@ export default function StudentManagement() {
   const fullName = `${newStudent.firstName} ${newStudent.lastName}`;
 
   try {
-    // 1. Register PROFILE (OK ✅)
-    await authApi.register({
+    // ✅ Use registerByAdmin to prevent auto-login when admin creates students
+    await authApi.registerByAdmin({
       email,
       password,
       fullName,
       role: 'STUDENT',
       schoolId,
-    });
-
-    // 2. Create STUDENT RECORD (FIXED ✅)
-    await authApi.createStudentRecord({
-      firstName: newStudent.firstName,
-      lastName: newStudent.lastName,
-      dateOfBirth: `${newStudent.dateOfBirth}T00:00:00`, // ✅ FIXED !
+      dateOfBirth: newStudent.dateOfBirth,
       gender: newStudent.gender,
       parentContact: newStudent.parentContact || undefined,
-      schoolId,
     });
 
     setGeneratedCredentials({ email, password });

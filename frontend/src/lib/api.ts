@@ -390,6 +390,39 @@ createStudentRecord: async (studentData: {
     return response;
   },
 
+  /**
+   * Register a user BY ADMIN - does NOT return token
+   * Use this when admin creates teachers/students to prevent auto-login
+   * Admin stays logged in as admin after creating users
+   */
+  registerByAdmin: async (userData: {
+    email: string;
+    password: string;
+    fullName?: string;
+    role: string;
+    schoolId: string;
+    dateOfBirth?: string;
+    gender?: string;
+    parentContact?: string;
+    massar?: string;
+    classId?: string;
+  }) => {
+    console.log('[AUTH] Admin creating user (no auto-login):', { email: userData.email, role: userData.role });
+    
+    // Uses admin's current token for authorization
+    const response = await api.post<{ user: any; message: string }>(
+      '/auth/register-by-admin',
+      userData,
+      { skipAuth: false } // Use admin's token
+    );
+    
+    // ✅ CRITICAL: Do NOT touch localStorage or auth state
+    // Admin remains logged in
+    console.log('[AUTH] User created by admin successfully, admin session preserved');
+    
+    return response;
+  },
+
   signupAdmin: async (signupData: {
     fullName: string;
     email: string;

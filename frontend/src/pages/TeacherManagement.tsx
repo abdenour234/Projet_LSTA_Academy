@@ -171,15 +171,13 @@ export default function TeacherManagement() {
     const password = generatePassword();
 
     try {
-      // Register the teacher using the backend API
-      await authApi.register({
+      // ✅ Use registerByAdmin to prevent auto-login when admin creates teachers
+      await authApi.registerByAdmin({
         email,
         password,
         fullName: newTeacher.full_name,
-        role: 'teacher',
+        role: 'TEACHER',
         schoolId,
-        matiere: newTeacher.matiere,
-        phone: newTeacher.phone || undefined,
       });
 
       setGeneratedCredentials({ email, password });

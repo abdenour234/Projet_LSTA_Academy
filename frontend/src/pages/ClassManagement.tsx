@@ -320,7 +320,8 @@ export default function ClassManagement() {
           };
 
           try {
-            await authApi.register(userData);
+            // ✅ Use registerByAdmin to prevent auto-login
+            await authApi.registerByAdmin(userData);
             credentials.push({ fullName, email, password });
           } catch (error: any) {
             if (error.status === 400 && error.message.includes('already exists')) {
@@ -364,7 +365,8 @@ export default function ClassManagement() {
     const fullName = `${newStudent.firstName} ${newStudent.lastName}`;
 
     try {
-      await authApi.register({
+      // ✅ Use registerByAdmin to prevent auto-login
+      await authApi.registerByAdmin({
         email,
         password,
         fullName,

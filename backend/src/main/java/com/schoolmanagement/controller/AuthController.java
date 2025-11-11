@@ -209,6 +209,121 @@ public class AuthController {
         }
     }
 
+    /**
+     * Register endpoint for admin-created users
+     * Does NOT return a token - prevents auto-login when admin creates users
+     * Used by admins to create teachers, students without affecting their own session
+     */
+    @PostMapping("/register-by-admin")
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseEntity<Map<String, Object>> registerByAdmin(@RequestBody Map<String, Object> userDto) {
+        String email = (String) userDto.get("email");
+        String password = (String) userDto.get("password");
+        String fullName = (String) userDto.get("fullName");
+        Long schoolId = userDto.get("schoolId") != null ? Long.parseLong(userDto.get("schoolId").toString()) : null;
+        String roleStr = (String) userDto.get("role");
+        String massar = (String) userDto.get("massar");
+        String dateOfBirth = (String) userDto.get("dateOfBirth");
+        String gender = (String) userDto.get("gender");
+        String parentContact = (String) userDto.get("parentContact");
+        UUID classId = userDto.get("classId") != null ? UUID.fromString((String) userDto.get("classId")) : null;
+
+        if (email == null || email.trim().isEmpty()) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Email is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        if (password == null || password.trim().isEmpty()) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Password is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        if (schoolId == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "School ID is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        if (profileRepository.findByEmail(email) != null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "User already exists");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        try {
+            Profile profile = new Profile();
+            profile.setEmail(email);
+            profile.setPasswordHash(passwordEncoder.encode(password));
+            profile.setFullName(fullName != null ? fullName : email.split("@")[0]);
+            profile.setSchoolId(schoolId);
+
+            Profile savedProfile = profileRepository.save(profile);
+
+            UserRole userRole = new UserRole();
+            userRole.setUserId(savedProfile.getId());
+
+            UserRole.Role parsedRole = UserRole.Role.TEACHER;
+            if (roleStr != null && !roleStr.trim().isEmpty()) {
+                try {
+                    parsedRole = UserRole.Role.valueOf(roleStr.toUpperCase().trim());
+                } catch (IllegalArgumentException e) {
+                    parsedRole = UserRole.Role.TEACHER;
+                }
+            }
+            userRole.setRole(parsedRole);
+            userRoleRepository.save(userRole);
+
+            if (parsedRole == UserRole.Role.STUDENT) {
+                savedProfile.setMustChangePassword(true);
+                profileRepository.save(savedProfile);
+                
+                Optional<Student> existingStudentOpt = studentRepository.findByUserId(savedProfile.getId());
+                if (!existingStudentOpt.isPresent()) {
+                    Student student = new Student();
+                    student.setUserId(savedProfile.getId());
+                    student.setFirstName(fullName != null ? fullName.split(" ")[0] : email.split("@")[0]);
+                    student.setLastName(fullName != null && fullName.contains(" ") ? fullName.split(" ", 2)[1] : "");
+                    student.setSchoolId(schoolId);
+                    student.setClassId(classId);
+                    student.setDateOfBirth(dateOfBirth != null && !dateOfBirth.trim().isEmpty()
+                        ? LocalDate.parse(dateOfBirth)
+                        : null);
+                    student.setGender(gender);
+                    student.setParentContact(parentContact);
+                    student.setMassar(massar != null && !massar.trim().isEmpty() ? massar : null);
+                    student.setCreatedAt(LocalDateTime.now());
+                    student.setUpdatedAt(LocalDateTime.now());
+                    studentRepository.save(student);
+                }
+            }
+
+            // ✅ CRITICAL: Do NOT generate or return token
+            // This prevents auto-login when admin creates users
+            Map<String, Object> response = new HashMap<>();
+            
+            Map<String, Object> user = new HashMap<>();
+            user.put("id", savedProfile.getId().toString());
+            user.put("email", savedProfile.getEmail());
+            user.put("fullName", savedProfile.getFullName());
+            user.put("schoolId", savedProfile.getSchoolId());
+            user.put("role", userRole.getRole().name());
+            user.put("credentials", Map.of(
+                "email", email,
+                "password", password
+            ));
+
+            response.put("user", user);
+            response.put("message", "User created successfully");
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to register user: " + e.getMessage(), e);
+        }
+    }
+
     @PostMapping("/register")
     @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, Object> userDto) {
