@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    */
   useEffect(() => {
     const initAuth = async () => {
-      // Try to restore from localStorage first for instant UI update
+      // ✅ STEP 1: Try to restore from localStorage FIRST for instant UI update
       const storedUser = localStorage.getItem('user');
       const storedToken = localStorage.getItem('token');
       
@@ -51,14 +51,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser); // Set immediately for better UX
+          setLoading(false); // Stop loading immediately to prevent "auth required" errors
           console.log('[AUTH] Restored user from localStorage:', parsedUser);
+          
+          // ✅ STEP 2: Then validate with server in background (async)
+          setTimeout(async () => {
+            try {
+              await checkAuth();
+            } catch (error) {
+              console.error('[AUTH] Background validation failed:', error);
+            }
+          }, 100);
         } catch (error) {
           console.error('[AUTH] Failed to parse stored user:', error);
+          auth.clearAllAuthData();
+          setLoading(false);
         }
+      } else {
+        // No stored credentials, just check with server
+        await checkAuth();
       }
-      
-      // Then validate with server
-      await checkAuth();
     };
     
     initAuth();

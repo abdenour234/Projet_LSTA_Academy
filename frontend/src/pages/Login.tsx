@@ -25,7 +25,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   setLoading(true);
   
   try {
-    // ✅ STEP 1: Login (api.ts already clears old session data)
+    // ✅ STEP 1: Login (api.ts already clears old session data completely)
     const response = await authApi.login(formData.email, formData.password);
     
     console.log('[LOGIN] Response received:', { 
@@ -35,14 +35,13 @@ const handleSubmit = async (e: React.FormEvent) => {
       mustChangePassword: response.user.mustChangePassword
     });
 
-    // ✅ STEP 1: Validate and normalize role
+    // ✅ STEP 2: Validate and normalize role
     const userRole = normalizeRole(response.user.role);
     console.log('[LOGIN] Normalized role:', userRole);
     
     if (!userRole) {
       console.error('[LOGIN] Invalid role detected:', response.user.role);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      auth.clearAllAuthData();
       toast({
         title: 'Erreur de configuration',
         description: `Rôle utilisateur invalide: ${response.user.role}. Contactez un administrateur.`,
@@ -52,11 +51,10 @@ const handleSubmit = async (e: React.FormEvent) => {
       return;
     }
 
-    // ✅ STEP 2: Verify schoolId for roles that require it
+    // ✅ STEP 3: Verify schoolId for roles that require it
     if ((userRole === 'ADMIN' || userRole === 'TEACHER') && !response.user.schoolId) {
       console.error('[LOGIN] Missing schoolId for role:', userRole);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      auth.clearAllAuthData();
       toast({
         title: 'Erreur de configuration',
         description: 'Aucune école associée à votre compte. Contactez un administrateur.',
@@ -66,31 +64,23 @@ const handleSubmit = async (e: React.FormEvent) => {
       return;
     }
 
-    // ✅ STEP 3: Store token and normalized user data
-    localStorage.setItem('token', response.token);
-    const normalizedUser = {
-      ...response.user,
-      role: userRole, // Always UPPERCASE
-    };
-    localStorage.setItem('user', JSON.stringify(normalizedUser));
-    console.log('[LOGIN] User data stored:', normalizedUser);
-
-    // ✅ STEP 4: Verify token is valid before redirecting
-    try {
-      await authApi.getCurrentUser();
-      console.log('[LOGIN] Token verified successfully');
-    } catch (error: any) {
-      console.error('[LOGIN] Token verification failed:', error);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+    // ✅ STEP 4: Double-check localStorage has data (synchronous verification)
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    
+    if (!storedToken || !storedUser) {
+      console.error('[LOGIN] Storage verification failed - data not saved');
+      auth.clearAllAuthData();
       toast({
-        title: 'Erreur d\'authentification',
-        description: 'Token invalide. Veuillez réessayer.',
+        title: 'Erreur de connexion',
+        description: 'Impossible de sauvegarder la session. Veuillez réessayer.',
         variant: 'destructive',
       });
       setLoading(false);
       return;
     }
+    
+    console.log('[LOGIN] Storage verified - token and user data present');
 
     // ✅ STEP 5: Show success message
     toast({

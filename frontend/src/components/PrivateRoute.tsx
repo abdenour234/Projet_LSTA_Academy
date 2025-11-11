@@ -1,9 +1,10 @@
-import React, { ReactNode, useEffect, useRef } from 'react';
+import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { Navigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { PageLoadingSpinner } from '@/components/ui/loading-spinner';
 import { normalizeRole, getRoleDashboardRoute } from '@/lib/roleUtils';
+import { auth } from '@/lib/api';
 
 /**
  * Props for PrivateRoute component
@@ -32,13 +33,48 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
   requiredRole,
   redirectTo = '/login',
 }) => {
-  const { user, loading, isAuthenticated, hasRole } = useAuth();
+  const { user, loading, isAuthenticated, hasRole, checkAuth } = useAuth();
   const location = useLocation();
   const params = useParams();
   const { toast } = useToast();
   
   // Track if we've already shown a toast to avoid duplicates
   const toastShownRef = useRef(false);
+  
+  // Local state to handle immediate authentication check from localStorage
+  const [quickAuthCheck, setQuickAuthCheck] = useState<{
+    hasToken: boolean;
+    hasUser: boolean;
+    checked: boolean;
+  }>({
+    hasToken: false,
+    hasUser: false,
+    checked: false,
+  });
+
+  // ✅ CRITICAL: Check localStorage directly on mount for immediate auth status
+  useEffect(() => {
+    const token = auth.getToken();
+    const storedUser = auth.getUser();
+    
+    console.log('[PRIVATE_ROUTE] Quick auth check:', { 
+      hasToken: !!token, 
+      hasUser: !!storedUser,
+      path: location.pathname 
+    });
+    
+    setQuickAuthCheck({
+      hasToken: !!token,
+      hasUser: !!storedUser,
+      checked: true,
+    });
+    
+    // If we have token and user, but AuthContext is still loading, trigger refresh
+    if (token && storedUser && loading) {
+      console.log('[PRIVATE_ROUTE] Token exists but AuthContext loading, triggering refresh');
+      checkAuth();
+    }
+  }, [location.pathname]);
 
   console.log('[PRIVATE_ROUTE] Check:', { 
     path: location.pathname, 
@@ -46,16 +82,24 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
     role: user?.role, 
     requiredRole, 
     loading, 
-    isAuthenticated 
+    isAuthenticated,
+    quickCheck: quickAuthCheck
   });
 
   // Show loading spinner while checking authentication
-  if (loading) {
+  // BUT only if we don't have a quick positive auth check from localStorage
+  if (loading && !quickAuthCheck.checked) {
     return <PageLoadingSpinner text="Vérification de l'authentification..." />;
   }
+  
+  // If AuthContext is loading but we have token/user in localStorage, trust it temporarily
+  if (loading && quickAuthCheck.hasToken && quickAuthCheck.hasUser) {
+    console.log('[PRIVATE_ROUTE] Trusting localStorage while AuthContext loads');
+    // Continue to render - AuthContext will update soon
+  }
 
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
+  // Redirect to login if not authenticated (and no quick check indicates auth)
+  if (!isAuthenticated && !(quickAuthCheck.hasToken && quickAuthCheck.hasUser)) {
     console.log('[PRIVATE_ROUTE] Not authenticated, redirecting to login');
     // Show toast notification for unauthenticated access
     if (!toastShownRef.current) {
