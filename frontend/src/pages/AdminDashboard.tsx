@@ -27,7 +27,9 @@ const AdminDashboard = () => {
   // Filter states
   const [classSearchTerm, setClassSearchTerm] = useState('');
   const [classLevelFilter, setClassLevelFilter] = useState<string>('all');
+  const [classStatusFilter, setClassStatusFilter] = useState<string>('all');
   const [teacherSearchTerm, setTeacherSearchTerm] = useState('');
+  const [teacherStatusFilter, setTeacherStatusFilter] = useState<string>('all');
   const [activityTypeFilter, setActivityTypeFilter] = useState<string>('all');
 
   useEffect(() => {
@@ -228,15 +230,30 @@ const AdminDashboard = () => {
       classe.name?.toLowerCase().includes(classSearchTerm.toLowerCase()) ||
       classe.filiere?.toLowerCase().includes(classSearchTerm.toLowerCase());
     const matchesLevel = classLevelFilter === 'all' || classe.level === classLevelFilter;
-    return matchesSearch && matchesLevel;
+    
+    // Status filter: active (has students) or empty (no students)
+    const classStudents = studentsMap.get(classe.id) || [];
+    const matchesStatus = classStatusFilter === 'all' || 
+      (classStatusFilter === 'active' && classStudents.length > 0) ||
+      (classStatusFilter === 'empty' && classStudents.length === 0);
+    
+    return matchesSearch && matchesLevel && matchesStatus;
   });
 
   const filteredTeachers = teachers.filter((teacher) => {
     const fullName = teacher.fullName || `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim();
-    return !teacherSearchTerm || 
+    const matchesSearch = !teacherSearchTerm || 
       fullName.toLowerCase().includes(teacherSearchTerm.toLowerCase()) ||
       teacher.email?.toLowerCase().includes(teacherSearchTerm.toLowerCase()) ||
       teacher.specialty?.toLowerCase().includes(teacherSearchTerm.toLowerCase());
+    
+    // Status filter: active (has email) or inactive (no email)
+    const hasEmail = teacher.email && teacher.email.length > 0;
+    const matchesStatus = teacherStatusFilter === 'all' || 
+      (teacherStatusFilter === 'active' && hasEmail) ||
+      (teacherStatusFilter === 'inactive' && !hasEmail);
+    
+    return matchesSearch && matchesStatus;
   });
 
   const filteredActivities = activities.filter((activity) => {
@@ -298,7 +315,8 @@ const AdminDashboard = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+      {/* Main Container - max-w-7xl, consistent spacing: 24px (space-6) */}
+      <main className="max-w-7xl mx-auto px-6 py-6 space-y-8">
         {/* Statistics Dashboard */}
         <div>
           <AdminStatsCards schoolId={id!} />
@@ -306,7 +324,7 @@ const AdminDashboard = () => {
 
         {/* Classes Table - Primary Focus */}
         <div>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">Classes</h2>
               <p className="text-sm text-slate-600 mt-0.5">Gérer les classes et leurs élèves</p>
@@ -320,9 +338,9 @@ const AdminDashboard = () => {
             </Button>
           </div>
 
-          {/* Search and Filters */}
-          <div className="flex gap-3 mb-3">
-            <div className="relative flex-1 max-w-xs">
+          {/* Quick Filters - Actionable & Scannable */}
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div className="relative flex-1 min-w-[240px] max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text"
@@ -335,13 +353,34 @@ const AdminDashboard = () => {
             <select
               value={classLevelFilter}
               onChange={(e) => setClassLevelFilter(e.target.value)}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-2 transition-shadow"
+              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-2 transition-shadow min-w-[140px]"
             >
               <option value="all">Tous les niveaux</option>
               {getUniqueLevels().map((level) => (
                 <option key={level} value={level}>{level}</option>
               ))}
             </select>
+            <select
+              value={classStatusFilter}
+              onChange={(e) => setClassStatusFilter(e.target.value)}
+              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-2 transition-shadow min-w-[120px]"
+            >
+              <option value="all">Tous statuts</option>
+              <option value="active">Actif</option>
+              <option value="empty">Vide</option>
+            </select>
+            {(classSearchTerm || classLevelFilter !== 'all' || classStatusFilter !== 'all') && (
+              <button
+                onClick={() => {
+                  setClassSearchTerm('');
+                  setClassLevelFilter('all');
+                  setClassStatusFilter('all');
+                }}
+                className="text-sm text-slate-600 hover:text-slate-900 font-medium px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors"
+              >
+                Réinitialiser
+              </button>
+            )}
           </div>
 
           {loadingClasses ? (
@@ -519,9 +558,9 @@ const AdminDashboard = () => {
             </Button>
           </div>
 
-          {/* Search */}
-          <div className="mb-3">
-            <div className="relative max-w-xs">
+          {/* Quick Filters - Teachers */}
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div className="relative flex-1 min-w-[240px] max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text"
@@ -531,6 +570,26 @@ const AdminDashboard = () => {
                 className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-2 transition-shadow"
               />
             </div>
+            <select
+              value={teacherStatusFilter}
+              onChange={(e) => setTeacherStatusFilter(e.target.value)}
+              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-2 transition-shadow min-w-[120px]"
+            >
+              <option value="all">Tous statuts</option>
+              <option value="active">Actif</option>
+              <option value="inactive">Inactif</option>
+            </select>
+            {(teacherSearchTerm || teacherStatusFilter !== 'all') && (
+              <button
+                onClick={() => {
+                  setTeacherSearchTerm('');
+                  setTeacherStatusFilter('all');
+                }}
+                className="text-sm text-slate-600 hover:text-slate-900 font-medium px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors"
+              >
+                Réinitialiser
+              </button>
+            )}
           </div>
 
           {loadingTeachers ? (
