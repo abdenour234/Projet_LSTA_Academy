@@ -72,7 +72,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: http://57.129.110.129:8080/api
+        VITE_API_URL: /api  # Use relative URL - nginx will proxy to backend
     container_name: school-management-frontend
     ports:
       - "80:80"
