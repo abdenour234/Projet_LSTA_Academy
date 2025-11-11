@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LogOut, Plus, Trash2, BarChart3, Eye, Edit, Users, GraduationCap, Clock, MessageSquare } from 'lucide-react';
+import { LogOut, Plus, Trash2, BarChart3, Eye, Edit, Users, GraduationCap, Clock, MessageSquare, Mail, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { authApi, schoolApi, activityApi, auth } from '@/lib/api';
+import { authApi, schoolApi, activityApi, auth, teacherApi, classApi, studentApi } from '@/lib/api';
 import { DIAGNOSTIC_GRIDS } from '@/config/diagnosticGrids';
 import { AdminStatsCards } from '@/components/admin/AdminStatsCards';
 import { normalizeRole, getRoleDashboardRoute } from '@/lib/roleUtils';
@@ -18,6 +18,11 @@ const AdminDashboard = () => {
   const [diagnosticSessions, setDiagnosticSessions] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [userName, setUserName] = useState('');
+  const [teachers, setTeachers] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [studentsMap, setStudentsMap] = useState<Map<string, any[]>>(new Map());
+  const [loadingTeachers, setLoadingTeachers] = useState(true);
+  const [loadingClasses, setLoadingClasses] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,6 +94,8 @@ const AdminDashboard = () => {
 
         loadDiagnosticSessions();
         loadActivities();
+        loadTeachers();
+        loadClasses();
       } catch (error) {
         console.error('[ADMIN_DASHBOARD] Error fetching data:', error);
         toast({
@@ -116,6 +123,45 @@ const AdminDashboard = () => {
 
   const handleViewResults = (sessionId: string) => {
     navigate(`/school/${id}/teacher/diagnostic/${sessionId}/results`);
+  };
+
+  const loadTeachers = async () => {
+    try {
+      setLoadingTeachers(true);
+      const data = await teacherApi.getBySchoolId(id!);
+      setTeachers(data || []);
+    } catch (error) {
+      console.error('Error loading teachers:', error);
+      setTeachers([]);
+    } finally {
+      setLoadingTeachers(false);
+    }
+  };
+
+  const loadClasses = async () => {
+    try {
+      setLoadingClasses(true);
+      const data = await classApi.getBySchoolId(id!);
+      setClasses(data || []);
+      
+      // Load students for each class
+      const studentsData = new Map<string, any[]>();
+      for (const classe of data || []) {
+        try {
+          const classStudents = await studentApi.getByClass(classe.id);
+          studentsData.set(classe.id, classStudents || []);
+        } catch (err) {
+          console.error(`Error loading students for class ${classe.id}:`, err);
+          studentsData.set(classe.id, []);
+        }
+      }
+      setStudentsMap(studentsData);
+    } catch (error) {
+      console.error('Error loading classes:', error);
+      setClasses([]);
+    } finally {
+      setLoadingClasses(false);
+    }
   };
 
   const loadActivities = async () => {
@@ -335,6 +381,203 @@ const AdminDashboard = () => {
             </div>
           ) : (
             <p className="text-center text-muted-foreground py-8">Aucune activité créée</p>
+          )}
+        </Card>
+
+        {/* Teachers List Section */}
+        <Card className="p-6 shadow-card">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-lg bg-primary/10">
+                <GraduationCap className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Enseignants</h2>
+                <p className="text-sm text-muted-foreground">Liste complète des enseignants de l'école</p>
+              </div>
+            </div>
+            <Button onClick={() => navigate(`/school/${id}/admin/teachers`)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Gérer
+            </Button>
+          </div>
+
+          {loadingTeachers ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Chargement...</p>
+            </div>
+          ) : teachers.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {teachers.map((teacher) => (
+                <Card key={teacher.id} className="p-4 border-border hover:shadow-card-hover transition-smooth">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-full bg-primary/10">
+                      <GraduationCap className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-foreground truncate">
+                        {teacher.fullName || `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim()}
+                      </h4>
+                      {teacher.email && (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                          <Mail className="h-3 w-3" />
+                          <span className="truncate">{teacher.email}</span>
+                        </div>
+                      )}
+                      {teacher.specialty && (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                          <BookOpen className="h-3 w-3" />
+                          <span className="truncate">{teacher.specialty}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground">Aucun enseignant enregistré</p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => navigate(`/school/${id}/admin/teachers`)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter un enseignant
+              </Button>
+            </div>
+          )}
+        </Card>
+
+        {/* Classes List Section */}
+        <Card className="p-6 shadow-card">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-lg bg-accent/10">
+                <Users className="h-6 w-6 text-accent" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Classes</h2>
+                <p className="text-sm text-muted-foreground">Liste des classes avec élèves et activités</p>
+              </div>
+            </div>
+            <Button onClick={() => navigate(`/school/${id}/admin/classes`)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Gérer
+            </Button>
+          </div>
+
+          {loadingClasses ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Chargement...</p>
+            </div>
+          ) : classes.length > 0 ? (
+            <div className="space-y-4">
+              {classes.map((classe) => {
+                const classStudents = studentsMap.get(classe.id) || [];
+                const classActivities = activities.filter(
+                  (activity) => activity.targetClasses?.includes(classe.id) || activity.level === classe.level
+                );
+                
+                return (
+                  <Card key={classe.id} className="p-4 border-border hover:shadow-card-hover transition-smooth">
+                    <div className="space-y-3">
+                      {/* Class Header */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold text-foreground text-lg">{classe.name}</h4>
+                            {classe.level && (
+                              <span className="text-xs font-medium px-2 py-1 rounded bg-primary/10 text-primary">
+                                {classe.level}
+                              </span>
+                            )}
+                            {classe.filiere && (
+                              <span className="text-xs font-medium px-2 py-1 rounded bg-accent/10 text-accent">
+                                {classe.filiere}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex gap-4 text-sm text-muted-foreground">
+                            <span>Année: <strong className="text-foreground">{classe.academicYear}</strong></span>
+                            <span>Élèves: <strong className="text-foreground">{classStudents.length}</strong></span>
+                            <span>Activités: <strong className="text-foreground">{classActivities.length}</strong></span>
+                          </div>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate(`/school/${id}/admin/classes`)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {/* Students List */}
+                      {classStudents.length > 0 && (
+                        <div className="border-t pt-3">
+                          <p className="text-sm font-medium text-muted-foreground mb-2">Élèves ({classStudents.length}):</p>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                            {classStudents.slice(0, 8).map((student) => (
+                              <div key={student.id} className="text-sm text-foreground bg-muted/50 rounded px-2 py-1 truncate">
+                                {student.firstName} {student.lastName}
+                              </div>
+                            ))}
+                            {classStudents.length > 8 && (
+                              <div className="text-sm text-muted-foreground bg-muted/30 rounded px-2 py-1">
+                                +{classStudents.length - 8} autres
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Activities List */}
+                      {classActivities.length > 0 && (
+                        <div className="border-t pt-3">
+                          <p className="text-sm font-medium text-muted-foreground mb-2">Activités assignées ({classActivities.length}):</p>
+                          <div className="flex flex-wrap gap-2">
+                            {classActivities.slice(0, 5).map((activity) => (
+                              <div 
+                                key={activity.id}
+                                className={`text-xs font-medium px-2 py-1 rounded cursor-pointer hover:opacity-80 ${
+                                  activity.type === 'Orale' ? 'bg-orale/10 text-orale' :
+                                  activity.type === 'Lecture' ? 'bg-lecture/10 text-lecture' :
+                                  'bg-ecriture/10 text-ecriture'
+                                }`}
+                                onClick={() => navigate(`/activity/${activity.id}`)}
+                              >
+                                {activity.title}
+                              </div>
+                            ))}
+                            {classActivities.length > 5 && (
+                              <div className="text-xs text-muted-foreground px-2 py-1">
+                                +{classActivities.length - 5} autres
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground">Aucune classe créée</p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => navigate(`/school/${id}/admin/classes`)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Créer une classe
+              </Button>
+            </div>
           )}
         </Card>
       </main>
