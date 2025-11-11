@@ -249,30 +249,47 @@ const AdminDashboard = () => {
       <header className="h-16 border-b border-slate-200 bg-white sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-full">
           <div className="flex items-center justify-between h-full">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               {schoolLogo && (
                 <img 
                   src={schoolLogo} 
                   alt="Logo" 
-                  className="h-8 w-8 object-contain"
+                  className="h-9 w-9 object-contain"
                 />
               )}
-              <div>
-                <h1 className="text-base font-semibold text-slate-900 tracking-tight">{schoolName}</h1>
-                <p className="text-xs text-slate-600">{userName} · Administrateur</p>
+              <div className="border-l border-slate-200 pl-4">
+                <h1 className="text-base font-semibold text-slate-900 tracking-tight leading-tight">{schoolName}</h1>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs text-slate-600">{userName}</span>
+                  <span className="text-xs text-slate-400">·</span>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-300">
+                    Admin
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => navigate(`/school/${id}/admin/teachers`)}
+                variant="ghost"
+                className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 text-sm h-9 font-medium"
+              >
+                <GraduationCap className="h-4 w-4 mr-2" />
+                Enseignants
+              </Button>
               <Button 
                 onClick={() => navigate(`/school/${id}/admin/classes`)}
                 className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium h-9"
               >
-                Gérer les classes
+                <Users className="h-4 w-4 mr-2" />
+                Classes
               </Button>
+              <div className="h-6 w-px bg-slate-200 mx-1" />
               <Button 
                 variant="ghost" 
                 onClick={handleLogout}
-                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-sm h-9"
+                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 h-9 px-2"
+                title="Déconnexion"
               >
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -284,7 +301,6 @@ const AdminDashboard = () => {
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Statistics Dashboard */}
         <div>
-          <h2 className="text-sm font-medium text-slate-500 uppercase tracking-wide mb-4">Vue d'ensemble</h2>
           <AdminStatsCards schoolId={id!} />
         </div>
 
