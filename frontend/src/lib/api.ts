@@ -66,6 +66,33 @@ export const auth = {
   
   isAuthenticated: (): boolean => {
     return !!localStorage.getItem(TOKEN_KEY);
+  },
+
+  /**
+   * Complete session cleanup - removes ALL authentication data
+   * Use this before login or on logout to ensure clean state
+   */
+  clearAllAuthData: (): void => {
+    console.log('[AUTH] Performing complete session cleanup');
+    
+    // Clear all auth-related localStorage items
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    
+    // Clear any other potential auth data
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('auth_') || key.startsWith('user_') || key === 'token' || key === 'user')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    
+    // Clear sessionStorage as well
+    sessionStorage.clear();
+    
+    console.log('[AUTH] Session cleanup complete');
   }
 };
 
@@ -269,13 +296,12 @@ createStudentRecord: async (studentData: {
   return api.post('/students', studentData);
 },
   login: async (email: string, password: string) => {
-    // ✅ CRITICAL: Clear old session data before new login to prevent conflicts
-    console.log('[AUTH] Clearing old session data before new login');
-    const oldToken = localStorage.getItem(TOKEN_KEY);
-    if (oldToken) {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
-    }
+    // ✅ CRITICAL: Complete cleanup of ALL old session data before new login
+    console.log('[AUTH] Clearing ALL old session data before new login');
+    auth.clearAllAuthData();
+    
+    // Small delay to ensure cleanup completes
+    await new Promise(resolve => setTimeout(resolve, 50));
     
     const response = await api.post<{ token: string; user: any }>(
       '/auth/login',
@@ -284,17 +310,21 @@ createStudentRecord: async (studentData: {
     );
     
     console.log('[AUTH] Login successful, storing new session data');
+    
     // Store token and user info securely
     auth.setToken(response.token);
     auth.setUser(response.user);
     
-    // Verify token immediately after login
+    // Verify token immediately after login with fresh data
     try {
       const verifiedUser = await api.get<any>('/auth/me');
-      console.log('[LOGIN] Token verified successfully');
+      console.log('[LOGIN] Token verified successfully with fresh user data:', verifiedUser);
+      
+      // Update with verified data to ensure consistency
       auth.setUser(verifiedUser);
     } catch (error) {
       console.error('[LOGIN] Token verification failed:', error);
+      auth.clearAllAuthData();
       throw new Error('Session validation failed');
     }
     
@@ -302,18 +332,24 @@ createStudentRecord: async (studentData: {
   },
 
   logout: async () => {
-    // ✅ CRITICAL: Clear ALL localStorage data FIRST
-    console.log('[AUTH] Clearing all authentication data');
-    localStorage.clear(); // Clear everything to prevent stale data
+    console.log('[AUTH] Initiating logout process');
     
+    // ✅ STEP 1: Call backend logout endpoint first (with current token)
     try {
       await api.post('/auth/logout');
+      console.log('[AUTH] Backend logout successful');
     } catch (error) {
-      // Ignore logout errors - we've already cleared local data
-      console.error('[AUTH] Logout API error (ignored):', error);
+      // Continue with local cleanup even if backend fails
+      console.error('[AUTH] Backend logout error (continuing with local cleanup):', error);
     }
     
-    // ✅ CRITICAL: Hard redirect to login page to clear navigation history
+    // ✅ STEP 2: Complete local session cleanup
+    auth.clearAllAuthData();
+    
+    // ✅ STEP 3: Small delay to ensure cleanup completes
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // ✅ STEP 4: Hard redirect to login page to clear navigation history and force full page reload
     console.log('[AUTH] Redirecting to login page (hard redirect)');
     window.location.href = '/login';
     

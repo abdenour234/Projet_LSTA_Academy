@@ -147,12 +147,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    */
   const logout = async (): Promise<void> => {
     try {
+      // Clear React state immediately
+      setUser(null);
+      setLoading(false);
+      
+      // Call logout API (which will clear storage and redirect)
       await authApi.logout();
     } catch (error) {
       console.error('Logout error:', error);
-    } finally {
-      auth.removeToken();
+      // Ensure state is cleared even on error
       setUser(null);
+      auth.clearAllAuthData();
+      window.location.href = '/login';
     }
   };
 

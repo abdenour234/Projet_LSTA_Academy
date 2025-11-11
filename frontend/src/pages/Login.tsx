@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { authApi } from '@/lib/api';
+import { authApi, auth } from '@/lib/api';
 import { Shield, GraduationCap, UserCheck, BookOpen, LogIn } from 'lucide-react';
 import { normalizeRole, getRoleDashboardRoute } from '@/lib/roleUtils';
 
@@ -25,6 +25,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   setLoading(true);
   
   try {
+    // ✅ STEP 1: Login (api.ts already clears old session data)
     const response = await authApi.login(formData.email, formData.password);
     
     console.log('[LOGIN] Response received:', { 
@@ -97,25 +98,29 @@ const handleSubmit = async (e: React.FormEvent) => {
       description: `Bienvenue ${response.user.fullName || response.user.email}!`,
     });
 
-    // ✅ STEP 6: Check if password change is required (for students)
+    // ✅ STEP 6: Force AuthContext to refresh with new user data
+    await checkAuth();
+    console.log('[LOGIN] AuthContext refreshed with new user');
+
+    // ✅ STEP 7: Check if password change is required (for students)
     if (response.user.mustChangePassword && userRole === 'STUDENT') {
       console.log('[LOGIN] Redirecting to password change');
       navigate('/change-password', { replace: true });
       return;
     }
 
-    // ✅ STEP 7: Get correct dashboard route and redirect
+    // ✅ STEP 8: Get correct dashboard route and redirect
     const dashboardRoute = getRoleDashboardRoute(userRole, response.user.schoolId);
     console.log('[LOGIN] Redirecting to:', dashboardRoute);
     
+    // Use replace to prevent back button from returning to login
     navigate(dashboardRoute, { replace: true });
     
   } catch (error: any) {
     console.error('[LOGIN] Login error:', error);
     
-    // Clear any partial authentication data
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    // Clear any partial authentication data using auth helper
+    auth.clearAllAuthData();
     
     toast({
       title: 'Erreur de connexion',
