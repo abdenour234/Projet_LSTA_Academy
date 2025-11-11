@@ -79,28 +79,28 @@ export const AdminStatsCards = ({ schoolId }: AdminStatsCardsProps) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      {/* Primary Metric - Students (larger emphasis) */}
+      {/* Primary Metric - Students (double width, largest emphasis) */}
       <Card className="col-span-1 md:col-span-2 border border-slate-200 bg-white p-6 hover:border-slate-300 transition-colors">
         <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm font-normal text-slate-600 mb-1">Élèves inscrits</p>
-            <p className="text-5xl font-bold text-slate-900 tracking-tight">{stats.totalStudents}</p>
-            <p className="text-xs text-slate-500 mt-2">Total des élèves de l'école</p>
+          <div className="flex-1">
+            <p className="text-sm font-normal text-slate-600 mb-2 tracking-normal">Élèves inscrits</p>
+            <p className="text-5xl font-bold text-slate-900 tracking-tight leading-none">{stats.totalStudents}</p>
+            <p className="text-xs text-slate-500 mt-3 font-normal">Total des élèves de l'école</p>
           </div>
-          <div className="p-3 rounded-lg bg-slate-100">
-            <Users className="h-6 w-6 text-slate-700" />
+          <div className="p-3 rounded bg-slate-50 border border-slate-200">
+            <Users className="h-6 w-6 text-slate-600" />
           </div>
         </div>
       </Card>
 
-      {/* Secondary Metrics */}
+      {/* Secondary Metrics - Classes & Teachers (grouped, medium emphasis) */}
       <Card className="border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors">
         <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs font-medium text-slate-600 uppercase tracking-wider mb-2">Classes</p>
-            <p className="text-3xl font-bold text-slate-900 tracking-tight">{stats.totalClasses}</p>
+          <div className="flex-1">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Classes</p>
+            <p className="text-4xl font-bold text-slate-900 tracking-tight leading-none">{stats.totalClasses}</p>
           </div>
-          <div className="p-2 rounded bg-slate-100">
+          <div className="p-2 rounded bg-slate-50">
             <Users className="h-5 w-5 text-slate-600" />
           </div>
         </div>
@@ -108,25 +108,25 @@ export const AdminStatsCards = ({ schoolId }: AdminStatsCardsProps) => {
 
       <Card className="border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors">
         <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs font-medium text-slate-600 uppercase tracking-wider mb-2">Enseignants</p>
-            <p className="text-3xl font-bold text-slate-900 tracking-tight">{stats.totalTeachers}</p>
+          <div className="flex-1">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Enseignants</p>
+            <p className="text-4xl font-bold text-slate-900 tracking-tight leading-none">{stats.totalTeachers}</p>
           </div>
-          <div className="p-2 rounded bg-slate-100">
+          <div className="p-2 rounded bg-slate-50">
             <GraduationCap className="h-5 w-5 text-slate-600" />
           </div>
         </div>
       </Card>
 
-      {/* Tertiary Metrics */}
+      {/* Tertiary Metric - Activities (smallest emphasis) */}
       <Card className="border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors">
         <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs font-medium text-slate-600 uppercase tracking-wider mb-2">Activités</p>
-            <p className="text-2xl font-semibold text-slate-900 tracking-tight">{stats.totalActivities}</p>
+          <div className="flex-1">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Activités</p>
+            <p className="text-2xl font-semibold text-slate-900 tracking-tight leading-none">{stats.totalActivities}</p>
           </div>
-          <div className="p-2 rounded bg-slate-100">
-            <BookOpen className="h-5 w-5 text-slate-600" />
+          <div className="p-2 rounded bg-slate-50">
+            <BookOpen className="h-4 w-4 text-slate-600" />
           </div>
         </div>
       </Card>

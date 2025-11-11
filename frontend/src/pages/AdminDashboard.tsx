@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LogOut, Plus, Trash2, BarChart3, Eye, Edit, Users, GraduationCap, Clock, MessageSquare, Mail, BookOpen } from 'lucide-react';
+import { LogOut, Plus, Trash2, BarChart3, Eye, Edit, Users, GraduationCap, Clock, MessageSquare, Mail, BookOpen, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +23,12 @@ const AdminDashboard = () => {
   const [studentsMap, setStudentsMap] = useState<Map<string, any[]>>(new Map());
   const [loadingTeachers, setLoadingTeachers] = useState(true);
   const [loadingClasses, setLoadingClasses] = useState(true);
+  
+  // Filter states
+  const [classSearchTerm, setClassSearchTerm] = useState('');
+  const [classLevelFilter, setClassLevelFilter] = useState<string>('all');
+  const [teacherSearchTerm, setTeacherSearchTerm] = useState('');
+  const [activityTypeFilter, setActivityTypeFilter] = useState<string>('all');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -211,6 +217,32 @@ const AdminDashboard = () => {
     }
   };
 
+  // Filter functions
+  const getUniqueLevels = () => {
+    const levels = new Set(classes.map(c => c.level).filter(Boolean));
+    return Array.from(levels).sort();
+  };
+
+  const filteredClasses = classes.filter((classe) => {
+    const matchesSearch = !classSearchTerm || 
+      classe.name?.toLowerCase().includes(classSearchTerm.toLowerCase()) ||
+      classe.filiere?.toLowerCase().includes(classSearchTerm.toLowerCase());
+    const matchesLevel = classLevelFilter === 'all' || classe.level === classLevelFilter;
+    return matchesSearch && matchesLevel;
+  });
+
+  const filteredTeachers = teachers.filter((teacher) => {
+    const fullName = teacher.fullName || `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim();
+    return !teacherSearchTerm || 
+      fullName.toLowerCase().includes(teacherSearchTerm.toLowerCase()) ||
+      teacher.email?.toLowerCase().includes(teacherSearchTerm.toLowerCase()) ||
+      teacher.specialty?.toLowerCase().includes(teacherSearchTerm.toLowerCase());
+  });
+
+  const filteredActivities = activities.filter((activity) => {
+    return activityTypeFilter === 'all' || activity.type === activityTypeFilter;
+  });
+
   return (
     <div className="min-h-screen bg-white">
       {/* Fixed Header - 64px height */}
@@ -272,6 +304,30 @@ const AdminDashboard = () => {
             </Button>
           </div>
 
+          {/* Search and Filters */}
+          <div className="flex gap-3 mb-4">
+            <div className="relative flex-1 max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Rechercher une classe..."
+                value={classSearchTerm}
+                onChange={(e) => setClassSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <select
+              value={classLevelFilter}
+              onChange={(e) => setClassLevelFilter(e.target.value)}
+              className="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">Tous les niveaux</option>
+              {getUniqueLevels().map((level) => (
+                <option key={level} value={level}>{level}</option>
+              ))}
+            </select>
+          </div>
+
           {loadingClasses ? (
             <div className="border border-slate-200 rounded-lg p-12 text-center bg-white">
               <div className="inline-flex items-center gap-2 text-slate-600">
@@ -279,7 +335,7 @@ const AdminDashboard = () => {
                 <span className="text-sm">Chargement des classes...</span>
               </div>
             </div>
-          ) : classes.length > 0 ? (
+          ) : filteredClasses.length > 0 ? (
             <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
               <table className="w-full">
                 <thead>
@@ -293,7 +349,7 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {classes.map((classe, index) => {
+                  {filteredClasses.map((classe, index) => {
                     const classStudents = studentsMap.get(classe.id) || [];
                     const classActivities = activities.filter(
                       (activity) => activity.targetClasses?.includes(classe.id) || activity.level === classe.level
@@ -342,6 +398,17 @@ const AdminDashboard = () => {
                 </tbody>
               </table>
             </div>
+          ) : classes.length > 0 ? (
+            <div className="border border-slate-200 rounded-lg p-12 text-center bg-white">
+              <p className="text-sm text-slate-600">Aucune classe ne correspond aux filtres</p>
+              <Button 
+                variant="ghost"
+                onClick={() => { setClassSearchTerm(''); setClassLevelFilter('all'); }}
+                className="mt-3 text-sm"
+              >
+                Réinitialiser les filtres
+              </Button>
+            </div>
           ) : (
             <div className="border border-slate-200 rounded-lg p-12 text-center bg-white">
               <Users className="h-12 w-12 text-slate-400 mx-auto mb-3" />
@@ -374,6 +441,20 @@ const AdminDashboard = () => {
             </Button>
           </div>
 
+          {/* Search */}
+          <div className="mb-4">
+            <div className="relative max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Rechercher un enseignant..."
+                value={teacherSearchTerm}
+                onChange={(e) => setTeacherSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
           {loadingTeachers ? (
             <div className="border border-slate-200 rounded-lg p-12 text-center bg-white">
               <div className="inline-flex items-center gap-2 text-slate-600">
@@ -381,7 +462,7 @@ const AdminDashboard = () => {
                 <span className="text-sm">Chargement des enseignants...</span>
               </div>
             </div>
-          ) : teachers.length > 0 ? (
+          ) : filteredTeachers.length > 0 ? (
             <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
               <table className="w-full">
                 <thead>
@@ -393,7 +474,7 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {teachers.map((teacher, index) => (
+                  {filteredTeachers.map((teacher, index) => (
                     <tr 
                       key={teacher.id} 
                       className={`${
@@ -426,6 +507,17 @@ const AdminDashboard = () => {
                 </tbody>
               </table>
             </div>
+          ) : teachers.length > 0 ? (
+            <div className="border border-slate-200 rounded-lg p-12 text-center bg-white">
+              <p className="text-sm text-slate-600">Aucun enseignant ne correspond à la recherche</p>
+              <Button 
+                variant="ghost"
+                onClick={() => setTeacherSearchTerm('')}
+                className="mt-3 text-sm"
+              >
+                Réinitialiser la recherche
+              </Button>
+            </div>
           ) : (
             <div className="border border-slate-200 rounded-lg p-12 text-center bg-white">
               <GraduationCap className="h-12 w-12 text-slate-400 mx-auto mb-3" />
@@ -451,7 +543,23 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          {activities.length > 0 ? (
+          {/* Filter */}
+          {activities.length > 0 && (
+            <div className="mb-4">
+              <select
+                value={activityTypeFilter}
+                onChange={(e) => setActivityTypeFilter(e.target.value)}
+                className="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Tous les types</option>
+                <option value="Orale">Orale</option>
+                <option value="Lecture">Lecture</option>
+                <option value="Ecriture">Écriture</option>
+              </select>
+            </div>
+          )}
+
+          {filteredActivities.length > 0 ? (
             <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
               <table className="w-full">
                 <thead>
@@ -463,7 +571,7 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {activities.map((activity, index) => (
+                  {filteredActivities.map((activity, index) => (
                     <tr 
                       key={activity.id} 
                       className={`${
@@ -502,6 +610,17 @@ const AdminDashboard = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          ) : activities.length > 0 ? (
+            <div className="border border-slate-200 rounded-lg p-12 text-center bg-white">
+              <p className="text-sm text-slate-600">Aucune activité ne correspond au filtre</p>
+              <Button 
+                variant="ghost"
+                onClick={() => setActivityTypeFilter('all')}
+                className="mt-3 text-sm"
+              >
+                Réinitialiser le filtre
+              </Button>
             </div>
           ) : (
             <div className="border border-slate-200 rounded-lg p-12 text-center bg-white">
