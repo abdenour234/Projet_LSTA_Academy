@@ -71,7 +71,7 @@ const SchoolDetails = () => {
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
       const schoolResponse = await fetch(`${API_BASE_URL}/schools/${schoolId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
       });
 

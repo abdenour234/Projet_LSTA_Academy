@@ -44,8 +44,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const initAuth = async () => {
       // ✅ STEP 1: Try to restore from localStorage FIRST for instant UI update
-      const storedUser = localStorage.getItem('user');
-      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('current_user');
+      const storedToken = localStorage.getItem('auth_token');
       
       if (storedToken && storedUser) {
         try {
@@ -129,7 +129,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error('[AUTH] Auth check failed:', error);
       
       // ✅ CRITICAL: Don't clear if we're mid-logout (localStorage already empty)
-      if (localStorage.getItem('token')) {
+      if (localStorage.getItem('auth_token')) {
         auth.removeToken();
       }
       

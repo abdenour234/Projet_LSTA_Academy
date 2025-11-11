@@ -267,7 +267,7 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
         const response = await fetch(`${API_BASE_URL}/activity-files/upload/${currentActivityId}`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
           },
           body: formData,
         });
