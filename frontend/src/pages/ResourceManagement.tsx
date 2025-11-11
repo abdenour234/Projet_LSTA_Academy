@@ -28,27 +28,34 @@ export default function ResourceManagement() {
   }
 
   return (
-    <div className="container mx-auto p-8">
-      <Button
-        variant="ghost"
-        onClick={() => navigate(-1)}
-        className="mb-4"
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Retour
-      </Button>
+    <div className="min-h-screen bg-white">
+      {/* Fixed Header - 64px height */}
+      <header className="h-16 border-b border-slate-200 bg-white sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 h-9 w-9"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-lg font-semibold text-slate-900">Gestion des Ressources Pédagogiques</h1>
+              <p className="text-sm text-slate-600">Ajoutez et gérez vos PDF, vidéos et images</p>
+            </div>
+          </div>
+        </div>
+      </header>
 
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Gestion des Ressources Pédagogiques</h1>
-        <p className="text-muted-foreground mt-2">
-          Ajoutez et gérez vos PDF, vidéos et images
-        </p>
-      </div>
-
-      <ResourceUploader
-        schoolId={schoolId!}
-        onSuccess={() => navigate(`/school/${schoolId}/admin/dashboard`)}
-      />
+      {/* Main content */}
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <ResourceUploader
+          schoolId={schoolId!}
+          onSuccess={() => navigate(`/school/${schoolId}/admin/dashboard`)}
+        />
+      </main>
     </div>
   );
 }
