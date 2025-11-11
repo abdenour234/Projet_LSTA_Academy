@@ -219,80 +219,94 @@ export default function TeacherManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-      <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => navigate(`/school/${schoolId}/admin/dashboard`)}
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold">Gestion des Enseignants</h1>
-                <p className="text-sm text-muted-foreground">Gérez les enseignants et leurs affectations</p>
-              </div>
-            </div>
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Déconnexion
+    <div className="min-h-screen bg-white">
+      {/* Fixed Header - 64px height, professional style */}
+      <header className="h-16 border-b border-slate-200 bg-white sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate(`/school/${schoolId}/admin/dashboard`)}
+              className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 h-9 w-9"
+            >
+              <ArrowLeft className="h-4 w-4" />
             </Button>
+            <div>
+              <h1 className="text-lg font-semibold text-slate-900">Gestion des Enseignants</h1>
+              <p className="text-sm text-slate-600">Gérez les enseignants et leurs affectations</p>
+            </div>
           </div>
+          <Button 
+            variant="ghost"
+            onClick={handleLogout}
+            className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 h-9"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Déconnexion
+          </Button>
         </div>
       </header>
 
-      <main className="container mx-auto p-8">
-        <Card className="p-6">
-        <div className="flex justify-end mb-4">
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => setGeneratedCredentials(null)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Ajouter un enseignant
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Ajouter un enseignant</DialogTitle>
-              </DialogHeader>
-              {generatedCredentials ? (
-                <div className="space-y-4">
-                  <div className="p-4 bg-accent/10 rounded-lg space-y-3">
-                    <p className="font-semibold text-accent">✅ Compte créé avec succès!</p>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Email:</span>
-                        <div className="flex items-center gap-2">
-                          <code className="text-sm font-mono bg-background px-2 py-1 rounded">
-                            {generatedCredentials.email}
-                          </code>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => copyToClipboard(generatedCredentials.email)}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
+      {/* Main content - max-w-7xl, consistent spacing */}
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+          <div className="p-6 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">Enseignants</h2>
+              <p className="text-sm text-slate-600 mt-0.5">Liste des enseignants de l'école</p>
+            </div>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  onClick={() => setGeneratedCredentials(null)}
+                  className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium h-9"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ajouter un enseignant
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle className="text-lg font-semibold text-slate-900">Ajouter un enseignant</DialogTitle>
+                </DialogHeader>
+                {generatedCredentials ? (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-3">
+                      <p className="font-semibold text-emerald-700">✅ Compte créé avec succès!</p>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-slate-700">Email:</span>
+                          <div className="flex items-center gap-2">
+                            <code className="text-sm font-mono bg-white px-2 py-1 rounded border border-slate-200">
+                              {generatedCredentials.email}
+                            </code>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => copyToClipboard(generatedCredentials.email)}
+                              className="h-8 w-8 text-slate-600 hover:text-slate-900"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Mot de passe:</span>
-                        <div className="flex items-center gap-2">
-                          <code className="text-sm font-mono bg-background px-2 py-1 rounded">
-                            {generatedCredentials.password}
-                          </code>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => copyToClipboard(generatedCredentials.password)}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-slate-700">Mot de passe:</span>
+                          <div className="flex items-center gap-2">
+                            <code className="text-sm font-mono bg-white px-2 py-1 rounded border border-slate-200">
+                              {generatedCredentials.password}
+                            </code>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => copyToClipboard(generatedCredentials.password)}
+                              className="h-8 w-8 text-slate-600 hover:text-slate-900"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       ⚠️ Veuillez transmettre ces identifiants à l'enseignant. Ils ne seront plus affichés.
@@ -422,7 +436,7 @@ export default function TeacherManagement() {
             )}
           </TableBody>
         </Table>
-      </Card>
+        </div>
 
       <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
         <DialogContent>
