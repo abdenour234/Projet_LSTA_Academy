@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Shield, School, Users, UserCheck, GraduationCap, 
-  LogOut, BarChart3, Activity, TrendingUp, MapPin, Plus
+  Shield, School, UserCheck, GraduationCap,
+  LogOut, BarChart3, Activity, TrendingUp, MapPin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -134,166 +134,233 @@ const SuperAdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center">
-        <div className="text-center">
-          <Shield className="h-12 w-12 text-primary mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground">Chargement des statistiques...</p>
-        </div>
+      <div className="min-h-screen bg-slate-50">
+        <header className="h-16 bg-white border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-8 h-full flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Shield className="h-5 w-5 text-slate-400" />
+              <div className="h-4 w-48 bg-slate-200 rounded animate-pulse" />
+            </div>
+          </div>
+        </header>
+        <main className="max-w-7xl mx-auto px-8 py-8">
+          <div className="grid grid-cols-12 gap-5 mb-8">
+            <div className="col-span-12 md:col-span-6 h-40 bg-white border border-slate-200 rounded-lg animate-pulse" />
+            <div className="col-span-6 md:col-span-3 h-40 bg-white border border-slate-200 rounded-lg animate-pulse" />
+            <div className="col-span-6 md:col-span-3 h-40 bg-white border border-slate-200 rounded-lg animate-pulse" />
+          </div>
+          <div className="grid grid-cols-12 gap-5 mb-8">
+            <div className="col-span-12 md:col-span-5 h-56 bg-white border border-slate-200 rounded-lg animate-pulse" />
+            <div className="col-span-12 md:col-span-4 h-56 bg-white border border-slate-200 rounded-lg animate-pulse" />
+            <div className="col-span-12 md:col-span-3 h-56 bg-white border border-slate-200 rounded-lg animate-pulse" />
+          </div>
+          <div className="h-96 bg-white border border-slate-200 rounded-lg animate-pulse" />
+        </main>
       </div>
     );
   }
 
   if (!stats) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center">
-        <Card className="p-6">
-          <p className="text-muted-foreground">Aucune donnée disponible</p>
-        </Card>
+      <div className="min-h-screen bg-slate-50">
+        <header className="h-16 bg-white border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-8 h-full flex items-center">
+            <Shield className="h-5 w-5 text-slate-600 mr-3" />
+            <h1 className="text-base font-semibold text-slate-900">Tableau de Bord SuperAdmin</h1>
+          </div>
+        </header>
+        <main className="max-w-7xl mx-auto px-8 py-8">
+          <Card className="p-8 border-slate-200 shadow-none">
+            <p className="text-sm text-slate-600">Aucune donnée disponible</p>
+          </Card>
+        </main>
       </div>
     );
   }
 
+  const user = auth.getUser();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-      {/* Header */}
-      <header className="bg-card/80 backdrop-blur-sm border-b sticky top-0 z-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/70 rounded-full flex items-center justify-center">
-                <Shield className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">SuperAdmin Dashboard</h1>
-                <p className="text-sm text-muted-foreground">Vue globale du système</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button onClick={() => navigate('/superadmin/activities/new')}>
-                <Plus className="mr-2 h-4 w-4" />
-                Nouvelle Activité
-              </Button>
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Déconnexion
-              </Button>
+    <div className="min-h-screen bg-slate-50">
+      {/* Header - Fixed 64px height */}
+      <header className="h-16 bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-8 h-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Shield className="h-5 w-5 text-slate-600" />
+            <div>
+              <h1 className="text-base font-semibold text-slate-900">
+                Tableau de Bord SuperAdmin
+              </h1>
+              <p className="text-xs text-slate-500">
+                {user?.firstName} {user?.lastName} • {user?.email}
+              </p>
             </div>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            className="text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Déconnexion
+          </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Global Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Écoles</CardTitle>
-              <School className="h-4 w-4 text-muted-foreground" />
+      <main className="max-w-7xl mx-auto px-8 py-8">
+        {/* Global Stats - Asymmetric Layout */}
+        <div className="grid grid-cols-12 gap-5 mb-8">
+          {/* Primary Metric - Takes more space */}
+          <Card className="col-span-12 md:col-span-6 border-slate-200 shadow-none rounded-lg">
+            <CardHeader className="p-5 pb-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                    Total Écoles
+                  </CardTitle>
+                  <div className="text-5xl font-bold text-slate-900 tracking-tight">
+                    {stats.global.totalSchools}
+                  </div>
+                </div>
+                <School className="h-7 w-7 text-slate-400" />
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.global.totalSchools}</div>
-              <p className="text-xs text-muted-foreground">
-                {stats.global.totalSchoolStudents.toLocaleString()} élèves total
-              </p>
+            <CardContent className="px-5 pb-5">
+              <div className="flex items-center gap-8">
+                <div>
+                  <div className="text-2xl font-bold text-slate-900">
+                    {stats.global.totalSchoolStudents.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-slate-600 font-medium mt-0.5">Élèves au total</div>
+                </div>
+                <div className="h-12 w-px bg-slate-200" />
+                <div>
+                  <div className="text-2xl font-bold text-slate-900">
+                    {stats.global.totalUsers.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-slate-600 font-medium mt-0.5">Utilisateurs</div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Utilisateurs</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+          {/* Secondary Metrics - Compact */}
+          <Card className="col-span-6 md:col-span-3 border-slate-200 shadow-none rounded-lg">
+            <CardHeader className="p-5 pb-3">
+              <CardTitle className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                Enseignants
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.global.totalUsers}</div>
-              <p className="text-xs text-muted-foreground">
-                Tous rôles confondus
-              </p>
+            <CardContent className="px-5 pb-5">
+              <div className="flex items-baseline justify-between">
+                <div className="text-3xl font-bold text-slate-900 tracking-tight">
+                  {stats.global.totalTeachers}
+                </div>
+                <GraduationCap className="h-5 w-5 text-slate-400" />
+              </div>
+              <p className="text-xs text-slate-600 font-medium mt-2">Professeurs actifs</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Enseignants</CardTitle>
-              <GraduationCap className="h-4 w-4 text-muted-foreground" />
+          <Card className="col-span-6 md:col-span-3 border-slate-200 shadow-none rounded-lg">
+            <CardHeader className="p-5 pb-3">
+              <CardTitle className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                Administrateurs
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.global.totalTeachers}</div>
-              <p className="text-xs text-muted-foreground">
-                Professeurs actifs
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Administrateurs</CardTitle>
-              <UserCheck className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.global.totalAdmins}</div>
-              <p className="text-xs text-muted-foreground">
-                Admins d'écoles
-              </p>
+            <CardContent className="px-5 pb-5">
+              <div className="flex items-baseline justify-between">
+                <div className="text-3xl font-bold text-slate-900 tracking-tight">
+                  {stats.global.totalAdmins}
+                </div>
+                <UserCheck className="h-5 w-5 text-slate-400" />
+              </div>
+              <p className="text-xs text-slate-600 font-medium mt-2">Admins d'écoles</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Distribution Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
+        {/* Distribution Cards - Improved with visual bars */}
+        <div className="grid grid-cols-12 gap-5 mb-8">
+          <Card className="col-span-12 md:col-span-5 border-slate-200 shadow-none rounded-lg">
+            <CardHeader className="p-5 pb-4">
+              <CardTitle className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-slate-600" />
                 Distribution par Région
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
+            <CardContent className="px-5 pb-5">
+              <div className="space-y-4">
                 {Object.entries(stats.distribution.byRegion)
                   .sort(([, a], [, b]) => b - a)
                   .slice(0, 5)
-                  .map(([region, count]) => (
-                    <div key={region} className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">{region}</span>
-                      <span className="font-semibold">{count}</span>
-                    </div>
-                  ))}
+                  .map(([region, count]) => {
+                    const maxCount = Math.max(...Object.values(stats.distribution.byRegion));
+                    const percentage = (count / maxCount) * 100;
+                    return (
+                      <div key={region}>
+                        <div className="flex justify-between items-baseline mb-1.5">
+                          <span className="text-sm font-medium text-slate-700">{region}</span>
+                          <span className="text-sm font-bold text-slate-900">{count}</span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-sm h-2">
+                          <div
+                            className="bg-slate-700 h-2 rounded-sm transition-all"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
+          <Card className="col-span-12 md:col-span-4 border-slate-200 shadow-none rounded-lg">
+            <CardHeader className="p-5 pb-4">
+              <CardTitle className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-slate-600" />
                 Par Niveau
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {Object.entries(stats.distribution.byLevel).map(([level, count]) => (
-                  <div key={level} className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">{level}</span>
-                    <span className="font-semibold">{count}</span>
-                  </div>
-                ))}
+            <CardContent className="px-5 pb-5">
+              <div className="space-y-4">
+                {Object.entries(stats.distribution.byLevel).map(([level, count]) => {
+                  const maxCount = Math.max(...Object.values(stats.distribution.byLevel));
+                  const percentage = (count / maxCount) * 100;
+                  return (
+                    <div key={level}>
+                      <div className="flex justify-between items-baseline mb-1.5">
+                        <span className="text-sm font-medium text-slate-700">{level}</span>
+                        <span className="text-sm font-bold text-slate-900">{count}</span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-sm h-2">
+                        <div
+                          className="bg-slate-700 h-2 rounded-sm transition-all"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
+          <Card className="col-span-12 md:col-span-3 border-slate-200 shadow-none rounded-lg">
+            <CardHeader className="p-5 pb-4">
+              <CardTitle className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-slate-600" />
                 Par Statut
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
+            <CardContent className="px-5 pb-5">
+              <div className="space-y-3">
                 {Object.entries(stats.distribution.byStatus).map(([status, count]) => (
-                  <div key={status} className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">{status}</span>
-                    <span className="font-semibold">{count}</span>
+                  <div key={status} className="flex justify-between items-baseline py-2.5 border-b border-slate-100 last:border-0">
+                    <span className="text-sm font-medium text-slate-700">{status}</span>
+                    <span className="text-xl font-bold text-slate-900">{count}</span>
                   </div>
                 ))}
               </div>
@@ -302,64 +369,72 @@ const SuperAdminDashboard = () => {
         </div>
 
         {/* Schools Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <School className="h-5 w-5" />
-              Liste des Écoles
-            </CardTitle>
-            <CardDescription>
-              Vue détaillée de toutes les écoles du système
-            </CardDescription>
+        <Card className="border-slate-200 shadow-none rounded-lg">
+          <CardHeader className="p-5 pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                  <School className="h-4 w-4 text-slate-600" />
+                  Liste des Écoles
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-600 mt-1">
+                  {stats.schools.length} écoles au total
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3 font-semibold">ID</th>
-                    <th className="text-left p-3 font-semibold">École</th>
-                    <th className="text-left p-3 font-semibold">Ville</th>
-                    <th className="text-left p-3 font-semibold">Région</th>
-                    <th className="text-left p-3 font-semibold">Niveau</th>
-                    <th className="text-left p-3 font-semibold">Statut</th>
-                    <th className="text-right p-3 font-semibold">Élèves</th>
-                    <th className="text-right p-3 font-semibold">Profs</th>
-                    <th className="text-right p-3 font-semibold">Users</th>
-                    <th className="text-center p-3 font-semibold">Actions</th>
+                  <tr className="border-y border-slate-200 bg-slate-50">
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">ID</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">École</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Ville</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Région</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Niveau</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Statut</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Élèves</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Profs</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Users</th>
+                    <th className="text-center px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {stats.schools.map((school) => (
-                    <tr key={school.id} className="border-b hover:bg-muted/50">
-                      <td className="p-3 font-mono text-sm">{school.id}</td>
-                      <td className="p-3 font-medium">{school.name}</td>
-                      <td className="p-3 text-sm">{school.city}</td>
-                      <td className="p-3 text-sm text-muted-foreground">{school.region}</td>
-                      <td className="p-3">
-                        <span className="px-2 py-1 bg-primary/10 text-primary rounded text-xs">
+                  {stats.schools.map((school, idx) => (
+                    <tr
+                      key={school.id}
+                      className={`${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'} hover:bg-slate-100 transition-colors`}
+                    >
+                      <td className="px-5 py-4 text-sm font-mono text-slate-500">{school.id}</td>
+                      <td className="px-5 py-4 text-sm font-semibold text-slate-900">{school.name}</td>
+                      <td className="px-5 py-4 text-sm text-slate-700">{school.city}</td>
+                      <td className="px-5 py-4 text-sm text-slate-700">{school.region}</td>
+                      <td className="px-5 py-4">
+                        <span className="inline-block px-2.5 py-1 bg-slate-100 border border-slate-300 text-slate-800 text-xs font-medium rounded">
                           {school.level}
                         </span>
                       </td>
-                      <td className="p-3">
-                        <span className={`px-2 py-1 rounded text-xs ${
+                      <td className="px-5 py-4">
+                        <span className={`inline-block px-2.5 py-1 text-xs font-medium border rounded ${
                           school.status === 'Public' 
-                            ? 'bg-blue-100 text-blue-700' 
-                            : 'bg-purple-100 text-purple-700'
+                            ? 'bg-slate-50 border-slate-300 text-slate-700' 
+                            : 'bg-slate-100 border-slate-400 text-slate-800'
                         }`}>
                           {school.status}
                         </span>
                       </td>
-                      <td className="p-3 text-right font-semibold">{school.students}</td>
-                      <td className="p-3 text-right">{school.teachers}</td>
-                      <td className="p-3 text-right">{school.totalUsers}</td>
-                      <td className="p-3 text-center">
-                        <Button 
+                      <td className="px-5 py-4 text-sm font-semibold text-slate-900">{school.students}</td>
+                      <td className="px-5 py-4 text-sm text-slate-700">{school.teachers}</td>
+                      <td className="px-5 py-4 text-sm text-slate-700">{school.totalUsers}</td>
+                      <td className="px-5 py-4 text-center">
+                        <Button
                           variant="ghost" 
                           size="sm"
+                          className="text-slate-700 hover:text-slate-900 hover:bg-slate-200 font-medium"
                           onClick={() => navigate(`/superadmin/schools/${school.id}`)}
                         >
-                          <Activity className="h-4 w-4 mr-1" />
+                          <Activity className="h-4 w-4 mr-1.5" />
                           Détails
                         </Button>
                       </td>
