@@ -8,6 +8,18 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
     
+    # HikariCP Configuration - Fix connection pool exhaustion
+    hikari:
+      maximum-pool-size: ${HIKARI_MAX_POOL_SIZE:20}          # Maximum number of connections in the pool
+      minimum-idle: ${HIKARI_MIN_IDLE:5}                      # Minimum number of idle connections
+      connection-timeout: ${HIKARI_CONNECTION_TIMEOUT:30000}  # 30 seconds - Max wait for connection
+      idle-timeout: ${HIKARI_IDLE_TIMEOUT:600000}             # 10 minutes - Max idle time before removal
+      max-lifetime: ${HIKARI_MAX_LIFETIME:1800000}            # 30 minutes - Max connection lifetime
+      connection-test-query: SELECT 1                         # Test query to validate connections
+      pool-name: SchoolManagementHikariPool
+      auto-commit: true
+      leak-detection-threshold: ${HIKARI_LEAK_DETECTION:60000} # 60 seconds - Detect connection leaks
+    
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,6 +28,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        # Connection release mode - Release connections immediately after use
+        connection.release_mode: after_transaction
+        # Enable query cache
+        query.plan_cache_max_size: 2048
+        query.plan_parameter_metadata_max_size: 128
     
   servlet:
     multipart:
