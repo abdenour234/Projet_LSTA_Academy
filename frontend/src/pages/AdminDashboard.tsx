@@ -356,12 +356,13 @@ const AdminDashboard = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Classe</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Niveau</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Élèves</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Activités</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Année</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider sticky right-0 bg-slate-50">Actions</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Classe</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Niveau</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Enseignant principal</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Élèves</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Activités</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Statut</th>
+                    <th className="text-right px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider sticky right-0 bg-slate-50">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -371,39 +372,62 @@ const AdminDashboard = () => {
                       (activity) => activity.targetClasses?.includes(classe.id) || activity.level === classe.level
                     );
                     
+                    // Find head teacher if available
+                    const headTeacher = classe.headTeacherId 
+                      ? teachers.find(t => t.id === classe.headTeacherId)
+                      : null;
+                    
+                    // Determine class status
+                    const isActive = classStudents.length > 0;
+                    
                     return (
                       <tr 
                         key={classe.id} 
                         className={`${
                           index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
-                        } hover:bg-slate-100 transition-colors`}
+                        } hover:bg-slate-100 transition-colors cursor-pointer`}
+                        onClick={() => navigate(`/school/${id}/admin/classes`)}
                       >
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-4">
                           <div className="font-medium text-slate-900">{classe.name}</div>
                           {classe.filiere && (
-                            <div className="text-xs text-slate-600 mt-0.5">{classe.filiere}</div>
+                            <div className="text-xs text-slate-500 mt-0.5">{classe.filiere}</div>
                           )}
                         </td>
-                        <td className="px-4 py-3">
-                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-300">
+                        <td className="px-4 py-4">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
                             {classe.level}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-900 font-medium">
+                        <td className="px-4 py-4 text-sm text-slate-700">
+                          {headTeacher 
+                            ? headTeacher.fullName || `${headTeacher.firstName || ''} ${headTeacher.lastName || ''}`.trim()
+                            : <span className="text-slate-400">Non assigné</span>
+                          }
+                        </td>
+                        <td className="px-4 py-4 text-sm font-medium text-slate-900 tabular-nums">
                           {classStudents.length}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-900 font-medium">
+                        <td className="px-4 py-4 text-sm font-medium text-slate-900 tabular-nums">
                           {classActivities.length}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">
-                          {classe.academicYear}
+                        <td className="px-4 py-4">
+                          {isActive ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              Active
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                              Vide
+                            </span>
+                          )}
                         </td>
-                        <td className="px-4 py-3 text-right sticky right-0 bg-inherit">
+                        <td className="px-4 py-4 text-right sticky right-0 bg-inherit" onClick={(e) => e.stopPropagation()}>
                           <Button 
                             variant="ghost" 
                             size="sm"
                             onClick={() => navigate(`/school/${id}/admin/classes`)}
-                            className="text-slate-600 hover:text-slate-900 hover:bg-slate-200 h-8"
+                            className="text-slate-600 hover:text-slate-900 hover:bg-white/80 h-8"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -483,41 +507,67 @@ const AdminDashboard = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Nom</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Email</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Spécialité</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider sticky right-0 bg-slate-50">Actions</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Nom</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Email</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Spécialité</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Classes assignées</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Statut</th>
+                    <th className="text-right px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider sticky right-0 bg-slate-50">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTeachers.map((teacher, index) => (
-                    <tr 
-                      key={teacher.id} 
-                      className={`${
-                        index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
-                      } hover:bg-slate-100 transition-colors`}
-                    >
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-slate-900">
-                          {teacher.fullName || `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim()}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
-                        {teacher.email || '—'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
-                        {teacher.specialty || '—'}
-                      </td>
-                      <td className="px-4 py-3 text-right sticky right-0 bg-inherit">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => navigate(`/school/${id}/admin/teachers`)}
-                          className="text-slate-600 hover:text-slate-900 hover:bg-slate-200 h-8"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </td>
+                  {filteredTeachers.map((teacher, index) => {
+                    // Count classes assigned to this teacher
+                    const assignedClasses = classes.filter(c => c.headTeacherId === teacher.id);
+                    const hasEmail = teacher.email && teacher.email.length > 0;
+                    
+                    return (
+                      <tr 
+                        key={teacher.id} 
+                        className={`${
+                          index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
+                        } hover:bg-slate-100 transition-colors cursor-pointer`}
+                        onClick={() => navigate(`/school/${id}/admin/teachers`)}
+                      >
+                        <td className="px-4 py-4">
+                          <div className="font-medium text-slate-900">
+                            {teacher.fullName || `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim()}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-slate-700">
+                          {teacher.email || <span className="text-slate-400">—</span>}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-slate-700">
+                          {teacher.specialty || <span className="text-slate-400">—</span>}
+                        </td>
+                        <td className="px-4 py-4 text-sm font-medium text-slate-900 tabular-nums">
+                          {assignedClasses.length > 0 ? (
+                            <span>{assignedClasses.length} classe{assignedClasses.length > 1 ? 's' : ''}</span>
+                          ) : (
+                            <span className="text-slate-400">Aucune</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4">
+                          {hasEmail ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              Actif
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                              Incomplet
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-right sticky right-0 bg-inherit" onClick={(e) => e.stopPropagation()}>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => navigate(`/school/${id}/admin/teachers`)}
+                            className="text-slate-600 hover:text-slate-900 hover:bg-white/80 h-8"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </td>
                     </tr>
                   ))}
                 </tbody>
@@ -580,48 +630,59 @@ const AdminDashboard = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Titre</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Type</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Niveau</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider sticky right-0 bg-slate-50">Actions</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Titre</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Type</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Niveau</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Classes ciblées</th>
+                    <th className="text-right px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider sticky right-0 bg-slate-50">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredActivities.map((activity, index) => (
-                    <tr 
-                      key={activity.id} 
-                      className={`${
-                        index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
-                      } hover:bg-slate-100 transition-colors`}
-                    >
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-slate-900">{activity.title}</div>
-                        {activity.description && (
-                          <div className="text-xs text-slate-600 mt-0.5 line-clamp-1">{activity.description}</div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border ${
-                          activity.type === 'Orale' ? 'bg-blue-50 text-blue-700 border-blue-300' :
-                          activity.type === 'Lecture' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' :
-                          'bg-amber-50 text-amber-700 border-amber-300'
-                        }`}>
-                          {activity.type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
-                        {activity.level}
-                      </td>
-                      <td className="px-4 py-3 text-right sticky right-0 bg-inherit">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => navigate(`/activity/${activity.id}`)}
-                          className="text-slate-600 hover:text-slate-900 hover:bg-slate-200 h-8"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </td>
+                  {filteredActivities.map((activity, index) => {
+                    // Count targeted classes
+                    const targetedClasses = activity.targetClasses?.length || 0;
+                    
+                    return (
+                      <tr 
+                        key={activity.id} 
+                        className={`${
+                          index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
+                        } hover:bg-slate-100 transition-colors cursor-pointer`}
+                        onClick={() => navigate(`/activity/${activity.id}`)}
+                      >
+                        <td className="px-4 py-4">
+                          <div className="font-medium text-slate-900">{activity.title}</div>
+                          {activity.description && (
+                            <div className="text-xs text-slate-500 mt-0.5 line-clamp-1">{activity.description}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${
+                            activity.type === 'Orale' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                            activity.type === 'Lecture' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                            'bg-amber-50 text-amber-700 border-amber-200'
+                          }`}>
+                            {activity.type}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                            {activity.level}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-sm font-medium text-slate-900 tabular-nums">
+                          {targetedClasses > 0 ? `${targetedClasses} classe${targetedClasses > 1 ? 's' : ''}` : <span className="text-slate-400">Toutes</span>}
+                        </td>
+                        <td className="px-4 py-4 text-right sticky right-0 bg-inherit" onClick={(e) => e.stopPropagation()}>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => navigate(`/activity/${activity.id}`)}
+                            className="text-slate-600 hover:text-slate-900 hover:bg-white/80 h-8"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </td>
                     </tr>
                   ))}
                 </tbody>
@@ -659,12 +720,12 @@ const AdminDashboard = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Type</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Niveau</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Classe</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Élèves</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Date</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider sticky right-0 bg-slate-50">Actions</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Type</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Niveau</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Classe</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Élèves</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider">Date</th>
+                    <th className="text-right px-4 py-3.5 text-xs font-medium text-slate-700 uppercase tracking-wider sticky right-0 bg-slate-50">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -675,29 +736,36 @@ const AdminDashboard = () => {
                         key={session.id} 
                         className={`${
                           index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
-                        } hover:bg-slate-100 transition-colors`}
+                        } hover:bg-slate-100 transition-colors cursor-pointer`}
+                        onClick={() => handleViewResults(session.id)}
                       >
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-4">
                           <div className="font-medium text-slate-900">{gridInfo?.title || session.diagnostic_type}</div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">
-                          {session.grade_level}
+                        <td className="px-4 py-4">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                            {session.grade_level}
+                          </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">
-                          {session.class_name || '—'}
+                        <td className="px-4 py-4 text-sm text-slate-700">
+                          {session.class_name || <span className="text-slate-400">—</span>}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-900 font-medium">
+                        <td className="px-4 py-4 text-sm font-medium text-slate-900 tabular-nums">
                           {session.total_students}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">
-                          {new Date(session.session_date).toLocaleDateString('fr-FR')}
+                        <td className="px-4 py-4 text-sm text-slate-700">
+                          {new Date(session.session_date).toLocaleDateString('fr-FR', { 
+                            day: 'numeric', 
+                            month: 'short', 
+                            year: 'numeric' 
+                          })}
                         </td>
-                        <td className="px-4 py-3 text-right sticky right-0 bg-inherit">
+                        <td className="px-4 py-4 text-right sticky right-0 bg-inherit" onClick={(e) => e.stopPropagation()}>
                           <Button 
                             variant="ghost" 
                             size="sm"
                             onClick={() => handleViewResults(session.id)}
-                            className="text-slate-600 hover:text-slate-900 hover:bg-slate-200 h-8"
+                            className="text-slate-600 hover:text-slate-900 hover:bg-white/80 h-8"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
