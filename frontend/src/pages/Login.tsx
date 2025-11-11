@@ -65,8 +65,8 @@ const handleSubmit = async (e: React.FormEvent) => {
     }
 
     // ✅ STEP 4: Double-check localStorage has data (synchronous verification)
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('auth_token');
+    const storedUser = localStorage.getItem('current_user');
     
     if (!storedToken || !storedUser) {
       console.error('[LOGIN] Storage verification failed - data not saved');
