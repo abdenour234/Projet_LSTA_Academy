@@ -481,62 +481,70 @@ export default function ClassManagement() {
   }
 
   return (
-  <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-    {/* Header with navigation and logout */}
-    <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(`/school/${schoolId}/admin/dashboard`)}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold">Gestion des Classes</h1>
-              <p className="text-sm text-muted-foreground">Gérez les classes et leurs effectifs</p>
-            </div>
-          </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Déconnexion
+  <div className="min-h-screen bg-white">
+    {/* Fixed Header - 64px height, professional style */}
+    <header className="h-16 border-b border-slate-200 bg-white sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => navigate(`/school/${schoolId}/admin/dashboard`)}
+            className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 h-9 w-9"
+          >
+            <ArrowLeft className="h-4 w-4" />
           </Button>
+          <div>
+            <h1 className="text-lg font-semibold text-slate-900">Gestion des Classes</h1>
+            <p className="text-sm text-slate-600">Gérez les classes et leurs effectifs</p>
+          </div>
         </div>
+        <Button 
+          variant="ghost"
+          onClick={handleLogout}
+          className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 h-9"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Déconnexion
+        </Button>
       </div>
     </header>
 
-    {/* Main content */}
-    <main className="container mx-auto p-8">
+    {/* Main content - max-w-7xl, consistent spacing */}
+    <main className="max-w-7xl mx-auto px-6 py-8">
       {/* Create Class Button */}
-      <div className="flex justify-end items-center mb-8">
+      <div className="flex justify-end items-center mb-6">
         <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium h-9">
               <Plus className="w-4 h-4 mr-2" />
               Nouvelle Classe
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>{editingClass ? "Modifier" : "Nouvelle"} Classe</DialogTitle>
+              <DialogTitle className="text-lg font-semibold text-slate-900">
+                {editingClass ? "Modifier" : "Nouvelle"} Classe
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="name">Nom de la classe</Label>
+                <Label htmlFor="name" className="text-sm font-medium text-slate-900">Nom de la classe</Label>
                 <Input 
                   id="name" 
                   value={formData.name} 
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
                   placeholder="6ème A" 
-                  required 
+                  required
+                  className="mt-1.5 border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-2"
                 />
               </div>
               <div>
-                <Label htmlFor="level">Niveau</Label>
+                <Label htmlFor="level" className="text-sm font-medium text-slate-900">Niveau</Label>
                 <Select value={formData.level} onValueChange={(value) => setFormData({ ...formData, level: value })}>
-                  <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
+                  <SelectTrigger className="mt-1.5 border-slate-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <SelectValue placeholder="Sélectionner" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Primaire">Primaire</SelectItem>
                     <SelectItem value="Collège">Collège</SelectItem>
@@ -545,7 +553,7 @@ export default function ClassManagement() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="annee">Année scolaire</Label>
+                <Label htmlFor="annee" className="text-sm font-medium text-slate-900">Année scolaire</Label>
                 <Input 
                   id="annee" 
                   value={formData.academicYear} 
@@ -593,51 +601,76 @@ export default function ClassManagement() {
         </Dialog>
       </div>
 
-      {/* Classes Table */}
-      <Card className="p-6">
+      {/* Classes Table - Professional Design */}
+      <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Nom</TableHead>
-              <TableHead>Niveau</TableHead>
-              <TableHead>Année scolaire</TableHead>
-              <TableHead><Users className="w-4 h-4 inline mr-2" />Effectif</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+            <TableRow className="bg-slate-50 border-b border-slate-200 hover:bg-slate-50">
+              <TableHead className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Nom</TableHead>
+              <TableHead className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Niveau</TableHead>
+              <TableHead className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Année scolaire</TableHead>
+              <TableHead className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">
+                <Users className="w-4 h-4 inline mr-1.5" />Effectif
+              </TableHead>
+              <TableHead className="text-right px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {classes.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
+              <TableRow className="hover:bg-white">
+                <TableCell colSpan={5} className="text-center text-slate-600 py-12">
                   Aucune classe enregistrée
                 </TableCell>
               </TableRow>
             ) : (
-              classes.map((classItem) => (
-                <TableRow key={classItem.id}>
-                  <TableCell className="font-medium">{classItem.name}</TableCell>
-                  <TableCell>{classItem.level}</TableCell>
-                  <TableCell>{classItem.academicYear}</TableCell>
-                  <TableCell>{classItem.studentCount}</TableCell>
-                  <TableCell className="text-right">
+              classes.map((classItem, index) => (
+                <TableRow 
+                  key={classItem.id}
+                  className={`${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'} hover:bg-slate-100 transition-colors`}
+                >
+                  <TableCell className="px-4 py-4 font-medium text-slate-900">{classItem.name}</TableCell>
+                  <TableCell className="px-4 py-4 text-sm text-slate-700">{classItem.level}</TableCell>
+                  <TableCell className="px-4 py-4 text-sm text-slate-700">{classItem.academicYear}</TableCell>
+                  <TableCell className="px-4 py-4 text-sm font-medium text-slate-900 tabular-nums">{classItem.studentCount}</TableCell>
+                  <TableCell className="px-4 py-4 text-right">
                     <div className="flex gap-2 justify-end">
-                      <Button size="sm" variant="outline" onClick={() => handleExportClass(classItem)}>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => handleExportClass(classItem)}
+                        className="text-slate-600 hover:text-slate-900 hover:bg-white/80 h-8 w-8 p-0"
+                        title="Exporter"
+                      >
                         <Download className="w-4 h-4" />
                       </Button>
                       <Button 
                         size="sm" 
-                        variant="outline" 
+                        variant="ghost" 
                         onClick={() => { 
                           setSelectedClass(classItem); 
                           setIsStudentDialogOpen(true); 
                         }}
+                        className="text-slate-600 hover:text-slate-900 hover:bg-white/80 h-8 w-8 p-0"
+                        title="Ajouter des élèves"
                       >
                         <UserPlus className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(classItem)}>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => handleEdit(classItem)}
+                        className="text-slate-600 hover:text-slate-900 hover:bg-white/80 h-8 w-8 p-0"
+                        title="Modifier"
+                      >
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleDelete(classItem.id)}>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => handleDelete(classItem.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                        title="Supprimer"
+                      >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -647,7 +680,7 @@ export default function ClassManagement() {
             )}
           </TableBody>
         </Table>
-      </Card>
+      </div>
 
       {/* Add Student Dialog */}
       <Dialog open={isStudentDialogOpen} onOpenChange={setIsStudentDialogOpen}>
