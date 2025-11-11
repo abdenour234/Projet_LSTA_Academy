@@ -269,9 +269,13 @@ createStudentRecord: async (studentData: {
   return api.post('/students', studentData);
 },
   login: async (email: string, password: string) => {
-    // ✅ CRITICAL: Clear ALL old data before login
+    // ✅ CRITICAL: Clear old session data before new login to prevent conflicts
     console.log('[AUTH] Clearing old session data before new login');
-    localStorage.clear();
+    const oldToken = localStorage.getItem(TOKEN_KEY);
+    if (oldToken) {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+    }
     
     const response = await api.post<{ token: string; user: any }>(
       '/auth/login',
@@ -280,9 +284,19 @@ createStudentRecord: async (studentData: {
     );
     
     console.log('[AUTH] Login successful, storing new session data');
-    // Store token and user info
+    // Store token and user info securely
     auth.setToken(response.token);
     auth.setUser(response.user);
+    
+    // Verify token immediately after login
+    try {
+      const verifiedUser = await api.get<any>('/auth/me');
+      console.log('[LOGIN] Token verified successfully');
+      auth.setUser(verifiedUser);
+    } catch (error) {
+      console.error('[LOGIN] Token verification failed:', error);
+      throw new Error('Session validation failed');
+    }
     
     return response;
   },
