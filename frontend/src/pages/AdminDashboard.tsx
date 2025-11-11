@@ -212,374 +212,369 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-      <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-white">
+      {/* Fixed Header - 64px height */}
+      <header className="h-16 border-b border-slate-200 bg-white sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 h-full">
+          <div className="flex items-center justify-between h-full">
+            <div className="flex items-center gap-3">
               {schoolLogo && (
                 <img 
                   src={schoolLogo} 
-                  alt="Logo de l'école" 
-                  className="h-12 w-12 object-contain rounded-lg"
+                  alt="Logo" 
+                  className="h-8 w-8 object-contain"
                 />
               )}
               <div>
-                <h1 className="text-2xl font-bold text-foreground">{schoolName}</h1>
-                <p className="text-muted-foreground">Administration - {userName}</p>
+                <h1 className="text-base font-semibold text-slate-900 tracking-tight">{schoolName}</h1>
+                <p className="text-xs text-slate-600">{userName} · Administrateur</p>
               </div>
             </div>
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Déconnexion
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button 
+                onClick={() => navigate(`/school/${id}/admin/classes`)}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium h-9"
+              >
+                Gérer les classes
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={handleLogout}
+                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-sm h-9"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Statistics Dashboard */}
         <div>
-          <h2 className="text-2xl font-bold mb-6">📊 Tableau de bord</h2>
+          <h2 className="text-sm font-medium text-slate-500 uppercase tracking-wide mb-4">Vue d'ensemble</h2>
           <AdminStatsCards schoolId={id!} />
         </div>
 
-        {/* Quick Actions */}
+        {/* Classes Table - Primary Focus */}
         <div>
-          <h2 className="text-2xl font-bold mb-6">⚡ Actions rapides</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card 
-            className="p-6 cursor-pointer hover:shadow-lg transition-smooth"
-            onClick={() => navigate(`/school/${id}/admin/classes`)}
-          >
-            <Users className="h-8 w-8 text-primary mb-3" />
-            <h3 className="font-semibold">Classes</h3>
-            <p className="text-sm text-muted-foreground">Gérer les classesssss</p>
-          </Card>
-          <Card 
-            className="p-6 cursor-pointer hover:shadow-lg transition-smooth"
-            onClick={() => navigate(`/school/${id}/admin/teachers`)}
-          >
-            <GraduationCap className="h-8 w-8 text-primary mb-3" />
-            <h3 className="font-semibold">Enseignants</h3>
-            <p className="text-sm text-muted-foreground">Gérer les enseignants</p>
-          </Card>
-          <Card 
-            className="p-6 cursor-pointer hover:shadow-lg transition-smooth"
-            onClick={() => navigate(`/school/${id}/admin/activity-tracking`)}
-          >
-            <Clock className="h-8 w-8 text-primary mb-3" />
-            <h3 className="font-semibold">Suivi d'activité</h3>
-            <p className="text-sm text-muted-foreground">Temps d'utilisation</p>
-          </Card>
-          <Card 
-            className="p-6 cursor-pointer hover:shadow-lg transition-smooth"
-            onClick={() => navigate(`/school/${id}/messages`)}
-          >
-            <MessageSquare className="h-8 w-8 text-primary mb-3" />
-            <h3 className="font-semibold">Messagerie</h3>
-            <p className="text-sm text-muted-foreground">Communications</p>
-          </Card>
-          </div>
-        </div>
-        
-        {/* Diagnostic Sessions Section */}
-        <Card className="p-6 shadow-card">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 rounded-lg bg-accent/10">
-              <BarChart3 className="h-6 w-6 text-accent" />
-            </div>
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-xl font-bold text-foreground">Diagnostics pédagogiques</h2>
-              <p className="text-sm text-muted-foreground">Tous les diagnostics réalisés par les professeurs</p>
+              <h2 className="text-lg font-semibold text-slate-900">Classes</h2>
+              <p className="text-sm text-slate-600 mt-0.5">Gérer les classes et leurs élèves</p>
             </div>
-          </div>
-
-          {diagnosticSessions.length > 0 ? (
-            <div className="grid gap-4">
-              {diagnosticSessions.map((session) => {
-                const gridInfo = DIAGNOSTIC_GRIDS.find(g => g.type === session.diagnostic_type);
-                return (
-                  <Card key={session.id} className="p-4 border-border hover:shadow-card-hover transition-smooth">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <BarChart3 className="h-4 w-4 text-accent" />
-                          <h4 className="font-semibold text-foreground">{gridInfo?.title || session.diagnostic_type}</h4>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">{gridInfo?.description}</p>
-                        <div className="flex gap-4 text-sm text-muted-foreground">
-                          <span>Niveau: <strong className="text-foreground">{session.grade_level}</strong></span>
-                          {session.class_name && (
-                            <span>Classe: <strong className="text-foreground">{session.class_name}</strong></span>
-                          )}
-                          <span>Élèves: <strong className="text-foreground">{session.total_students}</strong></span>
-                          <span>Date: <strong className="text-foreground">{new Date(session.session_date).toLocaleDateString('fr-FR')}</strong></span>
-                        </div>
-                      </div>
-                      <Button variant="outline" size="sm" onClick={() => handleViewResults(session.id)}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        Voir résultats
-                      </Button>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">Aucun diagnostic disponible</p>
-            </div>
-          )}
-        </Card>
-
-        {/* Activities Management Section */}
-        <Card className="p-6 shadow-card">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 rounded-lg bg-primary/10">
-              <Plus className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-foreground">Activités disponibles</h2>
-              <p className="text-sm text-muted-foreground">Les activités créées par le SuperAdmin pour votre école</p>
-            </div>
-          </div>
-
-          {activities.length > 0 ? (
-            <div className="grid gap-4">
-              {activities.map((activity) => (
-                <Card key={activity.id} className="p-4 border-border">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                          activity.type === 'Orale' ? 'bg-orale/10 text-orale' :
-                          activity.type === 'Lecture' ? 'bg-lecture/10 text-lecture' :
-                          'bg-ecriture/10 text-ecriture'
-                        }`}>
-                          {activity.type}
-                        </span>
-                        <span className="text-xs text-muted-foreground">{activity.level}</span>
-                      </div>
-                      <h4 className="font-semibold text-foreground mb-1">{activity.title}</h4>
-                      <p className="text-sm text-muted-foreground">{activity.description}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => navigate(`/activity/${activity.id}`)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        Voir
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-muted-foreground py-8">Aucune activité créée</p>
-          )}
-        </Card>
-
-        {/* Teachers List Section */}
-        <Card className="p-6 shadow-card">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-lg bg-primary/10">
-                <GraduationCap className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-foreground">Enseignants</h2>
-                <p className="text-sm text-muted-foreground">Liste complète des enseignants de l'école</p>
-              </div>
-            </div>
-            <Button onClick={() => navigate(`/school/${id}/admin/teachers`)}>
+            <Button 
+              onClick={() => navigate(`/school/${id}/admin/classes`)}
+              className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium h-9"
+            >
               <Plus className="h-4 w-4 mr-2" />
-              Gérer
-            </Button>
-          </div>
-
-          {loadingTeachers ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Chargement...</p>
-            </div>
-          ) : teachers.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {teachers.map((teacher) => (
-                <Card key={teacher.id} className="p-4 border-border hover:shadow-card-hover transition-smooth">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-full bg-primary/10">
-                      <GraduationCap className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-foreground truncate">
-                        {teacher.fullName || `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim()}
-                      </h4>
-                      {teacher.email && (
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                          <Mail className="h-3 w-3" />
-                          <span className="truncate">{teacher.email}</span>
-                        </div>
-                      )}
-                      {teacher.specialty && (
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                          <BookOpen className="h-3 w-3" />
-                          <span className="truncate">{teacher.specialty}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">Aucun enseignant enregistré</p>
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => navigate(`/school/${id}/admin/teachers`)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter un enseignant
-              </Button>
-            </div>
-          )}
-        </Card>
-
-        {/* Classes List Section */}
-        <Card className="p-6 shadow-card">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-lg bg-accent/10">
-                <Users className="h-6 w-6 text-accent" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-foreground">Classes</h2>
-                <p className="text-sm text-muted-foreground">Liste des classes avec élèves et activités</p>
-              </div>
-            </div>
-            <Button onClick={() => navigate(`/school/${id}/admin/classes`)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Gérer
+              Nouvelle classe
             </Button>
           </div>
 
           {loadingClasses ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Chargement...</p>
+            <div className="border border-slate-200 rounded-lg p-12 text-center bg-white">
+              <div className="inline-flex items-center gap-2 text-slate-600">
+                <div className="h-4 w-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                <span className="text-sm">Chargement des classes...</span>
+              </div>
             </div>
           ) : classes.length > 0 ? (
-            <div className="space-y-4">
-              {classes.map((classe) => {
-                const classStudents = studentsMap.get(classe.id) || [];
-                const classActivities = activities.filter(
-                  (activity) => activity.targetClasses?.includes(classe.id) || activity.level === classe.level
-                );
-                
-                return (
-                  <Card key={classe.id} className="p-4 border-border hover:shadow-card-hover transition-smooth">
-                    <div className="space-y-3">
-                      {/* Class Header */}
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-foreground text-lg">{classe.name}</h4>
-                            {classe.level && (
-                              <span className="text-xs font-medium px-2 py-1 rounded bg-primary/10 text-primary">
-                                {classe.level}
-                              </span>
-                            )}
-                            {classe.filiere && (
-                              <span className="text-xs font-medium px-2 py-1 rounded bg-accent/10 text-accent">
-                                {classe.filiere}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex gap-4 text-sm text-muted-foreground">
-                            <span>Année: <strong className="text-foreground">{classe.academicYear}</strong></span>
-                            <span>Élèves: <strong className="text-foreground">{classStudents.length}</strong></span>
-                            <span>Activités: <strong className="text-foreground">{classActivities.length}</strong></span>
-                          </div>
-                        </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => navigate(`/school/${id}/admin/classes`)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      {/* Students List */}
-                      {classStudents.length > 0 && (
-                        <div className="border-t pt-3">
-                          <p className="text-sm font-medium text-muted-foreground mb-2">Élèves ({classStudents.length}):</p>
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                            {classStudents.slice(0, 8).map((student) => (
-                              <div key={student.id} className="text-sm text-foreground bg-muted/50 rounded px-2 py-1 truncate">
-                                {student.firstName} {student.lastName}
-                              </div>
-                            ))}
-                            {classStudents.length > 8 && (
-                              <div className="text-sm text-muted-foreground bg-muted/30 rounded px-2 py-1">
-                                +{classStudents.length - 8} autres
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Activities List */}
-                      {classActivities.length > 0 && (
-                        <div className="border-t pt-3">
-                          <p className="text-sm font-medium text-muted-foreground mb-2">Activités assignées ({classActivities.length}):</p>
-                          <div className="flex flex-wrap gap-2">
-                            {classActivities.slice(0, 5).map((activity) => (
-                              <div 
-                                key={activity.id}
-                                className={`text-xs font-medium px-2 py-1 rounded cursor-pointer hover:opacity-80 ${
-                                  activity.type === 'Orale' ? 'bg-orale/10 text-orale' :
-                                  activity.type === 'Lecture' ? 'bg-lecture/10 text-lecture' :
-                                  'bg-ecriture/10 text-ecriture'
-                                }`}
-                                onClick={() => navigate(`/activity/${activity.id}`)}
-                              >
-                                {activity.title}
-                              </div>
-                            ))}
-                            {classActivities.length > 5 && (
-                              <div className="text-xs text-muted-foreground px-2 py-1">
-                                +{classActivities.length - 5} autres
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-                );
-              })}
+            <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Classe</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Niveau</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Élèves</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Activités</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Année</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider sticky right-0 bg-slate-50">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {classes.map((classe, index) => {
+                    const classStudents = studentsMap.get(classe.id) || [];
+                    const classActivities = activities.filter(
+                      (activity) => activity.targetClasses?.includes(classe.id) || activity.level === classe.level
+                    );
+                    
+                    return (
+                      <tr 
+                        key={classe.id} 
+                        className={`${
+                          index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
+                        } hover:bg-slate-100 transition-colors`}
+                      >
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-slate-900">{classe.name}</div>
+                          {classe.filiere && (
+                            <div className="text-xs text-slate-600 mt-0.5">{classe.filiere}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-300">
+                            {classe.level}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-900 font-medium">
+                          {classStudents.length}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-900 font-medium">
+                          {classActivities.length}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600">
+                          {classe.academicYear}
+                        </td>
+                        <td className="px-4 py-3 text-right sticky right-0 bg-inherit">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => navigate(`/school/${id}/admin/classes`)}
+                            className="text-slate-600 hover:text-slate-900 hover:bg-slate-200 h-8"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           ) : (
-            <div className="text-center py-8">
-              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">Aucune classe créée</p>
+            <div className="border border-slate-200 rounded-lg p-12 text-center bg-white">
+              <Users className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+              <p className="text-sm font-medium text-slate-900 mb-1">Aucune classe</p>
+              <p className="text-sm text-slate-600 mb-4">Commencez par créer votre première classe</p>
               <Button 
-                variant="outline" 
-                className="mt-4"
                 onClick={() => navigate(`/school/${id}/admin/classes`)}
+                className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium h-9"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Créer une classe
               </Button>
             </div>
           )}
-        </Card>
+        </div>
+
+        {/* Teachers Table */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Enseignants</h2>
+              <p className="text-sm text-slate-600 mt-0.5">Personnel enseignant de l'école</p>
+            </div>
+            <Button 
+              onClick={() => navigate(`/school/${id}/admin/teachers`)}
+              className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium h-9"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Ajouter un enseignant
+            </Button>
+          </div>
+
+          {loadingTeachers ? (
+            <div className="border border-slate-200 rounded-lg p-12 text-center bg-white">
+              <div className="inline-flex items-center gap-2 text-slate-600">
+                <div className="h-4 w-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                <span className="text-sm">Chargement des enseignants...</span>
+              </div>
+            </div>
+          ) : teachers.length > 0 ? (
+            <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Nom</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Email</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Spécialité</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider sticky right-0 bg-slate-50">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teachers.map((teacher, index) => (
+                    <tr 
+                      key={teacher.id} 
+                      className={`${
+                        index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
+                      } hover:bg-slate-100 transition-colors`}
+                    >
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-slate-900">
+                          {teacher.fullName || `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim()}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-600">
+                        {teacher.email || '—'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-600">
+                        {teacher.specialty || '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right sticky right-0 bg-inherit">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => navigate(`/school/${id}/admin/teachers`)}
+                          className="text-slate-600 hover:text-slate-900 hover:bg-slate-200 h-8"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="border border-slate-200 rounded-lg p-12 text-center bg-white">
+              <GraduationCap className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+              <p className="text-sm font-medium text-slate-900 mb-1">Aucun enseignant</p>
+              <p className="text-sm text-slate-600 mb-4">Ajoutez des enseignants à votre école</p>
+              <Button 
+                onClick={() => navigate(`/school/${id}/admin/teachers`)}
+                className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium h-9"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter un enseignant
+              </Button>
+            </div>
+          )}
+        </div>
+        
+        {/* Activities Section - Compact */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Activités disponibles</h2>
+              <p className="text-sm text-slate-600 mt-0.5">Créées par le SuperAdmin</p>
+            </div>
+          </div>
+
+          {activities.length > 0 ? (
+            <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Titre</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Type</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Niveau</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider sticky right-0 bg-slate-50">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activities.map((activity, index) => (
+                    <tr 
+                      key={activity.id} 
+                      className={`${
+                        index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
+                      } hover:bg-slate-100 transition-colors`}
+                    >
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-slate-900">{activity.title}</div>
+                        {activity.description && (
+                          <div className="text-xs text-slate-600 mt-0.5 line-clamp-1">{activity.description}</div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border ${
+                          activity.type === 'Orale' ? 'bg-blue-50 text-blue-700 border-blue-300' :
+                          activity.type === 'Lecture' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' :
+                          'bg-amber-50 text-amber-700 border-amber-300'
+                        }`}>
+                          {activity.type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-600">
+                        {activity.level}
+                      </td>
+                      <td className="px-4 py-3 text-right sticky right-0 bg-inherit">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => navigate(`/activity/${activity.id}`)}
+                          className="text-slate-600 hover:text-slate-900 hover:bg-slate-200 h-8"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="border border-slate-200 rounded-lg p-12 text-center bg-white">
+              <BookOpen className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+              <p className="text-sm font-medium text-slate-900 mb-1">Aucune activité</p>
+              <p className="text-sm text-slate-600">Les activités créées apparaîtront ici</p>
+            </div>
+          )}
+        </div>
+
+        {/* Diagnostic Sessions - Compact */}
+        {diagnosticSessions.length > 0 && (
+          <div>
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold text-slate-900">Diagnostics pédagogiques</h2>
+              <p className="text-sm text-slate-600 mt-0.5">Sessions réalisées par les enseignants</p>
+            </div>
+
+            <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Type</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Niveau</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Classe</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Élèves</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider">Date</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wider sticky right-0 bg-slate-50">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {diagnosticSessions.map((session, index) => {
+                    const gridInfo = DIAGNOSTIC_GRIDS.find(g => g.type === session.diagnostic_type);
+                    return (
+                      <tr 
+                        key={session.id} 
+                        className={`${
+                          index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
+                        } hover:bg-slate-100 transition-colors`}
+                      >
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-slate-900">{gridInfo?.title || session.diagnostic_type}</div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600">
+                          {session.grade_level}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600">
+                          {session.class_name || '—'}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-900 font-medium">
+                          {session.total_students}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600">
+                          {new Date(session.session_date).toLocaleDateString('fr-FR')}
+                        </td>
+                        <td className="px-4 py-3 text-right sticky right-0 bg-inherit">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleViewResults(session.id)}
+                            className="text-slate-600 hover:text-slate-900 hover:bg-slate-200 h-8"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

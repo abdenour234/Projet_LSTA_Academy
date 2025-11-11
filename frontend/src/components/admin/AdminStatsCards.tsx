@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { Users, GraduationCap, BookOpen, TrendingUp, Clock, MessageSquare } from 'lucide-react';
-import { classApi, teacherApi, activityApi, sessionApi } from '@/lib/api';
+import { Users, GraduationCap, BookOpen, Clock } from 'lucide-react';
+import { classApi, teacherApi, activityApi, sessionApi, studentApi } from '@/lib/api';
 
 interface AdminStatsCardsProps {
   schoolId: string;
@@ -9,13 +9,13 @@ interface AdminStatsCardsProps {
 
 export const AdminStatsCards = ({ schoolId }: AdminStatsCardsProps) => {
   const [stats, setStats] = useState({
+    totalStudents: 0,
     totalClasses: 0,
     totalTeachers: 0,
     totalActivities: 0,
-    totalSessions: 0,
-    avgProgress: 0,
-    activeUsers: 0,
   });
+
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadStats();
@@ -23,111 +23,113 @@ export const AdminStatsCards = ({ schoolId }: AdminStatsCardsProps) => {
 
   const loadStats = async () => {
     try {
+      setLoading(true);
+      
       // Total classes
       const classes = await classApi.getBySchoolId(schoolId);
       const classCount = classes.length;
+
+      // Total students across all classes
+      let totalStudents = 0;
+      for (const classe of classes) {
+        try {
+          const classStudents = await studentApi.getByClass(classe.id);
+          totalStudents += classStudents.length;
+        } catch (err) {
+          console.error(`Error loading students for class ${classe.id}:`, err);
+        }
+      }
 
       // Total teachers
       const teachers = await teacherApi.getBySchoolId(schoolId);
       const teacherCount = teachers.length;
 
-      // Total activities - convert both to strings for type-safe comparison
+      // Total activities
       const activities = await activityApi.getAll();
       const schoolActivities = activities.filter((a: any) => String(a.schoolId) === String(schoolId));
       const activityCount = schoolActivities.length;
 
-      // Total sessions - get all sessions and filter by school (convert to strings)
-      const allSessions = await sessionApi.getAll();
-      const sessions = allSessions.filter((s: any) => String(s.schoolId) === String(schoolId));
-      const sessionCount = sessions.length;
-
-      // Average progress
-      const avgProgress = sessions && sessions.length > 0
-        ? Math.round(sessions.reduce((acc: number, s: any) => acc + (s.percentageAcquired || 0), 0) / sessions.length)
-        : 0;
-
-      // Active users (last 7 days)
-      // TODO: Implement user activity tracking endpoint on backend
-      // For now, set to 0 or estimate based on recent sessions
-      const activeCount = 0;
-
       setStats({
+        totalStudents,
         totalClasses: classCount || 0,
         totalTeachers: teacherCount || 0,
         totalActivities: activityCount || 0,
-        totalSessions: sessionCount || 0,
-        avgProgress,
-        activeUsers: activeCount || 0,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const statCards = [
-    {
-      title: 'Classes actives',
-      value: stats.totalClasses,
-      icon: Users,
-      color: 'text-primary',
-      bg: 'bg-primary/10',
-    },
-    {
-      title: 'Enseignants',
-      value: stats.totalTeachers,
-      icon: GraduationCap,
-      color: 'text-accent',
-      bg: 'bg-accent/10',
-    },
-    {
-      title: 'Activités créées',
-      value: stats.totalActivities,
-      icon: BookOpen,
-      color: 'text-lecture',
-      bg: 'bg-lecture/10',
-    },
-    {
-      title: 'Séances réalisées',
-      value: stats.totalSessions,
-      icon: Clock,
-      color: 'text-orale',
-      bg: 'bg-orale/10',
-    },
-    {
-      title: 'Progression moyenne',
-      value: `${stats.avgProgress}%`,
-      icon: TrendingUp,
-      color: 'text-ecriture',
-      bg: 'bg-ecriture/10',
-    },
-    {
-      title: 'Utilisateurs actifs (7j)',
-      value: stats.activeUsers,
-      icon: MessageSquare,
-      color: 'text-secondary',
-      bg: 'bg-secondary/10',
-    },
-  ];
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {statCards.map((stat, index) => (
-        <Card
-          key={index}
-          className="p-6 hover:shadow-card-hover transition-smooth animate-scale-in"
-          style={{ animationDelay: `${index * 0.1}s` }}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
-              <p className="text-3xl font-bold">{stat.value}</p>
-            </div>
-            <div className={`p-4 rounded-lg ${stat.bg}`}>
-              <stat.icon className={`h-8 w-8 ${stat.color}`} />
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="border border-slate-200 rounded-lg p-5 bg-white">
+            <div className="animate-pulse space-y-3">
+              <div className="h-3 bg-slate-200 rounded w-20"></div>
+              <div className="h-8 bg-slate-200 rounded w-16"></div>
             </div>
           </div>
-        </Card>
-      ))}
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Primary Metric - Students (larger emphasis) */}
+      <Card className="col-span-1 md:col-span-2 border border-slate-200 bg-white p-6 hover:border-slate-300 transition-colors">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm font-normal text-slate-600 mb-1">Élèves inscrits</p>
+            <p className="text-5xl font-bold text-slate-900 tracking-tight">{stats.totalStudents}</p>
+            <p className="text-xs text-slate-500 mt-2">Total des élèves de l'école</p>
+          </div>
+          <div className="p-3 rounded-lg bg-slate-100">
+            <Users className="h-6 w-6 text-slate-700" />
+          </div>
+        </div>
+      </Card>
+
+      {/* Secondary Metrics */}
+      <Card className="border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs font-medium text-slate-600 uppercase tracking-wider mb-2">Classes</p>
+            <p className="text-3xl font-bold text-slate-900 tracking-tight">{stats.totalClasses}</p>
+          </div>
+          <div className="p-2 rounded bg-slate-100">
+            <Users className="h-5 w-5 text-slate-600" />
+          </div>
+        </div>
+      </Card>
+
+      <Card className="border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs font-medium text-slate-600 uppercase tracking-wider mb-2">Enseignants</p>
+            <p className="text-3xl font-bold text-slate-900 tracking-tight">{stats.totalTeachers}</p>
+          </div>
+          <div className="p-2 rounded bg-slate-100">
+            <GraduationCap className="h-5 w-5 text-slate-600" />
+          </div>
+        </div>
+      </Card>
+
+      {/* Tertiary Metrics */}
+      <Card className="border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs font-medium text-slate-600 uppercase tracking-wider mb-2">Activités</p>
+            <p className="text-2xl font-semibold text-slate-900 tracking-tight">{stats.totalActivities}</p>
+          </div>
+          <div className="p-2 rounded bg-slate-100">
+            <BookOpen className="h-5 w-5 text-slate-600" />
+          </div>
+        </div>
+      </Card>
     </div>
   );
 };
