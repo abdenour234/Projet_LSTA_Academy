@@ -685,8 +685,9 @@ const AdminDashboard = () => {
                             <Edit className="h-4 w-4" />
                           </Button>
                         </td>
-                    </tr>
-                  ))}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -800,8 +801,9 @@ const AdminDashboard = () => {
                             <Eye className="h-4 w-4" />
                           </Button>
                         </td>
-                    </tr>
-                  ))}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
