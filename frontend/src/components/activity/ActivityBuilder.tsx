@@ -263,7 +263,8 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
           newElements: newElements
         });
 
-        const response = await fetch(`http://localhost:8080/api/activity-files/upload/${currentActivityId}`, {
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+        const response = await fetch(`${API_BASE_URL}/activity-files/upload/${currentActivityId}`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,

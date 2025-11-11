@@ -110,7 +110,7 @@ public class SecurityConfig {
             "http://frontend:5173",    // Docker frontend
             "http://57.129.110.129",   // VPS IP
             "http://57.129.110.129:80" // VPS IP with explicit port
-            // Add production domain here: "https://yourdomain.com"
+            
         ));
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));

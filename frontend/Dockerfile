@@ -1,6 +1,11 @@
 # Build stage
 FROM node:18-alpine AS build
 WORKDIR /app
+
+# Set build-time environment variable for Vite
+ARG VITE_API_URL=http://57.129.110.129:8080/api
+ENV VITE_API_URL=$VITE_API_URL
+
 COPY package*.json ./
 RUN npm ci
 COPY . .

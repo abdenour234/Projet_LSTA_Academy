@@ -68,7 +68,8 @@ const SchoolDetails = () => {
     setLoading(true);
     try {
       // Load school info
-      const schoolResponse = await fetch(`http://localhost:8080/api/schools/${schoolId}`, {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+      const schoolResponse = await fetch(`${API_BASE_URL}/schools/${schoolId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },

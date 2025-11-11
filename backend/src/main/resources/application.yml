@@ -32,7 +32,7 @@ minio:
 
 # Application Configuration
 app:
-  base-url: ${APP_BASE_URL:http://localhost:8080}  # Public URL for file download links
+  base-url: ${APP_BASE_URL:http://57.129.110.129:8080}  # Public URL for file download links
 
 # JWT Configuration
 jwt:

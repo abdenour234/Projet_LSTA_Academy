@@ -91,7 +91,8 @@ const SuperAdminDashboard = () => {
   const loadStats = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8080/api/superadmin/stats', {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+      const response = await fetch(`${API_BASE_URL}/superadmin/stats`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
