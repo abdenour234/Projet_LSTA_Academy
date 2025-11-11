@@ -42,7 +42,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    * Check if user is authenticated on mount and validate token
    */
   useEffect(() => {
-    checkAuth();
+    const initAuth = async () => {
+      // Try to restore from localStorage first for instant UI update
+      const storedUser = localStorage.getItem('user');
+      const storedToken = localStorage.getItem('token');
+      
+      if (storedToken && storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser); // Set immediately for better UX
+          console.log('[AUTH] Restored user from localStorage:', parsedUser);
+        } catch (error) {
+          console.error('[AUTH] Failed to parse stored user:', error);
+        }
+      }
+      
+      // Then validate with server
+      await checkAuth();
+    };
+    
+    initAuth();
     
     // Check token expiration every 5 minutes
     const interval = setInterval(() => {

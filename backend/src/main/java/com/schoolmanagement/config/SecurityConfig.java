@@ -107,7 +107,9 @@ public class SecurityConfig {
             "http://localhost:80",     // Explicit port 80
             "http://localhost:5173",   // Vite dev server
             "http://localhost:3000",   // Alternative dev port
-            "http://frontend:5173"     // Docker frontend
+            "http://frontend:5173",    // Docker frontend
+            "http://57.129.110.129",   // VPS IP
+            "http://57.129.110.129:80" // VPS IP with explicit port
             // Add production domain here: "https://yourdomain.com"
         ));
         
