@@ -146,8 +146,7 @@ export const PedagogiaCarousel = () => {
         <div className="absolute top-1/2 -translate-y-1/2 left-4 lg:left-6 z-20">
           <button
             onClick={goToPrevious}
-            disabled={currentIndex === 0}
-            className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-110"
+            className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/40 transition-all duration-300 shadow-lg hover:scale-110"
           >
             <ChevronLeft className="w-6 h-6 lg:w-7 lg:h-7" />
           </button>
@@ -156,8 +155,7 @@ export const PedagogiaCarousel = () => {
         <div className="absolute top-1/2 -translate-y-1/2 right-4 lg:right-6 z-20">
           <button
             onClick={goToNext}
-            disabled={currentIndex === slides.length - 1}
-            className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-110"
+            className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/40 transition-all duration-300 shadow-lg hover:scale-110"
           >
             <ChevronRight className="w-6 h-6 lg:w-7 lg:h-7" />
           </button>
