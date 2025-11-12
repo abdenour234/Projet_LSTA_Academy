@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Target, Users, Lightbulb, ChevronLeft, ChevronRight } from "lucide-react";
-import { motion, useMotionValue, animate } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface SlideData {
   id: number;
@@ -15,7 +15,6 @@ interface SlideData {
 
 export const PedagogiaCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const x = useMotionValue(0);
 
   const slides: SlideData[] = [
     {
@@ -59,16 +58,6 @@ export const PedagogiaCarousel = () => {
     return () => clearInterval(interval);
   }, [slides.length]);
 
-  // Animate slide transition
-  useEffect(() => {
-    const targetX = -currentIndex * 100;
-    animate(x, targetX, {
-      type: "spring",
-      stiffness: 300,
-      damping: 30,
-    });
-  }, [currentIndex, x]);
-
   const goToSlide = (index: number) => {
     setCurrentIndex(index);
   };
@@ -90,7 +79,8 @@ export const PedagogiaCarousel = () => {
         {/* Slides Container */}
         <motion.div
           className="flex"
-          style={{ x }}
+          animate={{ x: `${-currentIndex * 100}%` }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
           {slides.map((slide) => {
             const SlideIcon = slide.icon;
