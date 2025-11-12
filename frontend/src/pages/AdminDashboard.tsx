@@ -400,28 +400,28 @@ const AdminDashboard = () => {
                 </thead>
                 <tbody>
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <tr key={i} className={i % 2 === 0 ? 'bg-slate-50' : 'bg-white'}>
+                    <tr key={i} className={i % 2 === 0 ? 'bg-blue-50' : 'bg-white'}>
                       <td className="px-4 py-4">
-                        <div className="h-4 bg-slate-200 rounded w-32 animate-pulse" />
-                        <div className="h-3 bg-slate-100 rounded w-20 mt-1 animate-pulse" />
+                        <div className="h-4 bg-blue-200 rounded w-32 animate-pulse" />
+                        <div className="h-3 bg-blue-100 rounded w-20 mt-1 animate-pulse" />
                       </td>
                       <td className="px-4 py-4">
-                        <div className="h-6 bg-slate-200 rounded w-16 animate-pulse" />
+                        <div className="h-6 bg-blue-200 rounded w-16 animate-pulse" />
                       </td>
                       <td className="px-4 py-4">
-                        <div className="h-4 bg-slate-200 rounded w-28 animate-pulse" />
+                        <div className="h-4 bg-blue-200 rounded w-28 animate-pulse" />
                       </td>
                       <td className="px-4 py-4">
-                        <div className="h-4 bg-slate-200 rounded w-8 animate-pulse" />
+                        <div className="h-4 bg-blue-200 rounded w-8 animate-pulse" />
                       </td>
                       <td className="px-4 py-4">
-                        <div className="h-4 bg-slate-200 rounded w-8 animate-pulse" />
+                        <div className="h-4 bg-blue-200 rounded w-8 animate-pulse" />
                       </td>
                       <td className="px-4 py-4">
-                        <div className="h-6 bg-slate-200 rounded w-16 animate-pulse" />
+                        <div className="h-6 bg-blue-200 rounded w-16 animate-pulse" />
                       </td>
                       <td className="px-4 py-4 text-right">
-                        <div className="h-8 bg-slate-200 rounded w-8 ml-auto animate-pulse" />
+                        <div className="h-8 bg-blue-200 rounded w-8 ml-auto animate-pulse" />
                       </td>
                     </tr>
                   ))}
@@ -429,17 +429,17 @@ const AdminDashboard = () => {
               </table>
             </div>
           ) : filteredClasses.length > 0 ? (
-            <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+            <div className="border-2 border-blue-200 rounded-lg overflow-hidden bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Classe</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Niveau</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Enseignant principal</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Élèves</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Activités</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Statut</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Actions</th>
+                  <tr className="bg-blue-50 border-b-2 border-blue-200">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Classe</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Niveau</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Enseignant principal</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Élèves</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Activités</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Statut</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -461,31 +461,31 @@ const AdminDashboard = () => {
                       <tr 
                         key={classe.id} 
                         className={`${
-                          index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
-                        } hover:bg-slate-100 transition-colors cursor-pointer`}
+                          index % 2 === 0 ? 'bg-white' : 'bg-blue-50'
+                        } hover:bg-emerald-50 transition-colors cursor-pointer`}
                         onClick={() => navigate(`/school/${id}/admin/classes`)}
                       >
                         <td className="px-4 py-4">
-                          <div className="font-medium text-slate-900">{classe.name}</div>
+                          <div className="font-medium text-blue-600">{classe.name}</div>
                           {classe.filiere && (
-                            <div className="text-xs text-slate-500 mt-0.5">{classe.filiere}</div>
+                            <div className="text-xs text-blue-400 mt-0.5">{classe.filiere}</div>
                           )}
                         </td>
                         <td className="px-4 py-4">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
                             {classe.level}
                           </span>
                         </td>
-                        <td className="px-4 py-4 text-sm text-slate-700">
+                        <td className="px-4 py-4 text-sm text-blue-500">
                           {headTeacher 
                             ? headTeacher.fullName || `${headTeacher.firstName || ''} ${headTeacher.lastName || ''}`.trim()
-                            : <span className="text-slate-400">Non assigné</span>
+                            : <span className="text-blue-400">Non assigné</span>
                           }
                         </td>
-                        <td className="px-4 py-4 text-sm font-medium text-slate-900 tabular-nums">
+                        <td className="px-4 py-4 text-sm font-medium text-blue-600 tabular-nums">
                           {classStudents.length}
                         </td>
-                        <td className="px-4 py-4 text-sm font-medium text-slate-900 tabular-nums">
+                        <td className="px-4 py-4 text-sm font-medium text-blue-600 tabular-nums">
                           {classActivities.length}
                         </td>
                         <td className="px-4 py-4">
@@ -494,7 +494,7 @@ const AdminDashboard = () => {
                               Active
                             </span>
                           ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-600 border border-blue-200">
                               Vide
                             </span>
                           )}
@@ -547,11 +547,11 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between mb-3">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">Enseignants</h2>
-              <p className="text-sm text-slate-600 mt-0.5">Personnel enseignant de l'école</p>
+              <p className="text-sm text-blue-500 mt-0.5">Personnel enseignant de l'école</p>
             </div>
             <Button 
               onClick={() => navigate(`/school/${id}/admin/teachers`)}
-              className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium h-9"
+              className="bg-blue-600 hover:bg-emerald-500 text-white text-sm font-medium h-9"
             >
               <Plus className="h-4 w-4 mr-2" />
               Ajouter un enseignant
@@ -561,19 +561,19 @@ const AdminDashboard = () => {
           {/* Quick Filters - Teachers */}
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <div className="relative flex-1 min-w-[240px] max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-400" />
               <input
                 type="text"
                 placeholder="Rechercher un enseignant..."
                 value={teacherSearchTerm}
                 onChange={(e) => setTeacherSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-2 transition-shadow"
+                className="w-full pl-9 pr-3 py-2 text-sm border-2 border-blue-200 rounded-lg bg-white text-blue-600 placeholder:text-blue-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-400 focus:ring-offset-2 transition-shadow"
               />
             </div>
             <select
               value={teacherStatusFilter}
               onChange={(e) => setTeacherStatusFilter(e.target.value)}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-2 transition-shadow min-w-[120px]"
+              className="px-3 py-2 text-sm border-2 border-blue-200 rounded-lg bg-white text-blue-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-400 focus:ring-offset-2 transition-shadow min-w-[120px]"
             >
               <option value="all">Tous statuts</option>
               <option value="active">Actif</option>
@@ -585,7 +585,7 @@ const AdminDashboard = () => {
                   setTeacherSearchTerm('');
                   setTeacherStatusFilter('all');
                 }}
-                className="text-sm text-slate-600 hover:text-slate-900 font-medium px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors"
+                className="text-sm text-blue-500 hover:text-emerald-600 font-medium px-3 py-2 hover:bg-emerald-50 rounded-lg transition-colors"
               >
                 Réinitialiser
               </button>
@@ -593,11 +593,11 @@ const AdminDashboard = () => {
           </div>
 
           {loadingTeachers ? (
-            <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+            <div className="border-2 border-blue-200 rounded-lg overflow-hidden bg-white shadow-lg">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Nom</th>
+                  <tr className="bg-blue-50 border-b-2 border-blue-200">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Nom</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Email</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Spécialité</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Classes assignées</th>
