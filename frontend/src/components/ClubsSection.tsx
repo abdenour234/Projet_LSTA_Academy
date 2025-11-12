@@ -115,7 +115,7 @@ const ClubsSection = () => {
         <div className="text-center animate-fade-in" style={{ animationDelay: "0.8s" }}>
           <Button 
             size="lg" 
-            className="gap-3 text-base px-8 py-5 rounded-full bg-[hsl(var(--edu-mint))] hover:bg-[hsl(165_75%_55%)] text-white shadow-[var(--shadow-button)] hover:shadow-[var(--shadow-card-hover)] hover:scale-105 transition-all duration-300 group font-bold"
+            className="gap-3 text-base px-8 py-5 rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group font-medium"
           >
             <Sparkles className="h-5 w-5 group-hover:rotate-180 transition-transform duration-500" />
             Rejoindre un club
