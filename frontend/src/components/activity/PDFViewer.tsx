@@ -68,10 +68,10 @@ export const PDFViewer = ({ fileUrl, width = '100%', height = '600px' }: PDFView
   }
 
   return (
-    <div className="relative overflow-auto bg-muted/30 rounded-lg" style={{ width, height }}>
+    <div className="relative overflow-auto bg-slate-50 rounded-lg" style={{ width, height }}>
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/50 z-10">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-100/80 z-10">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         </div>
       )}
       
@@ -82,7 +82,7 @@ export const PDFViewer = ({ fileUrl, width = '100%', height = '600px' }: PDFView
           onLoadError={onDocumentLoadError}
           loading={
             <div className="flex items-center justify-center p-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
             </div>
           }
           className="flex flex-col items-center p-4"
@@ -101,7 +101,7 @@ export const PDFViewer = ({ fileUrl, width = '100%', height = '600px' }: PDFView
       )}
 
       {numPages > 0 && (
-        <div className="sticky bottom-4 left-1/2 transform -translate-x-1/2 bg-background/90 backdrop-blur-sm border rounded-full px-4 py-2 text-sm shadow-lg w-fit">
+        <div className="sticky bottom-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-full px-4 py-2 text-sm shadow-lg w-fit">
           {numPages} page{numPages > 1 ? 's' : ''}
         </div>
       )}

@@ -21,14 +21,14 @@ const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
               <span className="text-lg font-bold">ÉP</span>
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-lg font-semibold text-foreground">Plateforme Éducative</h1>
-              <p className="text-xs text-muted-foreground">Annuaire des écoles</p>
+              <h1 className="text-lg font-semibold text-slate-900">Plateforme Éducative</h1>
+              <p className="text-xs text-slate-600">Annuaire des écoles</p>
             </div>
           </div>
 
           {/* Search Bar */}
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600" />
             <Input
               type="search"
               placeholder="Rechercher une école..."

@@ -43,10 +43,10 @@ export const AutoActivityViewer = ({ title, description, elements }: AutoActivit
       if (!pdfElement) return null;
 
       return (
-        <div className="w-full h-full min-h-[800px] bg-card rounded-lg border p-4">
-          <div className="flex items-center gap-3 mb-4 pb-4 border-b">
-            <FileText className="h-6 w-6 text-primary" />
-            <h3 className="text-lg font-semibold">Document PDF</h3>
+        <div className="w-full h-full min-h-[800px] bg-white rounded-lg border border-slate-200 p-4">
+          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-slate-200">
+            <FileText className="h-6 w-6 text-blue-600" />
+            <h3 className="text-lg font-semibold text-slate-900">Document PDF</h3>
           </div>
           <div className="relative w-full h-[calc(100%-60px)]">
             <PDFViewer 
@@ -72,10 +72,10 @@ export const AutoActivityViewer = ({ title, description, elements }: AutoActivit
       if (!videoElement) return null;
 
       return (
-        <div className="w-full bg-card rounded-lg border p-6">
-          <div className="flex items-center gap-3 mb-4 pb-4 border-b">
-            <Video className="h-6 w-6 text-primary" />
-            <h3 className="text-lg font-semibold">Vidéo pédagogique</h3>
+        <div className="w-full bg-white rounded-lg border border-slate-200 p-6">
+          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-slate-200">
+            <Video className="h-6 w-6 text-blue-600" />
+            <h3 className="text-lg font-semibold text-slate-900">Vidéo pédagogique</h3>
           </div>
           <div className="max-w-4xl mx-auto">
             <VideoViewer 
@@ -91,10 +91,10 @@ export const AutoActivityViewer = ({ title, description, elements }: AutoActivit
 
     if (hasOnlyImages) {
       return (
-        <div className="w-full bg-card rounded-lg border p-6">
-          <div className="flex items-center gap-3 mb-4 pb-4 border-b">
-            <ImageIcon className="h-6 w-6 text-primary" />
-            <h3 className="text-lg font-semibold">Images pédagogiques</h3>
+        <div className="w-full bg-white rounded-lg border border-slate-200 p-6">
+          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-slate-200">
+            <ImageIcon className="h-6 w-6 text-blue-600" />
+            <h3 className="text-lg font-semibold text-slate-900">Images pédagogiques</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {elements.filter(el => el.type === 'image').map((element) => (
@@ -177,10 +177,10 @@ export const AutoActivityViewer = ({ title, description, elements }: AutoActivit
         />
       )}
       
-      <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg p-6 border">
-        <h1 className="text-3xl font-bold mb-2">{title}</h1>
+      <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
+        <h1 className="text-3xl font-bold mb-2 text-slate-900">{title}</h1>
         {description && (
-          <p className="text-muted-foreground text-lg">{description}</p>
+          <p className="text-slate-600 text-lg">{description}</p>
         )}
       </div>
 
