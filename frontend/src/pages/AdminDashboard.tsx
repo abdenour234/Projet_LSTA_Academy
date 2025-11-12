@@ -261,9 +261,9 @@ const AdminDashboard = () => {
   });
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
       {/* Fixed Header - 64px height */}
-      <header className="h-16 border-b border-slate-200 bg-white sticky top-0 z-50">
+      <header className="h-16 border-b-2 border-blue-200 bg-gradient-to-r from-blue-50 to-white sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-full">
           <div className="flex items-center justify-between h-full">
             <div className="flex items-center gap-4">
@@ -271,15 +271,15 @@ const AdminDashboard = () => {
                 <img 
                   src={schoolLogo} 
                   alt="Logo" 
-                  className="h-9 w-9 object-contain"
+                  className="h-9 w-9 object-contain hover:scale-110 transition-transform duration-300"
                 />
               )}
-              <div className="border-l border-slate-200 pl-4">
-                <h1 className="text-base font-semibold text-slate-900 tracking-tight leading-tight">{schoolName}</h1>
+              <div className="border-l-2 border-blue-200 pl-4">
+                <h1 className="text-base font-semibold text-blue-600 tracking-tight leading-tight">{schoolName}</h1>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs text-slate-600">{userName}</span>
-                  <span className="text-xs text-slate-400">·</span>
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-300">
+                  <span className="text-xs text-blue-500">{userName}</span>
+                  <span className="text-xs text-blue-300">·</span>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-300">
                     Admin
                   </span>
                 </div>
@@ -289,23 +289,23 @@ const AdminDashboard = () => {
               <Button 
                 onClick={() => navigate(`/school/${id}/admin/teachers`)}
                 variant="ghost"
-                className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 text-sm h-9 font-medium"
+                className="text-sm h-9 font-medium"
               >
                 <GraduationCap className="h-4 w-4 mr-2" />
                 Enseignants
               </Button>
               <Button 
                 onClick={() => navigate(`/school/${id}/admin/classes`)}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium h-9 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="text-sm font-medium h-9"
               >
                 <Users className="h-4 w-4 mr-2" />
                 Classes
               </Button>
-              <div className="h-6 w-px bg-slate-200 mx-1" />
+              <div className="h-6 w-px bg-blue-200 mx-1" />
               <Button 
                 variant="ghost" 
                 onClick={handleLogout}
-                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 h-9 px-2"
+                className="h-9 px-2"
                 title="Déconnexion"
               >
                 <LogOut className="h-4 w-4" />
@@ -326,12 +326,12 @@ const AdminDashboard = () => {
         <div>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Classes</h2>
-              <p className="text-sm text-slate-600 mt-0.5">Gérer les classes et leurs élèves</p>
+              <h2 className="text-lg font-semibold text-blue-600">Classes</h2>
+              <p className="text-sm text-blue-500 mt-0.5">Gérer les classes et leurs élèves</p>
             </div>
             <Button 
               onClick={() => navigate(`/school/${id}/admin/classes`)}
-              className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium h-9"
+              className="text-sm font-medium h-9"
             >
               <Plus className="h-4 w-4 mr-2" />
               Nouvelle classe
@@ -341,19 +341,19 @@ const AdminDashboard = () => {
           {/* Quick Filters - Actionable & Scannable */}
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <div className="relative flex-1 min-w-[240px] max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-400" />
               <input
                 type="text"
                 placeholder="Rechercher une classe..."
                 value={classSearchTerm}
                 onChange={(e) => setClassSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-2 transition-shadow"
+                className="w-full pl-9 pr-3 py-2 text-sm border-2 border-blue-200 rounded-lg bg-white text-blue-600 placeholder:text-blue-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-400 focus:ring-offset-2 transition-all"
               />
             </div>
             <select
               value={classLevelFilter}
               onChange={(e) => setClassLevelFilter(e.target.value)}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-2 transition-shadow min-w-[140px]"
+              className="px-3 py-2 text-sm border-2 border-blue-200 rounded-lg bg-white text-blue-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-400 focus:ring-offset-2 transition-all min-w-[140px]"
             >
               <option value="all">Tous les niveaux</option>
               {getUniqueLevels().map((level) => (
@@ -363,7 +363,7 @@ const AdminDashboard = () => {
             <select
               value={classStatusFilter}
               onChange={(e) => setClassStatusFilter(e.target.value)}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-2 transition-shadow min-w-[120px]"
+              className="px-3 py-2 text-sm border-2 border-blue-200 rounded-lg bg-white text-blue-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-400 focus:ring-offset-2 transition-all min-w-[120px]"
             >
               <option value="all">Tous statuts</option>
               <option value="active">Actif</option>

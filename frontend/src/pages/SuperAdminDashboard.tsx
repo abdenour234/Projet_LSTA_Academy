@@ -181,17 +181,17 @@ const SuperAdminDashboard = () => {
   const user = auth.getUser();
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
       {/* Header - Fixed 64px height */}
-      <header className="h-16 bg-white border-b border-slate-200 sticky top-0 z-50">
+      <header className="h-16 bg-gradient-to-r from-blue-50 to-white border-b-2 border-blue-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-8 h-full flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Shield className="h-5 w-5 text-slate-600" />
+            <Shield className="h-5 w-5 text-blue-500" />
             <div>
-              <h1 className="text-base font-semibold text-slate-900">
+              <h1 className="text-base font-semibold text-blue-600">
                 Tableau de Bord SuperAdmin
               </h1>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-blue-400">
                 {user?.firstName} {user?.lastName} • {user?.email}
               </p>
             </div>
@@ -200,7 +200,6 @@ const SuperAdminDashboard = () => {
             <Button
               size="sm"
               onClick={() => navigate('/superadmin/activities/new')}
-              className="bg-slate-900 hover:bg-slate-800 text-white font-medium"
             >
               <Plus className="mr-2 h-4 w-4" />
               Ajouter Activité
@@ -209,7 +208,6 @@ const SuperAdminDashboard = () => {
               variant="ghost"
               size="sm"
               onClick={handleLogout}
-              className="text-slate-700 hover:text-slate-900 hover:bg-slate-100"
             >
               <LogOut className="mr-2 h-4 w-4" />
               Déconnexion
