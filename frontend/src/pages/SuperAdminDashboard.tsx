@@ -220,81 +220,81 @@ const SuperAdminDashboard = () => {
         {/* Global Stats - Asymmetric Layout */}
         <div className="grid grid-cols-12 gap-5 mb-8">
           {/* Primary Metric - Takes more space */}
-          <Card className="col-span-12 md:col-span-6 border-slate-200 shadow-none rounded-lg">
+          <Card className="col-span-12 md:col-span-6 border-2 border-blue-200 shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
             <CardHeader className="p-5 pb-3">
               <div className="flex items-start justify-between">
                 <div>
-                  <CardTitle className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                  <CardTitle className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-2">
                     Total Écoles
                   </CardTitle>
-                  <div className="text-5xl font-bold text-slate-900 tracking-tight">
+                  <div className="text-5xl font-bold text-blue-600 tracking-tight">
                     {stats.global.totalSchools}
                   </div>
                 </div>
-                <School className="h-7 w-7 text-slate-400" />
+                <School className="h-7 w-7 text-blue-400" />
               </div>
             </CardHeader>
             <CardContent className="px-5 pb-5">
               <div className="flex items-center gap-8">
                 <div>
-                  <div className="text-2xl font-bold text-slate-900">
+                  <div className="text-2xl font-bold text-blue-600">
                     {stats.global.totalSchoolStudents.toLocaleString()}
                   </div>
-                  <div className="text-xs text-slate-600 font-medium mt-0.5">Élèves au total</div>
+                  <div className="text-xs text-blue-500 font-medium mt-0.5">Élèves au total</div>
                 </div>
-                <div className="h-12 w-px bg-slate-200" />
+                <div className="h-12 w-px bg-blue-200" />
                 <div>
-                  <div className="text-2xl font-bold text-slate-900">
+                  <div className="text-2xl font-bold text-blue-600">
                     {stats.global.totalUsers.toLocaleString()}
                   </div>
-                  <div className="text-xs text-slate-600 font-medium mt-0.5">Utilisateurs</div>
+                  <div className="text-xs text-blue-500 font-medium mt-0.5">Utilisateurs</div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Secondary Metrics - Compact */}
-          <Card className="col-span-6 md:col-span-3 border-slate-200 shadow-none rounded-lg">
+          <Card className="col-span-6 md:col-span-3 border-2 border-blue-200 shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
             <CardHeader className="p-5 pb-3">
-              <CardTitle className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+              <CardTitle className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
                 Enseignants
               </CardTitle>
             </CardHeader>
             <CardContent className="px-5 pb-5">
               <div className="flex items-baseline justify-between">
-                <div className="text-3xl font-bold text-slate-900 tracking-tight">
+                <div className="text-3xl font-bold text-blue-600 tracking-tight">
                   {stats.global.totalTeachers}
                 </div>
-                <GraduationCap className="h-5 w-5 text-slate-400" />
+                <GraduationCap className="h-5 w-5 text-blue-400" />
               </div>
-              <p className="text-xs text-slate-600 font-medium mt-2">Professeurs actifs</p>
+              <p className="text-xs text-blue-500 font-medium mt-2">Professeurs actifs</p>
             </CardContent>
           </Card>
 
-          <Card className="col-span-6 md:col-span-3 border-slate-200 shadow-none rounded-lg">
+          <Card className="col-span-6 md:col-span-3 border-2 border-blue-200 shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
             <CardHeader className="p-5 pb-3">
-              <CardTitle className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+              <CardTitle className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
                 Administrateurs
               </CardTitle>
             </CardHeader>
             <CardContent className="px-5 pb-5">
               <div className="flex items-baseline justify-between">
-                <div className="text-3xl font-bold text-slate-900 tracking-tight">
+                <div className="text-3xl font-bold text-blue-600 tracking-tight">
                   {stats.global.totalAdmins}
                 </div>
-                <UserCheck className="h-5 w-5 text-slate-400" />
+                <UserCheck className="h-5 w-5 text-blue-400" />
               </div>
-              <p className="text-xs text-slate-600 font-medium mt-2">Admins d'écoles</p>
+              <p className="text-xs text-blue-500 font-medium mt-2">Admins d'écoles</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Distribution Cards - Improved with visual bars */}
         <div className="grid grid-cols-12 gap-5 mb-8">
-          <Card className="col-span-12 md:col-span-5 border-slate-200 shadow-none rounded-lg">
+          <Card className="col-span-12 md:col-span-5 border-2 border-blue-200 shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
             <CardHeader className="p-5 pb-4">
-              <CardTitle className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-slate-600" />
+              <CardTitle className="text-sm font-semibold text-blue-600 flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-blue-500" />
                 Distribution par Région
               </CardTitle>
             </CardHeader>
