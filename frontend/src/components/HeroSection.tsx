@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { BookOpen, Sparkles } from "lucide-react";
 import heroImage from "@/assets/hero-transparent.png";
-import WaveDecoration from "./WaveDecoration";
+import { WebGLShader } from "./WebGLShader";
 
 const HeroSection = () => {
   return (
@@ -62,8 +62,8 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Wave Decoration */}
-      <WaveDecoration />
+      {/* Animated Wave Decoration */}
+      <WebGLShader />
     </section>
   );
 };
