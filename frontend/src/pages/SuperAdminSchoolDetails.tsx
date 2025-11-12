@@ -138,8 +138,8 @@ const SuperAdminSchoolDetails = () => {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center">
-                <School className="h-5 w-5 text-white" />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden">
+                <img src="/lsta-logo.svg" alt="L.S.T.A. ACADEMY" className="h-full w-full object-contain" />
               </div>
               <div>
                 <h1 className="text-base font-semibold text-slate-900">{school.name}</h1>
@@ -182,11 +182,11 @@ const SuperAdminSchoolDetails = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Enseignants</CardTitle>
-              <GraduationCap className="h-4 w-4 text-muted-foreground" />
+              <GraduationCap className="h-4 w-4 text-slate-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.teachers}</div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-slate-600">
                 Professeurs
               </p>
             </CardContent>
@@ -195,7 +195,7 @@ const SuperAdminSchoolDetails = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Élèves Déclarés</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
+              <BookOpen className="h-4 w-4 text-slate-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{school.students}</div>

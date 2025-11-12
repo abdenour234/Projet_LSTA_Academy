@@ -142,8 +142,8 @@ const SuperAdminActivityCreator = () => {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center">
-                <FileText className="h-5 w-5 text-white" />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden">
+                <img src="/lsta-logo.svg" alt="L.S.T.A. ACADEMY" className="h-full w-full object-contain" />
               </div>
               <div>
                 <h1 className="text-base font-semibold text-slate-900">Créer une Activité</h1>
