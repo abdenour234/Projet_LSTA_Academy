@@ -481,28 +481,28 @@ export default function ClassManagement() {
   }
 
   return (
-  <div className="min-h-screen bg-white">
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
     {/* Fixed Header - 64px height, professional style */}
-    <header className="h-16 border-b border-slate-200 bg-white sticky top-0 z-50">
+    <header className="h-16 border-b-2 border-blue-200 bg-gradient-to-r from-blue-50 to-white sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button 
             variant="ghost" 
             size="icon"
             onClick={() => navigate(`/school/${schoolId}/admin/dashboard`)}
-            className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 h-9 w-9"
+            className="h-9 w-9"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-lg font-semibold text-slate-900">Gestion des Classes</h1>
-            <p className="text-sm text-slate-600">Gérez les classes et leurs effectifs</p>
+            <h1 className="text-lg font-semibold text-blue-600">Gestion des Classes</h1>
+            <p className="text-sm text-blue-500">Gérez les classes et leurs effectifs</p>
           </div>
         </div>
         <Button 
           variant="ghost"
           onClick={handleLogout}
-          className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 h-9"
+          className="h-9"
         >
           <LogOut className="h-4 w-4 mr-2" />
           Déconnexion

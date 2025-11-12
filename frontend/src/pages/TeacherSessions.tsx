@@ -170,8 +170,8 @@ export default function TeacherSessions() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="h-16 border-b border-slate-200 bg-white sticky top-0 z-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
+      <header className="h-16 border-b-2 border-blue-200 bg-gradient-to-r from-blue-50 to-white sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-full">
           <div className="flex items-center justify-between h-full">
             <div className="flex items-center gap-4">
@@ -179,19 +179,17 @@ export default function TeacherSessions() {
                 variant="ghost" 
                 size="icon"
                 onClick={() => navigate(`/school/${schoolId}/teacher/dashboard`)}
-                className="text-slate-700 hover:text-slate-900 hover:bg-slate-100"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
-                <h1 className="text-base font-semibold text-slate-900">Suivi des Séances</h1>
-                <p className="text-xs text-slate-600">Enregistrez vos séances et la progression des élèves</p>
+                <h1 className="text-base font-semibold text-blue-600">Suivi des Séances</h1>
+                <p className="text-xs text-blue-500">Enregistrez vos séances et la progression des élèves</p>
               </div>
             </div>
             <Button 
               variant="ghost" 
               onClick={handleLogout}
-              className="text-slate-700 hover:text-slate-900 hover:bg-slate-100"
             >
               <LogOut className="mr-2 h-4 w-4" />
               Déconnexion

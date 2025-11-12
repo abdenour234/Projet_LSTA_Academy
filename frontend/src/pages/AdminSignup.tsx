@@ -130,26 +130,26 @@ const AdminSignup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 py-12 px-4">
       <div className="max-w-2xl mx-auto">
         <Button
           variant="ghost"
           onClick={() => navigate('/')}
-          className="mb-6 text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+          className="mb-6"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Retour à l'annuaire
         </Button>
 
-        <Card className="p-8 border-slate-200 shadow-none rounded-lg">
+        <Card className="p-8 border-2 border-blue-200 shadow-xl rounded-lg">
           <div className="text-center mb-8">
-            <div className="w-20 h-20 rounded-lg flex items-center justify-center mx-auto mb-4 overflow-hidden">
+            <div className="w-20 h-20 rounded-lg flex items-center justify-center mx-auto mb-4 overflow-hidden hover:scale-110 transition-transform duration-300">
               <img src="/lsta-logo.svg" alt="L.S.T.A. ACADEMY" className="h-full w-full object-contain" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">
+            <h1 className="text-2xl font-bold text-blue-600 mb-2">
               Créer un compte administrateur
             </h1>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-blue-500">
               Inscrivez votre école sur L.S.T.A. ACADEMY
             </p>
           </div>
@@ -157,13 +157,13 @@ const AdminSignup = () => {
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Personal Information */}
             <div className="space-y-4">
-              <h2 className="text-base font-semibold flex items-center gap-2 text-slate-900">
-                <User className="h-5 w-5 text-slate-600" />
+              <h2 className="text-base font-semibold flex items-center gap-2 text-blue-600">
+                <User className="h-5 w-5 text-blue-500" />
                 Informations personnelles
               </h2>
               
               <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-xs font-medium text-slate-700">Nom complet *</Label>
+                <Label htmlFor="fullName" className="text-xs font-medium text-blue-600">Nom complet *</Label>
                 <Input
                   id="fullName"
                   type="text"
@@ -171,21 +171,21 @@ const AdminSignup = () => {
                   value={formData.fullName}
                   onChange={(e) => handleChange('fullName', e.target.value)}
                   required
-                  className="border-slate-300 text-sm"
+                  className="border-2 border-blue-200 text-sm focus:border-emerald-400"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs font-medium text-slate-700">Email *</Label>
+                <Label htmlFor="email" className="text-xs font-medium text-blue-600">Email *</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-blue-400" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="admin@ecole.ma"
                     value={formData.email}
                     onChange={(e) => handleChange('email', e.target.value)}
-                    className="pl-10 border-slate-300 text-sm"
+                    className="pl-10 border-2 border-blue-200 text-sm focus:border-emerald-400"
                     required
                   />
                 </div>
@@ -193,9 +193,9 @@ const AdminSignup = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-xs font-medium text-slate-700">Mot de passe *</Label>
+                  <Label htmlFor="password" className="text-xs font-medium text-blue-600">Mot de passe *</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-blue-400" />
                     <Input
                       id="password"
                       type="password"
