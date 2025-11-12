@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Loader2, AlertCircle, Maximize2 } from 'lucide-react';
-import { storageApi } from '@/lib/api';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
@@ -27,25 +26,10 @@ export const VideoViewer = ({ fileUrl, width = '100%', height = '400px', onFulls
 
       console.log('[VIDEO_VIEWER] Loading video from URL:', fileUrl);
 
-      // ✅ UPDATED: Backend now returns pre-signed URLs directly
-      // If URL is already a full HTTP(S) URL (MinIO pre-signed), use it directly
-      if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
-        console.log('[VIDEO_VIEWER] Using direct pre-signed URL');
-        setSignedUrl(fileUrl);
-      } else if (fileUrl.startsWith('activity-files/') || fileUrl.startsWith('/api/activity-files/')) {
-        // Legacy: fetch signed URL for old-style URLs
-        console.log('[VIDEO_VIEWER] Fetching signed URL for legacy path');
-        const fileName = fileUrl.replace(/^(activity-files?\/|\/api\/activity-files\/download\/)/, '');
-        const response = await storageApi.getSignedUrl(fileName);
-        if (response?.url) {
-          setSignedUrl(response.url);
-        } else {
-          setError('Impossible de charger la vidéo');
-        }
-      } else {
-        console.error('[VIDEO_VIEWER] Invalid URL format:', fileUrl);
-        setError('Format d\'URL invalide');
-      }
+      // ✅ FIXED: Use the URL directly - backend streams the file
+      // URLs are now in format: /api/activity-files/download/{id}
+      setSignedUrl(fileUrl);
+      
     } catch (err) {
       console.error('Erreur lors du chargement de la vidéo:', err);
       setError('Une erreur est survenue lors du chargement du fichier');
