@@ -3,8 +3,26 @@ import { BookOpen, Sparkles } from "lucide-react";
 import heroImage from "@/assets/hero-transparent.png";
 import { WebGLShader } from "./WebGLShader";
 import { AuroraBackground } from "./AuroraBackground";
+import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 
 const HeroSection = () => {
+  const [titleNumber, setTitleNumber] = useState(0);
+  const titles = useMemo(
+    () => ["élève", "Parent", "Professeur", "Administration"],
+    []
+  );
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (titleNumber === titles.length - 1) {
+        setTitleNumber(0);
+      } else {
+        setTitleNumber(titleNumber + 1);
+      }
+    }, 2000);
+    return () => clearTimeout(timeoutId);
+  }, [titleNumber, titles]);
   return (
     <AuroraBackground className="relative min-h-screen pt-24 pb-16">
       <section className="relative w-full z-10">
@@ -23,7 +41,29 @@ const HeroSection = () => {
                 Une pédagogie qui
               </span>
               <span className="block text-blue-600">s&apos;adapte à chaque</span>
-              <span className="block text-blue-600">élève</span>
+              <span className="relative flex w-full overflow-hidden text-left pb-4 pt-1">
+                {titles.map((title, index) => (
+                  <motion.span
+                    key={index}
+                    className="absolute text-5xl lg:text-6xl font-bold text-blue-600"
+                    initial={{ opacity: 0, y: -100 }}
+                    transition={{ type: "spring", stiffness: 50 }}
+                    animate={
+                      titleNumber === index
+                        ? {
+                            y: 0,
+                            opacity: 1,
+                          }
+                        : {
+                            y: titleNumber > index ? -150 : 150,
+                            opacity: 0,
+                          }
+                    }
+                  >
+                    {title}
+                  </motion.span>
+                ))}
+              </span>
             </h1>
 
             <p className="text-lg max-w-xl leading-relaxed font-medium text-blue-500">
