@@ -13,7 +13,6 @@ const ClubsSection = () => {
       icon: Code,
       title: "Développement Informatique",
       description: "Le Club Développement Informatique ouvre les portes du monde du code et de la création numérique. Les élèves y apprennent à concevoir des sites web, des applications et des jeux interactifs à l'aide de langages simples et adaptés à leur niveau. À travers des projets concrets, ils développent leur logique, leur autonomie et leur esprit d'innovation, tout en découvrant comment les technologies façonnent le monde moderne.",
-      color: "hsl(var(--edu-blue))",
       emoji: "💻",
       image: clubDev,
     },
@@ -21,7 +20,6 @@ const ClubsSection = () => {
       icon: Bot,
       title: "Robotique & Innovation",
       description: "Le Club Robotique invite les élèves à explorer le monde fascinant des machines intelligentes. En assemblant des robots, en les programmant et en les testant, ils découvrent comment la science, la technologie et la créativité peuvent s'unir pour résoudre des problèmes réels. Le club valorise la coopération, la pensée critique et l'expérimentation, tout en rendant l'apprentissage scientifique amusant et concret.",
-      color: "hsl(var(--edu-mint))",
       emoji: "🤖",
       image: clubRobot,
     },
@@ -29,7 +27,6 @@ const ClubsSection = () => {
       icon: MessageCircle,
       title: "Soft Skills & Leadership",
       description: "Ce club aide les élèves à mieux se connaître, à collaborer efficacement et à communiquer avec confiance. À travers des activités ludiques, des jeux de rôle et des mini-projets collectifs, ils développent des compétences essentielles : travail d'équipe, empathie, gestion du stress, prise de parole et créativité. Le club prépare les élèves à devenir des citoyens responsables, ouverts et capables de s'adapter à toutes les situations.",
-      color: "hsl(var(--edu-yellow))",
       emoji: "🗣️",
       image: clubSoft,
     },
@@ -37,7 +34,6 @@ const ClubsSection = () => {
       icon: BookText,
       title: "Littérature & Théâtre",
       description: "Le Club Littérature et Théâtre célèbre la magie des mots et des émotions. Les élèves y lisent, interprètent et mettent en scène des textes issus de la littérature marocaine et universelle. À travers des ateliers d'écriture, de lecture expressive et de jeu théâtral, ils renforcent leur maîtrise du langage, leur confiance en soi et leur sens artistique. Le club transforme la lecture en une aventure vivante et collective.",
-      color: "hsl(var(--edu-orange))",
       emoji: "📖",
       image: clubLit,
     },
@@ -45,34 +41,25 @@ const ClubsSection = () => {
       icon: Palette,
       title: "Design Graphique & Dessin",
       description: "Ce club est un espace d'expression artistique et numérique. Les élèves y apprennent à créer des affiches, logos, illustrations et bandes dessinées à l'aide d'outils modernes comme Canva. Ils découvrent les bases du design graphique, de la couleur et de la mise en page tout en développant leur sens esthétique et leur imagination. Le club favorise la créativité et l'attention au détail.",
-      color: "hsl(var(--edu-coral))",
       emoji: "🎨",
       image: clubDesign,
     },
   ];
 
   return (
-    <section id="clubs" className="py-16 relative overflow-hidden scroll-mt-20 bg-[hsl(var(--cream))]">
-      {/* Playful background elements - simple colored shapes */}
-      <div className="absolute inset-0 overflow-hidden opacity-30">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-[hsl(var(--edu-blue))] rounded-full animate-float" />
-        <div className="absolute top-1/3 right-20 w-40 h-40 bg-[hsl(var(--edu-yellow))] rounded-full animate-float" style={{ animationDelay: "1s" }} />
-        <div className="absolute bottom-32 left-1/4 w-36 h-36 bg-[hsl(var(--edu-mint))] rounded-full animate-float" style={{ animationDelay: "2s" }} />
-        <div className="absolute bottom-40 right-1/3 w-28 h-28 bg-[hsl(var(--edu-coral))] rounded-full animate-float" style={{ animationDelay: "1.5s" }} />
-      </div>
-
+    <section id="clubs" className="py-16 relative overflow-hidden scroll-mt-20 bg-slate-50">
       <div className="container mx-auto px-6 relative z-10">
         {/* Header */}
         <div className="text-center space-y-4 mb-12 animate-fade-in">
-          <h2 className="text-4xl lg:text-5xl font-bold text-[hsl(var(--edu-blue))] leading-tight">
+          <h2 className="text-4xl lg:text-5xl font-bold text-slate-900 leading-tight">
             Clubs Éducatifs
           </h2>
           <div className="flex items-center justify-center gap-3">
-            <div className="w-12 h-1 bg-[hsl(var(--edu-blue))] rounded-full" />
-            <Sparkles className="w-6 h-6 text-[hsl(var(--edu-yellow))] animate-pulse-glow" />
-            <div className="w-12 h-1 bg-[hsl(var(--edu-mint))] rounded-full" />
+            <div className="w-12 h-1 bg-blue-600 rounded-full" />
+            <Sparkles className="w-6 h-6 text-blue-500" />
+            <div className="w-12 h-1 bg-blue-600 rounded-full" />
           </div>
-          <p className="text-lg lg:text-xl text-foreground font-semibold max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg lg:text-xl text-slate-700 font-semibold max-w-3xl mx-auto leading-relaxed">
             Apprendre, créer et s'amuser ensemble ! 🚀
           </p>
         </div>
@@ -88,16 +75,12 @@ const ClubsSection = () => {
                 style={{ animationDelay: `${index * 0.15}s` }}
               >
                 <Card
-                  className="h-full border-4 hover:border-white bg-white shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all duration-500 hover:scale-105 hover:-translate-y-2 cursor-pointer rounded-[2rem] overflow-hidden relative"
-                  style={{ borderColor: club.color }}
+                  className="h-full border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all duration-500 hover:scale-105 cursor-pointer rounded-lg overflow-hidden relative"
                 >
                   <CardContent className="p-0 space-y-0 relative">
                     {/* Image Container */}
-                    <div className="relative h-40 lg:h-48 overflow-hidden rounded-t-[2rem]">
-                      <div 
-                        className="absolute inset-0 opacity-20"
-                        style={{ backgroundColor: club.color }}
-                      />
+                    <div className="relative h-40 lg:h-48 overflow-hidden rounded-t-lg">
+                      <div className="absolute inset-0 bg-slate-900 opacity-5" />
                       <img 
                         src={club.image} 
                         alt={club.title}
@@ -105,31 +88,21 @@ const ClubsSection = () => {
                       />
                       
                       {/* Floating emoji on image */}
-                      <div className="absolute top-3 right-3 text-4xl animate-bounce-soft drop-shadow-xl">
+                      <div className="absolute top-3 right-3 text-4xl drop-shadow-xl">
                         {club.emoji}
                       </div>
                     </div>
 
                     {/* Content */}
                     <div className="p-6 lg:p-7 space-y-3">
-                      <h3 
-                        className="font-bold text-xl drop-shadow-sm group-hover:scale-105 transition-transform duration-300"
-                        style={{ color: club.color }}
-                      >
+                      <h3 className="font-bold text-xl text-slate-900 group-hover:scale-105 transition-transform duration-300">
                         {club.title}
                       </h3>
                       
                       {/* Description */}
-                      <p className="text-foreground/80 font-medium text-xs lg:text-sm leading-relaxed line-clamp-4">
+                      <p className="text-slate-700 font-medium text-xs lg:text-sm leading-relaxed line-clamp-4">
                         {club.description}
                       </p>
-
-                      {/* Decorative dots */}
-                      <div className="flex justify-center gap-2 pt-1">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: club.color, opacity: 0.7 }} />
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: club.color, opacity: 0.5 }} />
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: club.color, opacity: 0.3 }} />
-                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -142,7 +115,7 @@ const ClubsSection = () => {
         <div className="text-center animate-fade-in" style={{ animationDelay: "0.8s" }}>
           <Button 
             size="lg" 
-            className="gap-3 text-base px-8 py-5 rounded-full bg-[hsl(var(--edu-mint))] hover:bg-[hsl(165_75%_55%)] text-white shadow-[var(--shadow-button)] hover:shadow-[var(--shadow-card-hover)] hover:scale-105 transition-all duration-300 group font-bold"
+            className="gap-3 text-base px-8 py-5 rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group font-medium"
           >
             <Sparkles className="h-5 w-5 group-hover:rotate-180 transition-transform duration-500" />
             Rejoindre un club
