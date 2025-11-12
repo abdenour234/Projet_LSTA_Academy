@@ -1,0 +1,22 @@
+# Test results
+STRESS_TEST_REPORT_*.md
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Docker
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db
