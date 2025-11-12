@@ -13,14 +13,14 @@ const EmptyState = ({
   onReset,
 }: EmptyStateProps) => {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4 text-center animate-fade-in">
-      <div className="mb-4 rounded-full bg-muted p-6">
-        <Search className="h-12 w-12 text-muted-foreground" />
+    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+      <div className="mb-4 rounded-full bg-slate-100 p-6">
+        <Search className="h-12 w-12 text-slate-600" />
       </div>
-      <h3 className="mb-2 text-xl font-semibold text-foreground">{title}</h3>
-      <p className="mb-6 max-w-md text-muted-foreground">{description}</p>
+      <h3 className="mb-2 text-xl font-semibold text-slate-900">{title}</h3>
+      <p className="mb-6 max-w-md text-slate-600">{description}</p>
       {onReset && (
-        <Button onClick={onReset} variant="default">
+        <Button onClick={onReset} variant="default" className="bg-blue-600 hover:bg-blue-700">
           Réinitialiser les filtres
         </Button>
       )}

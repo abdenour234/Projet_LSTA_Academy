@@ -50,9 +50,9 @@ export const NavigationProgressBar: React.FC = () => {
   if (!isNavigating) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-gray-200">
+    <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-slate-200">
       <div
-        className="h-full bg-primary transition-all duration-200 ease-out"
+        className="h-full bg-blue-600 transition-all duration-200 ease-out"
         style={{ 
           width: `${progress}%`,
           opacity: progress === 100 ? 0 : 1,

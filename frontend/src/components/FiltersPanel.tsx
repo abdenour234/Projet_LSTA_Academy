@@ -52,14 +52,14 @@ const FiltersPanel = ({ filters, onFiltersChange }: FiltersPanelProps) => {
   };
 
   return (
-    <Card className="border-border shadow-card">
+    <Card className="border-slate-200 shadow-none bg-white">
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Filter className="h-5 w-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Filtres</h2>
+            <Filter className="h-5 w-5 text-blue-600" />
+            <h2 className="font-semibold text-slate-900">Filtres</h2>
             {activeFiltersCount > 0 && (
-              <Badge variant="secondary" className="ml-2">
+              <Badge variant="secondary" className="ml-2 bg-blue-50 text-blue-600">
                 {activeFiltersCount}
               </Badge>
             )}
@@ -69,7 +69,7 @@ const FiltersPanel = ({ filters, onFiltersChange }: FiltersPanelProps) => {
               variant="ghost"
               size="sm"
               onClick={resetFilters}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-slate-600 hover:text-slate-900"
             >
               <X className="mr-1 h-4 w-4" />
               Réinitialiser
@@ -79,7 +79,7 @@ const FiltersPanel = ({ filters, onFiltersChange }: FiltersPanelProps) => {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Région</label>
+            <label className="text-sm font-medium text-slate-900">Région</label>
             <Select
               value={filters.region}
               onValueChange={(value) => onFiltersChange({ ...filters, region: value })}
@@ -98,7 +98,7 @@ const FiltersPanel = ({ filters, onFiltersChange }: FiltersPanelProps) => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Niveau</label>
+            <label className="text-sm font-medium text-slate-900">Niveau</label>
             <Select
               value={filters.level}
               onValueChange={(value) => onFiltersChange({ ...filters, level: value })}
@@ -117,7 +117,7 @@ const FiltersPanel = ({ filters, onFiltersChange }: FiltersPanelProps) => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Statut</label>
+            <label className="text-sm font-medium text-slate-900">Statut</label>
             <Select
               value={filters.status}
               onValueChange={(value) => onFiltersChange({ ...filters, status: value })}

@@ -38,30 +38,30 @@ const SchoolCard = ({ school }: SchoolCardProps) => {
             />
           )}
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-foreground mb-1 group-hover:text-primary transition-smooth">
+            <h3 className="text-lg font-semibold text-slate-900 mb-1 group-hover:text-blue-600 transition-all duration-200">
               {school.name}
             </h3>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-slate-600">
               <MapPin className="h-4 w-4" />
               <span>{school.city}</span>
-              <span className="text-border">•</span>
+              <span className="text-slate-300">•</span>
               <span>{school.region}</span>
             </div>
           </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-smooth" />
+          <ChevronRight className="h-5 w-5 text-slate-600 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-200" />
         </div>
 
         {/* Badges */}
         <div className="flex flex-wrap gap-2 mb-4">
-          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+          <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-blue-200">
             {school.level}
           </Badge>
           <Badge
             variant="outline"
             className={
               school.status === 'Public'
-                ? 'border-accent/30 text-accent'
-                : 'border-primary/30 text-primary'
+                ? 'border-emerald-300 text-emerald-600'
+                : 'border-blue-300 text-blue-600'
             }
           >
             {school.status}
@@ -69,7 +69,7 @@ const SchoolCard = ({ school }: SchoolCardProps) => {
         </div>
 
         {/* Info */}
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-4 text-sm text-slate-600">
           <div className="flex items-center gap-1">
             <Users className="h-4 w-4" />
             <span>{school.students} élèves</span>
