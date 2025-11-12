@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload, Type, Image, FileText, Video, Save, Eye, Loader2, Files, X, File, ImageIcon } from 'lucide-react';
-import { activityApi } from '@/lib/api';
+import { activityApi, API_CONFIG } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { ActivityElement, ActivityElementType } from '@/types/activity';
 import { uploadActivityFile } from '@/lib/uploadToStorage';
@@ -263,8 +263,7 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
           newElements: newElements
         });
 
-        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-        const response = await fetch(`${API_BASE_URL}/activity-files/upload/${currentActivityId}`, {
+        const response = await fetch(API_CONFIG.getUrl(`/activity-files/upload/${currentActivityId}`), {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
@@ -285,11 +284,10 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
           // Mettre à jour les nouveaux éléments avec les vraies URLs
           if (result.success && result.files) {
             result.files.forEach((uploadedFile: any) => {
-              // ✅ FIXED: Backend now returns full MinIO pre-signed URLs
-              // Use the URL directly if it's already a full URL, otherwise prepend API base
+              // ✅ Use URL directly from backend - it will be properly configured for environment
               const fullUrl = uploadedFile.url.startsWith('http://') || uploadedFile.url.startsWith('https://')
                 ? uploadedFile.url
-                : `http://localhost:8080${uploadedFile.url}`;
+                : API_CONFIG.getUrl(uploadedFile.url);
               const element = newElements.find(el => el.id === uploadedFile.elementId);
               if (element) {
                 element.content = fullUrl;

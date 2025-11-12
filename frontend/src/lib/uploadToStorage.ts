@@ -1,4 +1,4 @@
-import { storageApi, ApiError } from './api';
+import { storageApi, ApiError, API_CONFIG } from './api';
 
 export interface UploadResult {
   success: boolean;
@@ -98,6 +98,5 @@ export const getPublicUrl = async (fileName: string): Promise<string> => {
 export const getPublicUrlSync = (fileName: string): string => {
   const cleanFileName = fileName.replace(/^(activity-files?\/|school-logos?\/)/, '');
   // Return the storage API endpoint - this may need authentication
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-  return `${baseUrl}/storage/file/${encodeURIComponent(cleanFileName)}`;
+  return API_CONFIG.getUrl(`/storage/file/${encodeURIComponent(cleanFileName)}`);
 };

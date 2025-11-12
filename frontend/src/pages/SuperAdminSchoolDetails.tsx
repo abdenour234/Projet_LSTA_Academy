@@ -7,6 +7,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { API_CONFIG } from '@/lib/api';
 
 interface SchoolUser {
   id: string;
@@ -43,8 +44,7 @@ const SuperAdminSchoolDetails = () => {
   const loadSchoolDetails = async () => {
     setLoading(true);
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-      const response = await fetch(`${API_BASE_URL}/superadmin/schools/${schoolId}`, {
+      const response = await fetch(API_CONFIG.getUrl(`/superadmin/schools/${schoolId}`), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },

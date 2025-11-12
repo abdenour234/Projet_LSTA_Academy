@@ -7,7 +7,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { authApi, auth } from '@/lib/api';
+import { authApi, auth, API_CONFIG } from '@/lib/api';
 import { normalizeRole, getRoleDashboardRoute } from '@/lib/roleUtils';
 
 interface GlobalStats {
@@ -91,8 +91,7 @@ const SuperAdminDashboard = () => {
   const loadStats = async () => {
     setLoading(true);
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-      const response = await fetch(`${API_BASE_URL}/superadmin/stats`, {
+      const response = await fetch(API_CONFIG.getUrl('/superadmin/stats'), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },

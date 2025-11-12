@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
+import { API_CONFIG } from '@/lib/api';
 import { ArrowLeft, Plus, Save, School, FileText, GraduationCap } from 'lucide-react';
 
 interface School {
@@ -40,8 +41,7 @@ const SuperAdminActivityCreator = () => {
 
   const loadSchools = async () => {
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-      const response = await fetch(`${API_BASE_URL}/superadmin/schools`, {
+      const response = await fetch(API_CONFIG.getUrl('/superadmin/schools'), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
@@ -91,8 +91,7 @@ const SuperAdminActivityCreator = () => {
     setLoading(true);
 
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-      const response = await fetch(`${API_BASE_URL}/superadmin/activities`, {
+      const response = await fetch(API_CONFIG.getUrl('/superadmin/activities'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

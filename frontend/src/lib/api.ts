@@ -5,7 +5,26 @@
 
 import { toast } from '@/hooks/use-toast';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+/**
+ * Centralized API Configuration
+ * Works in both development (localhost:8080) and production (nginx proxy /api)
+ * Export this to use in all components instead of hardcoding URLs
+ */
+export const API_CONFIG = {
+  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
+  
+  /**
+   * Get the full API URL with path
+   * @param path - API endpoint path (e.g., '/schools', '/teachers')
+   */
+  getUrl: (path: string): string => {
+    const baseUrl = API_CONFIG.BASE_URL;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${baseUrl}${cleanPath}`;
+  }
+};
+
+const API_BASE_URL = API_CONFIG.BASE_URL;
 
 // Token management
 const TOKEN_KEY = 'auth_token';

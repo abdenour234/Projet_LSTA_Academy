@@ -4,7 +4,7 @@ import { ArrowLeft, Trash2, Eye, Shield, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { activityApi, auth } from '@/lib/api';
+import { activityApi, auth, API_CONFIG } from '@/lib/api';
 import LoadingState from '@/components/LoadingState';
 import {
   AlertDialog,
@@ -68,8 +68,7 @@ const SchoolDetails = () => {
     setLoading(true);
     try {
       // Load school info
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-      const schoolResponse = await fetch(`${API_BASE_URL}/schools/${schoolId}`, {
+      const schoolResponse = await fetch(API_CONFIG.getUrl(`/schools/${schoolId}`), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
