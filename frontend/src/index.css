@@ -255,3 +255,133 @@ All colors MUST be HSL.
     font-family: 'Caveat', cursive;
   }
 }
+
+/* Stacked Cards Component Styles */
+.stacked-card {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  height: 550px;
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  border-radius: 24px;
+  border: 2px solid #BFDBFE;
+  box-shadow: 0 20px 60px rgba(59, 130, 246, 0.15);
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stacked-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 30px 80px rgba(59, 130, 246, 0.25);
+}
+
+.card-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 70% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+  z-index: 0;
+}
+
+.card-logo {
+  position: absolute;
+  top: 32px;
+  left: 32px;
+  z-index: 1;
+  font-size: 28px;
+  font-weight: 700;
+  color: #2563EB;
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
+}
+
+.stacked-card:hover .card-logo {
+  opacity: 0.6;
+}
+
+.feature-box {
+  position: absolute;
+  width: calc(100% - 64px);
+  left: 32px;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(239, 246, 255, 0.9) 100%);
+  backdrop-filter: blur(10px);
+  border: 2px solid #BFDBFE;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.12);
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  z-index: 2;
+}
+
+.feature-box.box1 {
+  top: 100px;
+  transform: translateY(0);
+}
+
+.feature-box.box2 {
+  top: 100px;
+  transform: translateY(80px);
+  filter: grayscale(80%);
+  opacity: 0.7;
+}
+
+.feature-box.box3 {
+  top: 100px;
+  transform: translateY(160px);
+  filter: grayscale(100%);
+  opacity: 0.5;
+}
+
+.feature-box.box4 {
+  top: 100px;
+  transform: translateY(240px);
+  filter: grayscale(100%);
+  opacity: 0.3;
+  background: linear-gradient(135deg, rgba(191, 219, 254, 0.3) 0%, rgba(147, 197, 253, 0.2) 100%);
+  pointer-events: none;
+}
+
+.stacked-card:hover .feature-box.box1 {
+  transform: translateY(-30px);
+  box-shadow: 0 16px 48px rgba(59, 130, 246, 0.2);
+}
+
+.stacked-card:hover .feature-box.box2 {
+  transform: translateY(80px);
+  filter: grayscale(0%);
+  opacity: 1;
+}
+
+.stacked-card:hover .feature-box.box3 {
+  transform: translateY(160px);
+  filter: grayscale(50%);
+  opacity: 0.8;
+}
+
+.feature-box:hover {
+  transform: translateY(-40px) !important;
+  filter: grayscale(0%) !important;
+  opacity: 1 !important;
+  box-shadow: 0 20px 60px rgba(59, 130, 246, 0.25) !important;
+  border-color: #10B981;
+  z-index: 10;
+}
+
+.icon-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  transition: all 0.3s ease;
+}
+
+.feature-box:hover .icon-circle {
+  background: linear-gradient(135deg, #2563EB 0%, #10B981 100%) !important;
+  transform: scale(1.1) rotate(5deg);
+}
+
