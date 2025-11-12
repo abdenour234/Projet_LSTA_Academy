@@ -57,8 +57,8 @@ public class ActivityFileController {
                     i
                 );
                 
-                // Return relative URL path for nginx proxy compatibility
-                String fileUrl = "/api/activity-files/download/" + activityFile.getId();
+                // Return relative path WITHOUT /api prefix (frontend API_CONFIG adds it)
+                String fileUrl = "/activity-files/download/" + activityFile.getId();
                 
                 Map<String, Object> fileData = new HashMap<>();
                 fileData.put("id", activityFile.getId().toString());
@@ -100,8 +100,8 @@ public class ActivityFileController {
             List<Map<String, Object>> response = new ArrayList<>();
             
             for (ActivityFile file : files) {
-                // Return relative URL path for nginx proxy compatibility
-                String fileUrl = "/api/activity-files/download/" + file.getId();
+                // Return relative path WITHOUT /api prefix (frontend API_CONFIG adds it)
+                String fileUrl = "/activity-files/download/" + file.getId();
                 
                 Map<String, Object> fileData = new HashMap<>();
                 fileData.put("id", file.getId().toString());
