@@ -24,7 +24,7 @@ const SchoolCard = ({ school }: SchoolCardProps) => {
 
   return (
     <Card
-      className="group relative overflow-hidden border-border bg-card hover:shadow-card-hover transition-smooth cursor-pointer animate-fade-in"
+      className="group relative overflow-hidden border-slate-200 bg-white hover:shadow-lg transition-all duration-200 cursor-pointer"
       onClick={() => navigate(`/school/${school.id}/login`)}
     >
       <div className="p-6">
@@ -34,7 +34,7 @@ const SchoolCard = ({ school }: SchoolCardProps) => {
             <img 
               src={school.logo_url} 
               alt={`Logo ${school.name}`}
-              className="h-16 w-16 object-contain rounded-lg border border-border"
+              className="h-16 w-16 object-contain rounded-lg border border-slate-200"
             />
           )}
           <div className="flex-1">

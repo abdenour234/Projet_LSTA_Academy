@@ -116,10 +116,10 @@ export const AutoActivityViewer = ({ title, description, elements }: AutoActivit
     return (
       <div className="w-full space-y-6">
         {elements.map((element) => (
-          <div key={element.id} className="bg-card rounded-lg border p-6">
+          <div key={element.id} className="bg-white rounded-lg border border-slate-200 p-6">
             {element.type === 'text' && (
               <div className="prose max-w-none">
-                <pre className="whitespace-pre-wrap font-sans">{element.content}</pre>
+                <pre className="whitespace-pre-wrap font-sans text-slate-900">{element.content}</pre>
               </div>
             )}
             
