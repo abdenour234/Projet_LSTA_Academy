@@ -256,6 +256,16 @@ All colors MUST be HSL.
   }
 }
 
+/* Keyframe for shaking animation */
+@keyframes shake {
+  0%, 100% { transform: translateY(var(--base-y, 0)) rotate(0deg); }
+  10% { transform: translateY(var(--base-y, 0)) rotate(-1deg) translateX(-2px); }
+  20% { transform: translateY(var(--base-y, 0)) rotate(1deg) translateX(2px); }
+  30% { transform: translateY(var(--base-y, 0)) rotate(-1deg) translateX(-2px); }
+  40% { transform: translateY(var(--base-y, 0)) rotate(1deg) translateX(2px); }
+  50% { transform: translateY(var(--base-y, 0)) rotate(0deg); }
+}
+
 /* Stacked Cards Component Styles */
 .stacked-card {
   position: relative;
@@ -268,11 +278,6 @@ All colors MUST be HSL.
   box-shadow: 0 20px 60px rgba(59, 130, 246, 0.15);
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.stacked-card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 30px 80px rgba(59, 130, 246, 0.25);
 }
 
 .card-background {
@@ -312,63 +317,83 @@ All colors MUST be HSL.
   border: 2px solid #BFDBFE;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(59, 130, 246, 0.12);
-  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   cursor: pointer;
   z-index: 2;
+  animation: shake 3s ease-in-out infinite;
 }
 
+/* Base positions with shaking animation */
 .feature-box.box1 {
   top: 100px;
-  transform: translateY(0);
+  --base-y: 0px;
+  animation-delay: 0s;
+  filter: grayscale(0%);
+  opacity: 1;
 }
 
 .feature-box.box2 {
   top: 100px;
+  --base-y: 80px;
   transform: translateY(80px);
+  animation-delay: 0.5s;
   filter: grayscale(80%);
   opacity: 0.7;
 }
 
 .feature-box.box3 {
   top: 100px;
+  --base-y: 160px;
   transform: translateY(160px);
+  animation-delay: 1s;
   filter: grayscale(100%);
   opacity: 0.5;
 }
 
 .feature-box.box4 {
   top: 100px;
+  --base-y: 240px;
   transform: translateY(240px);
   filter: grayscale(100%);
   opacity: 0.3;
   background: linear-gradient(135deg, rgba(191, 219, 254, 0.3) 0%, rgba(147, 197, 253, 0.2) 100%);
   pointer-events: none;
+  animation-delay: 1.5s;
 }
 
-.stacked-card:hover .feature-box.box1 {
-  transform: translateY(-30px);
-  box-shadow: 0 16px 48px rgba(59, 130, 246, 0.2);
+/* Expanded state - card grows and comes to front */
+.feature-box.expanded {
+  width: calc(100% - 64px) !important;
+  height: auto !important;
+  min-height: 180px;
+  z-index: 20 !important;
+  filter: grayscale(0%) !important;
+  opacity: 1 !important;
+  transform: translateY(0) scale(1.05) !important;
+  box-shadow: 0 30px 80px rgba(59, 130, 246, 0.35) !important;
+  border-color: #10B981 !important;
+  border-width: 3px;
+  animation: none !important;
 }
 
-.stacked-card:hover .feature-box.box2 {
-  transform: translateY(80px);
-  filter: grayscale(0%);
-  opacity: 1;
+/* Collapsed state - cards hide behind */
+.feature-box.collapsed {
+  z-index: 1 !important;
+  opacity: 0.2 !important;
+  filter: grayscale(100%) !important;
+  transform: translateY(320px) scale(0.9) !important;
+  pointer-events: none;
+  animation: none !important;
 }
 
-.stacked-card:hover .feature-box.box3 {
-  transform: translateY(160px);
-  filter: grayscale(50%);
-  opacity: 0.8;
-}
-
-.feature-box:hover {
-  transform: translateY(-40px) !important;
+/* Hover effect only when no card is expanded */
+.feature-box:not(.expanded):not(.collapsed):hover {
   filter: grayscale(0%) !important;
   opacity: 1 !important;
   box-shadow: 0 20px 60px rgba(59, 130, 246, 0.25) !important;
   border-color: #10B981;
   z-index: 10;
+  animation: none !important;
 }
 
 .icon-circle {
@@ -380,8 +405,10 @@ All colors MUST be HSL.
   transition: all 0.3s ease;
 }
 
+.feature-box.expanded .icon-circle,
 .feature-box:hover .icon-circle {
   background: linear-gradient(135deg, #2563EB 0%, #10B981 100%) !important;
   transform: scale(1.1) rotate(5deg);
 }
+
 
