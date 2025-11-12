@@ -24,7 +24,7 @@ const CircularCards = () => {
       description: "Solutions pédagogiques adaptées",
       subtitle: "À chaque besoin",
       detailedContent: "Nous analysons les besoins spécifiques de chaque élève pour créer un parcours d'apprentissage personnalisé. Notre approche ciblée garantit que chaque étudiant reçoit l'attention et les ressources dont il a besoin pour réussir.",
-      color: "from-blue-600 to-blue-400",
+      color: "bg-blue-600",
     },
     {
       id: 2,
@@ -33,7 +33,7 @@ const CircularCards = () => {
       description: "Communauté éducative connectée",
       subtitle: "Ensemble pour réussir",
       detailedContent: "Notre plateforme favorise la collaboration entre enseignants, élèves et parents. En créant une communauté éducative connectée, nous renforçons l'engagement et le soutien mutuel pour la réussite de tous.",
-      color: "from-emerald-600 to-emerald-400",
+      color: "bg-emerald-600",
     },
     {
       id: 3,
@@ -42,7 +42,7 @@ const CircularCards = () => {
       description: "Technologies au service de l'éducation",
       subtitle: "Apprentissage moderne",
       detailedContent: "Nous intégrons les dernières technologies éducatives pour offrir une expérience d'apprentissage moderne et interactive. L'intelligence artificielle et les outils numériques transforment la façon dont les élèves apprennent et progressent.",
-      color: "from-blue-500 to-emerald-500",
+      color: "bg-blue-500",
     },
   ];
 
@@ -95,7 +95,7 @@ const CircularCards = () => {
                 whileHover={{ scale: 1.05 }}
               >
                 <div
-                  className={`w-40 h-40 rounded-2xl bg-gradient-to-br ${card.color} p-6 shadow-xl flex flex-col items-center justify-center text-center text-white hover:shadow-2xl transition-shadow duration-300`}
+                  className={`w-40 h-40 rounded-2xl ${card.color} p-6 shadow-xl flex flex-col items-center justify-center text-center text-white hover:shadow-2xl transition-shadow duration-300`}
                 >
                   <div className="mb-3">{card.icon}</div>
                   <h4 className="text-lg font-bold mb-1">{card.title}</h4>
@@ -146,7 +146,7 @@ const CircularCards = () => {
                 .map((card) => (
                   <div
                     key={card.id}
-                    className={`bg-gradient-to-br ${card.color} rounded-3xl p-8 md:p-12 text-white shadow-2xl`}
+                    className={`${card.color} rounded-3xl p-8 md:p-12 text-white shadow-2xl`}
                   >
                     {/* Close Button */}
                     <button

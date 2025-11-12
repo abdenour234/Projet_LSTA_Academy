@@ -12,7 +12,7 @@ const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
   const navigate = useNavigate();
   
   return (
-    <header className="sticky top-0 z-50 w-full border-b-2 border-blue-200 bg-gradient-to-r from-blue-50 to-white shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b-2 border-blue-200 bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo */}

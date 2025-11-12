@@ -52,7 +52,7 @@ const FiltersPanel = ({ filters, onFiltersChange }: FiltersPanelProps) => {
   };
 
   return (
-    <Card className="border-2 border-blue-200 shadow-sm bg-gradient-to-br from-white to-blue-50">
+    <Card className="border-2 border-blue-200 shadow-sm bg-white">
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
