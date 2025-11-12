@@ -1,7 +1,46 @@
 import StackedCards from "./StackedCards";
 import logoPedagoria from "@/assets/logo-pedagoria.png";
+import { useState, useEffect } from "react";
 
 const PedagoriaSection = () => {
+  const [displayedText, setDisplayedText] = useState("");
+  const [isVisible, setIsVisible] = useState(false);
+  const fullText = "transforme l'éducation en rendant l'apprentissage plus accessible, interactif et personnalisé pour chaque élève.";
+
+  useEffect(() => {
+    // Observer to detect when the section is visible
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !isVisible) {
+            setIsVisible(true);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    const element = document.getElementById("pedagoria-statement");
+    if (element) {
+      observer.observe(element);
+    }
+
+    return () => {
+      if (element) {
+        observer.unobserve(element);
+      }
+    };
+  }, [isVisible]);
+
+  useEffect(() => {
+    if (isVisible && displayedText.length < fullText.length) {
+      const timeout = setTimeout(() => {
+        setDisplayedText(fullText.slice(0, displayedText.length + 1));
+      }, 30); // Speed of typing (30ms per character)
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isVisible, displayedText, fullText]);
   return (
     <section className="py-20 relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-emerald-50">
       <div className="container mx-auto px-6 relative z-10">
@@ -31,10 +70,15 @@ const PedagoriaSection = () => {
           </div>
 
           {/* Bottom statement */}
-          <div className="text-center animate-fade-in bg-gradient-to-r from-blue-600 to-emerald-500 text-white rounded-2xl p-10 lg:p-12 shadow-xl border-2 border-blue-200" style={{ animationDelay: "0.6s" }}>
+          <div 
+            id="pedagoria-statement"
+            className="text-center animate-fade-in bg-gradient-to-r from-blue-600 to-emerald-500 text-white rounded-2xl p-10 lg:p-12 shadow-xl border-2 border-blue-200" 
+            style={{ animationDelay: "0.6s" }}
+          >
             <p className="text-2xl lg:text-3xl font-bold leading-relaxed">
-              <span className="text-emerald-100">Pedagoria</span> transforme l&apos;éducation en rendant 
-              l&apos;apprentissage plus accessible, interactif et personnalisé pour chaque élève.
+              <span className="text-emerald-100">Pedagoria</span>{" "}
+              {displayedText}
+              <span className="animate-pulse">|</span>
             </p>
           </div>
         </div>
