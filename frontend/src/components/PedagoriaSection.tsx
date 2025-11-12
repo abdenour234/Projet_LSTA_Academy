@@ -1,4 +1,4 @@
-import StackedCards from "./StackedCards";
+import CircularCards from "./CircularCards";
 import logoPedagoria from "@/assets/logo-pedagoria.png";
 import { useState, useEffect } from "react";
 
@@ -64,9 +64,9 @@ const PedagoriaSection = () => {
             </div>
           </div>
 
-          {/* Stacked Cards Display */}
-          <div className="flex justify-center items-center min-h-[600px] mb-16 px-4">
-            <StackedCards />
+          {/* Circular Cards Display */}
+          <div className="flex justify-center items-center min-h-[700px] mb-16 px-4">
+            <CircularCards />
           </div>
 
           {/* Bottom statement */}
