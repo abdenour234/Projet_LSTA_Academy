@@ -60,33 +60,43 @@ const ActivityView = () => {
 
   if (!activity) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Activité non trouvée</h2>
-          <Button onClick={() => navigate(-1)}>Retour</Button>
+          <h2 className="text-lg font-semibold text-slate-900 mb-2">Activité non trouvée</h2>
+          <Button 
+            onClick={() => navigate(-1)}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium h-9"
+          >
+            Retour
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour aux activités
-        </Button>
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="h-16 border-b border-slate-200 bg-white sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 h-full flex items-center">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(-1)}
+            className="text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Retour aux activités
+          </Button>
+        </div>
+      </header>
 
+      <main className="max-w-7xl mx-auto px-6 py-8">
         <AutoActivityViewer
           title={activity.title}
           description={activity.description || ''}
           elements={activity.layout_data?.elements || []}
         />
-      </div>
+      </main>
     </div>
   );
 };
