@@ -14,13 +14,13 @@ const EmptyState = ({
 }: EmptyStateProps) => {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-      <div className="mb-4 rounded-full bg-slate-100 p-6">
-        <Search className="h-12 w-12 text-slate-600" />
+      <div className="mb-4 rounded-full bg-blue-100 p-6 hover:bg-emerald-100 transition-colors duration-300">
+        <Search className="h-12 w-12 text-blue-500" />
       </div>
-      <h3 className="mb-2 text-xl font-semibold text-slate-900">{title}</h3>
-      <p className="mb-6 max-w-md text-slate-600">{description}</p>
+      <h3 className="mb-2 text-xl font-semibold text-blue-600">{title}</h3>
+      <p className="mb-6 max-w-md text-blue-500">{description}</p>
       {onReset && (
-        <Button onClick={onReset} variant="default" className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={onReset} variant="default" className="bg-blue-600 hover:bg-emerald-500">
           Réinitialiser les filtres
         </Button>
       )}

@@ -130,14 +130,14 @@ const handleSubmit = async (e: React.FormEvent) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border-slate-200 shadow-none rounded-lg">
-        <CardHeader className="p-6 space-y-2">
-          <div className="w-16 h-16 rounded-lg flex items-center justify-center mx-auto overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md border-2 border-blue-200 shadow-xl rounded-xl hover:shadow-2xl transition-shadow duration-300">
+        <CardHeader className="p-6 space-y-2 bg-gradient-to-r from-blue-50 to-white rounded-t-xl">
+          <div className="w-16 h-16 rounded-lg flex items-center justify-center mx-auto overflow-hidden hover:scale-110 transition-transform duration-200">
             <img src="/lsta-logo.svg" alt="L.S.T.A. ACADEMY" className="h-full w-full object-contain" />
           </div>
-          <CardTitle className="text-lg font-semibold text-slate-900 text-center">Connexion</CardTitle>
-          <CardDescription className="text-xs text-slate-600 text-center">
+          <CardTitle className="text-lg font-semibold text-blue-600 text-center">Connexion</CardTitle>
+          <CardDescription className="text-xs text-blue-500 text-center">
             Connectez-vous à votre compte L.S.T.A. ACADEMY
           </CardDescription>
         </CardHeader>
