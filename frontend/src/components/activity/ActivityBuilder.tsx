@@ -284,21 +284,8 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
           // Mettre à jour les nouveaux éléments avec les vraies URLs
           if (result.success && result.files) {
             result.files.forEach((uploadedFile: any) => {
-              // ✅ Always use relative URLs through API_CONFIG for proper nginx proxying
-              // Extract just the path if backend returns a full URL
-              let urlPath = uploadedFile.url;
-              if (urlPath.startsWith('http://') || urlPath.startsWith('https://')) {
-                // Extract path from full URL (e.g., http://host/api/path -> /api/path)
-                const url = new URL(urlPath);
-                urlPath = url.pathname;
-              }
-              
-              // Remove /api prefix if present since API_CONFIG.getUrl() will add it
-              if (urlPath.startsWith('/api/')) {
-                urlPath = urlPath.substring(4);
-              }
-              
-              const fullUrl = API_CONFIG.getUrl(urlPath);
+              // Backend now returns relative paths, use directly with API_CONFIG
+              const fullUrl = API_CONFIG.getUrl(uploadedFile.url);
               const element = newElements.find(el => el.id === uploadedFile.elementId);
               if (element) {
                 element.content = fullUrl;

@@ -4,7 +4,6 @@ import com.schoolmanagement.entity.ActivityFile;
 import com.schoolmanagement.service.ActivityFileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -28,9 +27,6 @@ import java.util.*;
 public class ActivityFileController {
 
     private final ActivityFileService activityFileService;
-    
-    @Value("${app.base-url:http://localhost:8080}")
-    private String appBaseUrl;
 
     /**
      * Upload multiple files for an activity.
@@ -61,8 +57,8 @@ public class ActivityFileController {
                     i
                 );
                 
-                // Return full URL with app base URL for frontend compatibility
-                String fileUrl = appBaseUrl + "/api/activity-files/download/" + activityFile.getId();
+                // Return relative URL path for nginx proxy compatibility
+                String fileUrl = "/api/activity-files/download/" + activityFile.getId();
                 
                 Map<String, Object> fileData = new HashMap<>();
                 fileData.put("id", activityFile.getId().toString());
@@ -104,8 +100,8 @@ public class ActivityFileController {
             List<Map<String, Object>> response = new ArrayList<>();
             
             for (ActivityFile file : files) {
-                // Return full URL with app base URL for frontend compatibility
-                String fileUrl = appBaseUrl + "/api/activity-files/download/" + file.getId();
+                // Return relative URL path for nginx proxy compatibility
+                String fileUrl = "/api/activity-files/download/" + file.getId();
                 
                 Map<String, Object> fileData = new HashMap<>();
                 fileData.put("id", file.getId().toString());
