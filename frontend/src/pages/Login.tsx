@@ -133,12 +133,12 @@ const handleSubmit = async (e: React.FormEvent) => {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md border-slate-200 shadow-none rounded-lg">
         <CardHeader className="p-6 space-y-2">
-          <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center mx-auto">
-            <LogIn className="h-6 w-6 text-white" />
+          <div className="w-16 h-16 rounded-lg flex items-center justify-center mx-auto overflow-hidden">
+            <img src="/lsta-logo.svg" alt="L.S.T.A. ACADEMY" className="h-full w-full object-contain" />
           </div>
           <CardTitle className="text-lg font-semibold text-slate-900 text-center">Connexion</CardTitle>
           <CardDescription className="text-xs text-slate-600 text-center">
-            Connectez-vous à votre compte pour accéder à la plateforme
+            Connectez-vous à votre compte L.S.T.A. ACADEMY
           </CardDescription>
         </CardHeader>
         <CardContent className="px-6 pb-6">

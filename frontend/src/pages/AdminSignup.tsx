@@ -143,14 +143,14 @@ const AdminSignup = () => {
 
         <Card className="p-8 border-slate-200 shadow-none rounded-lg">
           <div className="text-center mb-8">
-            <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <School className="h-6 w-6 text-white" />
+            <div className="w-20 h-20 rounded-lg flex items-center justify-center mx-auto mb-4 overflow-hidden">
+              <img src="/lsta-logo.svg" alt="L.S.T.A. ACADEMY" className="h-full w-full object-contain" />
             </div>
             <h1 className="text-2xl font-bold text-slate-900 mb-2">
               Créer un compte administrateur
             </h1>
             <p className="text-sm text-slate-600">
-              Inscrivez votre école et créez votre compte administrateur
+              Inscrivez votre école sur L.S.T.A. ACADEMY
             </p>
           </div>
 

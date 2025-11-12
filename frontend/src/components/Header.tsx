@@ -17,12 +17,12 @@ const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-900 text-white">
-              <span className="text-lg font-bold">ÉP</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg overflow-hidden">
+              <img src="/lsta-logo.svg" alt="L.S.T.A. ACADEMY" className="h-full w-full object-contain" />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-lg font-semibold text-slate-900">Plateforme Éducative</h1>
-              <p className="text-xs text-slate-600">Annuaire des écoles</p>
+              <h1 className="text-lg font-semibold text-slate-900">L.S.T.A. ACADEMY</h1>
+              <p className="text-xs text-slate-600">Plateforme Éducative</p>
             </div>
           </div>
 
