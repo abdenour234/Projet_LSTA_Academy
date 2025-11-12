@@ -24,8 +24,8 @@ const HeroSection = () => {
     return () => clearTimeout(timeoutId);
   }, [titleNumber, titles]);
   return (
-    <AuroraBackground className="relative min-h-screen pt-24 pb-16">
-      <section className="relative w-full z-10">
+    <AuroraBackground className="relative min-h-screen pt-24 pb-32">
+      <section className="relative w-full z-10 pb-20">
         {/* Decorative circles - subtle blue shapes */}
         <div className="absolute top-32 left-10 w-40 h-40 rounded-full bg-blue-600 opacity-10 animate-float" />
         <div className="absolute top-48 right-20 w-64 h-64 rounded-full bg-blue-500 opacity-8 animate-float" style={{ animationDelay: "1s" }} />
@@ -35,13 +35,13 @@ const HeroSection = () => {
       <div className="container mx-auto px-6 relative z-10">
         <div className="grid lg:grid-cols-2 gap-8 items-center">
           {/* Left Content */}
-          <div className="space-y-6 animate-fade-in">
-            <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
-              <span className="handwriting text-7xl lg:text-8xl mb-2 text-blue-600">
+          <div className="space-y-8 animate-fade-in">
+            <h1 className="text-5xl lg:text-6xl font-bold leading-relaxed">
+              <span className="handwriting text-7xl lg:text-8xl mb-4 block leading-tight text-blue-600">
                 Une pédagogie qui
               </span>
-              <span className="block text-blue-600">s&apos;adapte à chaque</span>
-              <span className="relative flex w-full overflow-hidden text-left pb-4 pt-1">
+              <span className="block text-blue-600 mt-6 mb-4 leading-relaxed">s&apos;adapte à chaque</span>
+              <span className="relative flex w-full overflow-hidden text-left pb-8 pt-2 min-h-[80px]">
                 {titles.map((title, index) => (
                   <motion.span
                     key={index}
@@ -66,7 +66,7 @@ const HeroSection = () => {
               </span>
             </h1>
 
-            <p className="text-lg max-w-xl leading-relaxed font-medium text-blue-500">
+            <p className="text-lg max-w-xl leading-loose font-medium text-blue-500 mt-6">
               Diagnostic personnalisé, coaching enseignant, suivi familial et
               activités interactives.
             </p>
