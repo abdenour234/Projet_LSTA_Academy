@@ -1,5 +1,4 @@
-import CircularCards from "./CircularCards";
-import logoPedagoria from "@/assets/logo-pedagoria.png";
+import { PedagogiaCarousel } from "./PedagogiaCarousel";
 import { useState, useEffect } from "react";
 
 const PedagoriaSection = () => {
@@ -64,9 +63,9 @@ const PedagoriaSection = () => {
             </div>
           </div>
 
-          {/* Circular Cards Display */}
-          <div className="flex justify-center items-center min-h-[700px] mb-16 px-4">
-            <CircularCards />
+          {/* Pedagoria Carousel */}
+          <div className="mb-16">
+            <PedagogiaCarousel />
           </div>
 
           {/* Bottom statement */}
