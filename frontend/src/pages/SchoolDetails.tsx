@@ -140,32 +140,31 @@ const SchoolDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b sticky top-0 z-10 shadow-sm">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-white">
+      {/* Header - Fixed 64px */}
+      <header className="h-16 border-b border-slate-200 bg-white sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 h-full">
+          <div className="flex items-center justify-between h-full">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/superadmin/dashboard')}
+                className="text-slate-700 hover:text-slate-900 hover:bg-slate-100"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Retour
               </Button>
-              <div>
-                <h1 className="text-2xl font-bold flex items-center gap-2">
-                  <Shield className="h-6 w-6 text-primary" />
-                  {school.name}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  {school.city}, {school.region} • {school.level} • {school.status}
-                </p>
+              <div className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-slate-600" />
+                <h1 className="text-base font-semibold text-slate-900">{school.name}</h1>
               </div>
+              <p className="text-xs text-slate-600">
+                {school.city}, {school.region} • {school.level} • {school.status}
+              </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs text-slate-600">
                 {activities.length} activités
               </span>
             </div>

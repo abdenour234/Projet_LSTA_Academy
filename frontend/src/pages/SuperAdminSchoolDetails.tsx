@@ -97,10 +97,10 @@ const SuperAdminSchoolDetails = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <School className="h-12 w-12 text-primary mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground">Chargement des détails...</p>
+          <School className="h-12 w-12 text-slate-400 mx-auto mb-4 animate-pulse" />
+          <p className="text-slate-600">Chargement des détails...</p>
         </div>
       </div>
     );
@@ -108,9 +108,9 @@ const SuperAdminSchoolDetails = () => {
 
   if (!school) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center">
-        <Card className="p-6">
-          <p className="text-muted-foreground">École introuvable</p>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Card className="p-6 border-slate-200 shadow-none rounded-lg">
+          <p className="text-slate-600">École introuvable</p>
         </Card>
       </div>
     );
@@ -124,25 +124,26 @@ const SuperAdminSchoolDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-      {/* Header */}
-      <header className="bg-card/80 backdrop-blur-sm border-b sticky top-0 z-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-white">
+      {/* Header - Fixed 64px */}
+      <header className="h-16 border-b border-slate-200 bg-white sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 h-full">
+          <div className="flex items-center gap-4 h-full">
             <Button 
               variant="ghost" 
               size="icon"
               onClick={() => navigate('/superadmin/dashboard')}
+              className="text-slate-700 hover:text-slate-900 hover:bg-slate-100"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/70 rounded-full flex items-center justify-center">
-                <School className="h-6 w-6 text-primary-foreground" />
+              <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center">
+                <School className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">{school.name}</h1>
-                <p className="text-sm text-muted-foreground">{school.city}, {school.region}</p>
+                <h1 className="text-base font-semibold text-slate-900">{school.name}</h1>
+                <p className="text-xs text-slate-600">{school.city}, {school.region}</p>
               </div>
             </div>
           </div>

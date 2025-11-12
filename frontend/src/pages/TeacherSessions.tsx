@@ -245,29 +245,29 @@ export default function TeacherSessions() {
                     onChange={(e) =>
                       setFormData({ ...formData, session_date: e.target.value })
                     }
-                    className="bg-card"
+                    className="border-slate-300"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <Label className="text-lg mb-3 block">✅ Activités réalisées (cochez)</Label>
-                <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto p-4 bg-muted/30 rounded-lg">
+                <Label className="text-base mb-3 block font-medium text-slate-900">✅ Activités réalisées (cochez)</Label>
+                <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto p-4 bg-slate-50 rounded-lg">
                   {activities.map((activity) => (
                     <div
                       key={activity.id}
-                      className={`flex items-center space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-smooth ${
+                      className={`flex items-center space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                         selectedActivities.has(activity.title)
-                          ? "border-primary bg-primary/10"
-                          : "border-border bg-card hover:border-primary/50"
+                          ? "border-blue-600 bg-blue-50"
+                          : "border-slate-200 bg-white hover:border-blue-300"
                       }`}
                       onClick={() => toggleActivity(activity.title)}
                     >
                       <div
                         className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
                           selectedActivities.has(activity.title)
-                            ? "bg-primary border-primary"
+                            ? "bg-blue-600 border-blue-600"
                             : "border-border"
                         }`}
                       >
@@ -336,7 +336,7 @@ export default function TeacherSessions() {
                   }
                   placeholder="Observations, difficultés rencontrées, points à améliorer..."
                   rows={3}
-                  className="bg-card"
+                  className="border-slate-300"
                 />
               </div>
 
