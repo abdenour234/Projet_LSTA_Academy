@@ -130,21 +130,21 @@ const handleSubmit = async (e: React.FormEvent) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-3">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/70 rounded-full flex items-center justify-center mx-auto">
-            <LogIn className="h-8 w-8 text-primary-foreground" />
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md border-slate-200 shadow-none rounded-lg">
+        <CardHeader className="p-6 space-y-2">
+          <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center mx-auto">
+            <LogIn className="h-6 w-6 text-white" />
           </div>
-          <CardTitle className="text-2xl text-center">Connexion</CardTitle>
-          <CardDescription className="text-center">
+          <CardTitle className="text-lg font-semibold text-slate-900 text-center">Connexion</CardTitle>
+          <CardDescription className="text-xs text-slate-600 text-center">
             Connectez-vous à votre compte pour accéder à la plateforme
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 pb-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-xs font-medium text-slate-700">Email</Label>
               <Input
                 id="email"
                 name="email"
@@ -154,11 +154,12 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleChange}
                 required
                 disabled={loading}
+                className="border-slate-300 text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
+              <Label htmlFor="password" className="text-xs font-medium text-slate-700">Mot de passe</Label>
               <Input
                 id="password"
                 name="password"
@@ -168,10 +169,15 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleChange}
                 required
                 disabled={loading}
+                className="border-slate-300 text-sm"
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button 
+              type="submit" 
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium h-9" 
+              disabled={loading}
+            >
               {loading ? (
                 'Connexion en cours...'
               ) : (
@@ -184,25 +190,25 @@ const handleSubmit = async (e: React.FormEvent) => {
           </form>
 
           {/* Roles Info */}
-          <div className="mt-6 pt-6 border-t">
-            <p className="text-sm text-muted-foreground text-center mb-3">
+          <div className="mt-5 pt-5 border-t border-slate-200">
+            <p className="text-xs text-slate-600 text-center mb-3">
               Accès selon votre rôle:
             </p>
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Shield className="h-3 w-3" />
+              <div className="flex items-center gap-2 text-slate-600">
+                <Shield className="h-3 w-3 text-slate-400" />
                 <span>SuperAdmin</span>
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <UserCheck className="h-3 w-3" />
+              <div className="flex items-center gap-2 text-slate-600">
+                <UserCheck className="h-3 w-3 text-slate-400" />
                 <span>Admin École</span>
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <GraduationCap className="h-3 w-3" />
+              <div className="flex items-center gap-2 text-slate-600">
+                <GraduationCap className="h-3 w-3 text-slate-400" />
                 <span>Enseignant</span>
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <BookOpen className="h-3 w-3" />
+              <div className="flex items-center gap-2 text-slate-600">
+                <BookOpen className="h-3 w-3 text-slate-400" />
                 <span>Étudiant</span>
               </div>
             </div>
@@ -210,11 +216,11 @@ const handleSubmit = async (e: React.FormEvent) => {
 
           {/* Signup Link */}
           <div className="mt-4 text-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-slate-600">
               Pas encore de compte?{' '}
               <Button
                 variant="link"
-                className="p-0 h-auto"
+                className="p-0 h-auto text-xs text-blue-600 hover:text-blue-700"
                 onClick={() => navigate('/signup')}
               >
                 Créer un compte admin

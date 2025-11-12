@@ -135,24 +135,36 @@ const TeacherDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-      <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-white">
+      {/* Header - Fixed 64px height */}
+      <header className="h-16 border-b border-slate-200 bg-white sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 h-full">
+          <div className="flex items-center justify-between h-full">
             <div className="flex items-center gap-4">
               {schoolLogo && (
                 <img 
                   src={schoolLogo} 
-                  alt="Logo de l'école" 
-                  className="h-12 w-12 object-contain rounded-lg"
+                  alt="Logo" 
+                  className="h-9 w-9 object-contain"
                 />
               )}
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">{schoolName}</h1>
-                <p className="text-muted-foreground">Bienvenue, {userName}</p>
+              <div className="border-l border-slate-200 pl-4">
+                <h1 className="text-base font-semibold text-slate-900 tracking-tight leading-tight">{schoolName}</h1>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs text-slate-600">{userName}</span>
+                  <span className="text-xs text-slate-400">·</span>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-300">
+                    Enseignant
+                  </span>
+                </div>
               </div>
             </div>
-            <Button variant="outline" onClick={handleLogout}>
+            <Button 
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+            >
               <LogOut className="mr-2 h-4 w-4" />
               Déconnexion
             </Button>
@@ -160,74 +172,81 @@ const TeacherDashboard = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-5">
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <Card 
-            className="p-6 cursor-pointer hover:shadow-lg transition-smooth"
+            className="p-5 cursor-pointer hover:bg-slate-50 transition-colors border-slate-200 shadow-none rounded-lg"
             onClick={() => navigate(`/school/${id}/teacher/sessions`)}
           >
-            <Calendar className="h-8 w-8 text-primary mb-3" />
-            <h3 className="font-semibold">Mes Séances</h3>
-            <p className="text-sm text-muted-foreground">Enregistrer une séance</p>
+            <Calendar className="h-5 w-5 text-slate-600 mb-2" />
+            <h3 className="font-semibold text-slate-900 text-sm">Mes Séances</h3>
+            <p className="text-xs text-slate-600">Enregistrer une séance</p>
           </Card>
           <Card 
-            className="p-6 cursor-pointer hover:shadow-lg transition-smooth"
+            className="p-5 cursor-pointer hover:bg-slate-50 transition-colors border-slate-200 shadow-none rounded-lg"
             onClick={handleCreateNewDiagnostic}
           >
-            <ClipboardList className="h-8 w-8 text-primary mb-3" />
-            <h3 className="font-semibold">Diagnostic</h3>
-            <p className="text-sm text-muted-foreground">Nouveau diagnostic</p>
+            <ClipboardList className="h-5 w-5 text-slate-600 mb-2" />
+            <h3 className="font-semibold text-slate-900 text-sm">Diagnostic</h3>
+            <p className="text-xs text-slate-600">Nouveau diagnostic</p>
           </Card>
           <Card 
-            className="p-6 cursor-pointer hover:shadow-lg transition-smooth"
+            className="p-5 cursor-pointer hover:bg-slate-50 transition-colors border-slate-200 shadow-none rounded-lg"
             onClick={() => navigate(`/school/${id}/messages`)}
           >
-            <MessageSquare className="h-8 w-8 text-primary mb-3" />
-            <h3 className="font-semibold">Messagerie</h3>
-            <p className="text-sm text-muted-foreground">Mes messages</p>
+            <MessageSquare className="h-5 w-5 text-slate-600 mb-2" />
+            <h3 className="font-semibold text-slate-900 text-sm">Messagerie</h3>
+            <p className="text-xs text-slate-600">Mes messages</p>
           </Card>
         </div>
+
         {/* Diagnostics Section */}
-        <Card className="p-6 shadow-card">
-          <div className="flex items-center justify-between mb-6">
+        <Card className="p-5 border-slate-200 shadow-none rounded-lg">
+          <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-lg bg-primary/10">
-                <ClipboardList className="h-6 w-6 text-primary" />
-              </div>
+              <ClipboardList className="h-5 w-5 text-slate-600" />
               <div>
-                <h2 className="text-xl font-bold text-foreground">Diagnostics pédagogiques</h2>
-                <p className="text-sm text-muted-foreground">Réalisez des diagnostics selon les grilles officielles</p>
+                <h2 className="text-sm font-semibold text-slate-900">Diagnostics pédagogiques</h2>
+                <p className="text-xs text-slate-600">Réalisez des diagnostics selon les grilles officielles</p>
               </div>
             </div>
-            <Button onClick={handleCreateNewDiagnostic}>
+            <Button 
+              onClick={handleCreateNewDiagnostic}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium h-9"
+            >
               <Plus className="mr-2 h-4 w-4" />
               Nouveau diagnostic
             </Button>
           </div>
 
           {diagnosticSessions.length > 0 ? (
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               {diagnosticSessions.map((session) => {
                 const gridInfo = DIAGNOSTIC_GRIDS.find(g => g.type === session.diagnostic_type);
                 return (
-                  <Card key={session.id} className="p-4 border-border hover:shadow-card-hover transition-smooth">
+                  <Card key={session.id} className="p-4 border-slate-200 hover:bg-slate-50 transition-colors shadow-none rounded-lg">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <BarChart3 className="h-4 w-4 text-primary" />
-                          <h4 className="font-semibold text-foreground">{gridInfo?.title || session.diagnostic_type}</h4>
+                          <BarChart3 className="h-4 w-4 text-slate-600" />
+                          <h4 className="font-semibold text-slate-900 text-sm">{gridInfo?.title || session.diagnostic_type}</h4>
                         </div>
-                        <div className="flex gap-4 text-sm text-muted-foreground">
-                          <span>Niveau: <strong className="text-foreground">{session.grade_level}</strong></span>
+                        <div className="flex gap-4 text-xs text-slate-600">
+                          <span>Niveau: <strong className="text-slate-900">{session.grade_level}</strong></span>
                           {session.class_name && (
-                            <span>Classe: <strong className="text-foreground">{session.class_name}</strong></span>
+                            <span>Classe: <strong className="text-slate-900">{session.class_name}</strong></span>
                           )}
-                          <span>Élèves: <strong className="text-foreground">{session.total_students}</strong></span>
-                          <span>Date: <strong className="text-foreground">{new Date(session.session_date).toLocaleDateString('fr-FR')}</strong></span>
+                          <span>Élèves: <strong className="text-slate-900">{session.total_students}</strong></span>
+                          <span>Date: <strong className="text-slate-900">{new Date(session.session_date).toLocaleDateString('fr-FR')}</strong></span>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => handleViewResults(session.id)}>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleViewResults(session.id)}
+                        className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                      >
                         <Eye className="mr-2 h-4 w-4" />
                         Voir résultats
                       </Button>
@@ -238,11 +257,15 @@ const TeacherDashboard = () => {
             </div>
           ) : (
             <div className="text-center py-8">
-              <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground mb-4">
+              <ClipboardList className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+              <p className="text-slate-600 text-sm mb-4">
                 Aucun diagnostic réalisé pour le moment
               </p>
-              <Button onClick={handleCreateNewDiagnostic} variant="outline">
+              <Button 
+                onClick={handleCreateNewDiagnostic} 
+                variant="outline"
+                className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Créer votre premier diagnostic
               </Button>
@@ -251,54 +274,57 @@ const TeacherDashboard = () => {
         </Card>
 
         {/* Activities Section */}
-        <Card className="p-6 shadow-card">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 rounded-lg bg-accent/10">
-              <BookOpen className="h-6 w-6 text-accent" />
-            </div>
+        <Card className="p-5 border-slate-200 shadow-none rounded-lg">
+          <div className="flex items-center gap-3 mb-5">
+            <BookOpen className="h-5 w-5 text-slate-600" />
             <div>
-              <h2 className="text-xl font-bold text-foreground">Activités pédagogiques</h2>
-              <p className="text-sm text-muted-foreground">Activités disponibles après réalisation d'un diagnostic</p>
+              <h2 className="text-sm font-semibold text-slate-900">Activités pédagogiques</h2>
+              <p className="text-xs text-slate-600">Activités disponibles après réalisation d'un diagnostic</p>
             </div>
           </div>
 
           {!hasDiagnostic ? (
-            <div className="text-center py-8 bg-muted/30 rounded-lg">
-              <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-foreground font-medium mb-2">
+            <div className="text-center py-8 bg-slate-50 rounded-lg">
+              <ClipboardList className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+              <p className="text-slate-900 font-medium text-sm mb-2">
                 Diagnostic requis
               </p>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-slate-600 text-xs mb-4">
                 Veuillez d'abord réaliser un diagnostic avant d'accéder aux activités correspondantes.
               </p>
-              <Button onClick={handleCreateNewDiagnostic} variant="outline">
+              <Button 
+                onClick={handleCreateNewDiagnostic} 
+                variant="outline"
+                className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Réaliser un diagnostic
               </Button>
             </div>
           ) : activities.length > 0 ? (
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               {activities.map((activity) => (
-                <Card key={activity.id} className="p-4 border-border hover:shadow-card-hover transition-smooth">
+                <Card key={activity.id} className="p-4 border-slate-200 hover:bg-slate-50 transition-colors shadow-none rounded-lg">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                          activity.type === 'Orale' ? 'bg-orale/10 text-orale' :
-                          activity.type === 'Lecture' ? 'bg-lecture/10 text-lecture' :
-                          'bg-ecriture/10 text-ecriture'
+                          activity.type === 'Orale' ? 'bg-blue-100 text-blue-700' :
+                          activity.type === 'Lecture' ? 'bg-emerald-100 text-emerald-700' :
+                          'bg-amber-100 text-amber-700'
                         }`}>
                           {activity.type}
                         </span>
-                        <span className="text-xs text-muted-foreground">{activity.level}</span>
+                        <span className="text-xs text-slate-600">{activity.level}</span>
                       </div>
-                      <h4 className="font-semibold text-foreground mb-1">{activity.title}</h4>
-                      <p className="text-sm text-muted-foreground">{activity.description}</p>
+                      <h4 className="font-semibold text-slate-900 text-sm mb-1">{activity.title}</h4>
+                      <p className="text-xs text-slate-600">{activity.description}</p>
                     </div>
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => navigate(`/activity/${activity.id}`)}
+                      className="border-slate-300 text-slate-700 hover:bg-slate-50"
                     >
                       Démarrer
                     </Button>
@@ -308,7 +334,7 @@ const TeacherDashboard = () => {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">
+              <p className="text-slate-600 text-sm">
                 Aucune activité disponible pour le moment — veuillez contacter l'administrateur.
               </p>
             </div>
