@@ -88,10 +88,10 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
  */
 export const PageLoadingSpinner: React.FC<{ text?: string }> = ({ text = 'Chargement...' }) => {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex items-center justify-center min-h-screen bg-slate-50">
       <div className="text-center space-y-4">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
-        <p className="text-sm text-muted-foreground font-medium animate-pulse">
+        <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto" />
+        <p className="text-sm text-slate-600 font-medium animate-pulse">
           {text}
         </p>
       </div>
