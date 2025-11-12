@@ -170,24 +170,29 @@ export default function TeacherSessions() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-      <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-white">
+      <header className="h-16 border-b border-slate-200 bg-white sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 h-full">
+          <div className="flex items-center justify-between h-full">
             <div className="flex items-center gap-4">
               <Button 
                 variant="ghost" 
                 size="icon"
                 onClick={() => navigate(`/school/${schoolId}/teacher/dashboard`)}
+                className="text-slate-700 hover:text-slate-900 hover:bg-slate-100"
               >
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
-                <h1 className="text-2xl font-bold">Suivi des Séances</h1>
-                <p className="text-sm text-muted-foreground">Enregistrez vos séances et la progression des élèves</p>
+                <h1 className="text-base font-semibold text-slate-900">Suivi des Séances</h1>
+                <p className="text-xs text-slate-600">Enregistrez vos séances et la progression des élèves</p>
               </div>
             </div>
-            <Button variant="outline" onClick={handleLogout}>
+            <Button 
+              variant="ghost" 
+              onClick={handleLogout}
+              className="text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+            >
               <LogOut className="mr-2 h-4 w-4" />
               Déconnexion
             </Button>
@@ -195,30 +200,30 @@ export default function TeacherSessions() {
         </div>
       </header>
 
-      <main className="container mx-auto p-8">
-        <div className="flex justify-end items-center mb-8">
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <div className="flex justify-end items-center mb-6">
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium h-9">
               <Plus className="w-4 h-4 mr-2" />
               Nouvelle Séance
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto border-slate-200 rounded-lg">
             <DialogHeader>
-              <DialogTitle className="text-2xl">📝 Enregistrement rapide de séance</DialogTitle>
+              <DialogTitle className="text-lg font-semibold text-slate-900">📝 Enregistrement rapide de séance</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="class">Classe *</Label>
+                  <Label htmlFor="class" className="text-xs font-medium text-slate-700">Classe *</Label>
                   <Select
                     value={formData.class_id}
                     onValueChange={(value) =>
                       setFormData({ ...formData, class_id: value })
                     }
                   >
-                    <SelectTrigger className="bg-card">
+                    <SelectTrigger className="border-slate-300">
                       <SelectValue placeholder="Sélectionner une classe" />
                     </SelectTrigger>
                     <SelectContent>
@@ -231,11 +236,12 @@ export default function TeacherSessions() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="date">Date (auto-détectée)</Label>
+                  <Label htmlFor="date" className="text-xs font-medium text-slate-700">Date (auto-détectée)</Label>
                   <Input
                     id="date"
                     type="date"
                     value={formData.session_date}
+                    className="border-slate-300 text-sm"
                     onChange={(e) =>
                       setFormData({ ...formData, session_date: e.target.value })
                     }
