@@ -199,7 +199,7 @@ const SuperAdminDashboard = () => {
           <div className="flex items-center gap-3">
             <Button
               size="sm"
-              onClick={() => navigate('/superadmin/activities/create')}
+              onClick={() => navigate('/superadmin/activities/new')}
               className="bg-slate-900 hover:bg-slate-800 text-white font-medium"
             >
               <Plus className="mr-2 h-4 w-4" />
