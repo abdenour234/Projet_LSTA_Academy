@@ -26,7 +26,7 @@ const PedagoriaSection = () => {
           </div>
 
           {/* Stacked Cards Display */}
-          <div className="flex justify-center items-center min-h-[400px] mb-16">
+          <div className="flex justify-center items-center min-h-[500px] mb-16 px-4">
             <DisplayCards />
           </div>
 

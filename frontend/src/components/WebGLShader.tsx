@@ -41,19 +41,33 @@ export function WebGLShader() {
       uniform float distortion;
 
       void main() {
-        vec2 p = (gl_FragCoord.xy * 2.0 - resolution) / min(resolution.x, resolution.y);
+        vec2 uv = gl_FragCoord.xy / resolution.xy;
         
-        float d = length(p) * distortion;
+        // Create realistic wave motion
+        float wave1 = sin(uv.x * 3.0 + time * 0.5) * 0.1;
+        float wave2 = sin(uv.x * 5.0 - time * 0.3) * 0.05;
+        float wave3 = sin(uv.x * 7.0 + time * 0.7) * 0.03;
         
-        float rx = p.x * (1.0 + d);
-        float gx = p.x;
-        float bx = p.x * (1.0 - d);
-
-        float r = 0.05 / abs(p.y + sin((rx + time) * xScale) * yScale);
-        float g = 0.05 / abs(p.y + sin((gx + time) * xScale) * yScale);
-        float b = 0.05 / abs(p.y + sin((bx + time) * xScale) * yScale);
+        float waves = wave1 + wave2 + wave3;
+        float y = uv.y - 0.5 + waves;
         
-        gl_FragColor = vec4(r, g, b, 1.0);
+        // Emerald green gradient
+        vec3 topColor = vec3(0.06, 0.73, 0.51); // emerald-500
+        vec3 bottomColor = vec3(0.13, 0.85, 0.62); // emerald-400
+        vec3 waveColor = mix(bottomColor, topColor, uv.y);
+        
+        // Create wave edge
+        float edge = smoothstep(0.0, 0.02, y) * smoothstep(0.0, 0.02, -y + 0.1);
+        
+        // Add foam/white caps on wave peaks
+        float foam = smoothstep(0.95, 1.0, sin(uv.x * 10.0 + time));
+        vec3 foamColor = vec3(1.0, 1.0, 1.0);
+        waveColor = mix(waveColor, foamColor, foam * 0.3);
+        
+        // Transparency based on position
+        float alpha = step(y, 0.0) * 0.6;
+        
+        gl_FragColor = vec4(waveColor, alpha);
       }
     `
 
@@ -137,7 +151,7 @@ export function WebGLShader() {
   return (
     <canvas
       ref={canvasRef}
-      className="absolute bottom-0 left-0 w-full h-64 block pointer-events-none opacity-30"
+      className="absolute bottom-0 left-0 w-full h-80 block pointer-events-none"
     />
   )
 }
