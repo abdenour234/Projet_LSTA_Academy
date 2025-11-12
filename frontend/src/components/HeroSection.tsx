@@ -2,15 +2,17 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, Sparkles } from "lucide-react";
 import heroImage from "@/assets/hero-transparent.png";
 import { WebGLShader } from "./WebGLShader";
+import { AuroraBackground } from "./AuroraBackground";
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen pt-24 pb-16 overflow-hidden bg-gradient-to-br from-blue-50 via-white to-emerald-50">
-      {/* Decorative circles - subtle blue shapes */}
-      <div className="absolute top-32 left-10 w-40 h-40 rounded-full bg-blue-600 opacity-10 animate-float" />
-      <div className="absolute top-48 right-20 w-64 h-64 rounded-full bg-blue-500 opacity-8 animate-float" style={{ animationDelay: "1s" }} />
-      <div className="absolute bottom-1/4 left-1/3 w-48 h-48 rounded-full bg-blue-400 opacity-10 animate-float" style={{ animationDelay: "2s" }} />
-      <div className="absolute bottom-1/3 right-10 w-56 h-56 rounded-full bg-blue-500 opacity-8 animate-float" style={{ animationDelay: "1.5s" }} />
+    <AuroraBackground className="relative min-h-screen pt-24 pb-16">
+      <section className="relative w-full z-10">
+        {/* Decorative circles - subtle blue shapes */}
+        <div className="absolute top-32 left-10 w-40 h-40 rounded-full bg-blue-600 opacity-10 animate-float" />
+        <div className="absolute top-48 right-20 w-64 h-64 rounded-full bg-blue-500 opacity-8 animate-float" style={{ animationDelay: "1s" }} />
+        <div className="absolute bottom-1/4 left-1/3 w-48 h-48 rounded-full bg-blue-400 opacity-10 animate-float" style={{ animationDelay: "2s" }} />
+        <div className="absolute bottom-1/3 right-10 w-56 h-56 rounded-full bg-blue-500 opacity-8 animate-float" style={{ animationDelay: "1.5s" }} />
 
       <div className="container mx-auto px-6 relative z-10">
         <div className="grid lg:grid-cols-2 gap-8 items-center">
@@ -64,7 +66,8 @@ const HeroSection = () => {
 
       {/* Animated Wave Decoration */}
       <WebGLShader />
-    </section>
+      </section>
+    </AuroraBackground>
   );
 };
 
