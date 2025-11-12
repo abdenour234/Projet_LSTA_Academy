@@ -18,7 +18,7 @@ const ClubsSection = () => {
     },
     {
       icon: Bot,
-      title: "Robotique & Innovation",
+      title: "Robotique and Innovation",
       description: "Le Club Robotique invite les élèves à explorer le monde fascinant des machines intelligentes. En assemblant des robots, en les programmant et en les testant, ils découvrent comment la science, la technologie et la créativité peuvent s'unir pour résoudre des problèmes réels. Le club valorise la coopération, la pensée critique et l'expérimentation, tout en rendant l'apprentissage scientifique amusant et concret.",
       emoji: "🤖",
       image: clubRobot,

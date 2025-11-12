@@ -1,0 +1,58 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - test_prod
+
+jobs:
+  deploy:
+    name: Deploy to Production VPS
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          script: |
+            echo "🚀 Starting deployment..."
+            
+            # Navigate to project directory
+            cd /home/debian/LSTA_Academy/Projet_LSTA_Academy || { echo "❌ Project directory not found"; exit 1; }
+            
+            echo "📦 Pulling latest changes from test_prod..."
+            git fetch origin test_prod
+            git reset --hard origin/test_prod
+            
+            echo "🛑 Stopping current containers..."
+            docker-compose down
+            
+            echo "🏗️ Building new images..."
+            docker-compose build --no-cache
+            
+            echo "🚀 Starting containers..."
+            docker-compose up -d
+            
+            echo "🧹 Cleaning up old images..."
+            docker image prune -f
+            
+            echo "✅ Deployment completed successfully!"
+            
+            echo "📊 Container status:"
+            docker-compose ps
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Deployment to VPS successful!"
+          else
+            echo "❌ Deployment to VPS failed!"
+          fi
