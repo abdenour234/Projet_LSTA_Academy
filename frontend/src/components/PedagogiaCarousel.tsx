@@ -90,7 +90,7 @@ export const PedagogiaCarousel = () => {
         {/* Slides Container */}
         <motion.div
           className="flex"
-          style={{ x: x.get() === 0 ? "0%" : x }}
+          style={{ x }}
         >
           {slides.map((slide) => {
             const SlideIcon = slide.icon;
