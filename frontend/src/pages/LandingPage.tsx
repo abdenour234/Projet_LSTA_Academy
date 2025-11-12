@@ -196,7 +196,7 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="bg-slate-900 text-white py-8">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          <p className="font-medium">&copy; 2025 LSTA Academy & Pedagoria. Tous droits réservés.</p>
+          <p className="font-medium">&copy; 2025 LSTA Academy - Pedagoria. Tous droits réservés.</p>
         </div>
       </footer>
     </div>
