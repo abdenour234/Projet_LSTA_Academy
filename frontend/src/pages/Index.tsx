@@ -75,10 +75,11 @@ const Index = () => {
   if (loading) return <LoadingState />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
+    <div className="min-h-screen bg-white">
       <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Main content - max-w-7xl, consistent spacing */}
+      <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Setup Demo */}
         <div className="mb-8 animate-fade-in">
           <SetupDemo />
@@ -87,12 +88,16 @@ const Index = () => {
         {/* Page Title */}
         <div className="mb-8 animate-fade-in flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Annuaire des écoles</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">Annuaire des écoles</h1>
+            <p className="text-slate-600">
               Sélectionnez une école pour vous connecter et accéder au tableau de bord
             </p>
           </div>
-          <Button variant="outline" onClick={() => navigate('/signup')}>
+          <Button 
+            variant="outline"
+            onClick={() => navigate('/signup')}
+            className="border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+          >
             <UserPlus className="mr-2 h-4 w-4" />
             Créer un compte
           </Button>
@@ -105,7 +110,7 @@ const Index = () => {
 
         {/* Results Count */}
         <div className="mb-6 animate-fade-in">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-slate-600">
             {filteredSchools.length} école{filteredSchools.length !== 1 ? 's' : ''} trouvée
             {filteredSchools.length !== 1 ? 's' : ''}
           </p>
