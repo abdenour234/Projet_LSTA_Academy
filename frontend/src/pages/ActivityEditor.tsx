@@ -40,14 +40,29 @@ const ActivityEditor = () => {
             layoutData = { elements: [] };
           }
           
-          // ✅ FIXED: Clean up malformed URLs from old data
+          // ✅ FIXED: Clean up malformed URLs and convert to relative paths for nginx proxy
           if (layoutData?.elements) {
             layoutData.elements = layoutData.elements.map((el: any) => {
               if (el.content && typeof el.content === 'string') {
-                // Fix malformed URLs like "http://localhost:8080http://localhost:9000/..."
-                el.content = el.content.replace(/^http:\/\/localhost:8080(http:\/\/[^\/]+\/.*)/, '$1');
-                // Also fix "http://localhost:8080http://minio:9000/..." if any remain
-                el.content = el.content.replace(/^http:\/\/localhost:8080http:\/\/minio:9000/, 'http://localhost:9000');
+                let url = el.content;
+                
+                // If it's a full URL (http:// or https://), extract just the path
+                if (url.startsWith('http://') || url.startsWith('https://')) {
+                  try {
+                    const urlObj = new URL(url);
+                    // Extract path (e.g., /api/activity-files/download/xxx)
+                    url = urlObj.pathname;
+                  } catch (e) {
+                    console.warn('[ACTIVITY_EDITOR] Failed to parse URL:', url);
+                  }
+                }
+                
+                // Ensure the path is relative and will go through nginx proxy
+                if (!url.startsWith('/')) {
+                  url = '/' + url;
+                }
+                
+                el.content = url;
               }
               return el;
             });

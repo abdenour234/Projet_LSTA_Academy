@@ -41,15 +41,30 @@ const ActivityView = () => {
           }
         }
         
-        // ✅ FIXED: Clean up malformed URLs from old data
-        // Remove double http://localhost:8080 prefix if present
+        // ✅ FIXED: Clean up malformed URLs and convert to relative paths for nginx proxy
         if (data.layout_data?.elements) {
           data.layout_data.elements = data.layout_data.elements.map((el: any) => {
             if (el.content && typeof el.content === 'string') {
-              // Fix malformed URLs like "http://localhost:8080http://localhost:9000/..."
-              el.content = el.content.replace(/^http:\/\/localhost:8080(http:\/\/[^\/]+\/.*)/, '$1');
-              // Also fix "http://localhost:8080http://minio:9000/..." if any remain
-              el.content = el.content.replace(/^http:\/\/localhost:8080http:\/\/minio:9000/, 'http://localhost:9000');
+              let url = el.content;
+              
+              // If it's a full URL (http:// or https://), extract just the path
+              if (url.startsWith('http://') || url.startsWith('https://')) {
+                try {
+                  const urlObj = new URL(url);
+                  // Extract path (e.g., /api/activity-files/download/xxx)
+                  url = urlObj.pathname;
+                } catch (e) {
+                  console.warn('[ACTIVITY_VIEW] Failed to parse URL:', url);
+                }
+              }
+              
+              // Ensure the path is relative and will go through nginx proxy
+              // If it doesn't start with /, add it
+              if (!url.startsWith('/')) {
+                url = '/' + url;
+              }
+              
+              el.content = url;
             }
             return el;
           });
