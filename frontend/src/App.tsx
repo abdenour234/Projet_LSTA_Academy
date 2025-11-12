@@ -15,6 +15,7 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import SchoolDetails from "./pages/SchoolDetails";
 import SuperAdminSchoolDetails from "./pages/SuperAdminSchoolDetails";
 import SuperAdminActivityEditor from "./pages/SuperAdminActivityEditor";
+import SuperAdminActivityCreator from "./pages/SuperAdminActivityCreator";
 import StudentDashboard from "./pages/StudentDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -71,6 +72,14 @@ const App = () => (
               element={
                 <PrivateRoute requiredRole="SUPERADMIN">
                   <SuperAdminDashboard />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/superadmin/activities/create"
+              element={
+                <PrivateRoute requiredRole="SUPERADMIN">
+                  <SuperAdminActivityCreator />
                 </PrivateRoute>
               } 
             />
