@@ -135,9 +135,9 @@ const TeacherDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
       {/* Header - Fixed 64px height */}
-      <header className="h-16 border-b border-slate-200 bg-white sticky top-0 z-50">
+      <header className="h-16 border-b-2 border-blue-200 bg-gradient-to-r from-blue-50 to-white sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-full">
           <div className="flex items-center justify-between h-full">
             <div className="flex items-center gap-4">
@@ -145,15 +145,15 @@ const TeacherDashboard = () => {
                 <img 
                   src={schoolLogo} 
                   alt="Logo" 
-                  className="h-9 w-9 object-contain"
+                  className="h-9 w-9 object-contain hover:scale-110 transition-transform duration-300"
                 />
               )}
-              <div className="border-l border-slate-200 pl-4">
-                <h1 className="text-base font-semibold text-slate-900 tracking-tight leading-tight">{schoolName}</h1>
+              <div className="border-l-2 border-blue-200 pl-4">
+                <h1 className="text-base font-semibold text-blue-600 tracking-tight leading-tight">{schoolName}</h1>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs text-slate-600">{userName}</span>
-                  <span className="text-xs text-slate-400">·</span>
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-300">
+                  <span className="text-xs text-blue-500">{userName}</span>
+                  <span className="text-xs text-blue-300">·</span>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-300">
                     Enseignant
                   </span>
                 </div>
@@ -163,7 +163,6 @@ const TeacherDashboard = () => {
               variant="ghost"
               size="sm"
               onClick={handleLogout}
-              className="text-slate-700 hover:text-slate-900 hover:bg-slate-100"
             >
               <LogOut className="mr-2 h-4 w-4" />
               Déconnexion
@@ -176,44 +175,44 @@ const TeacherDashboard = () => {
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <Card 
-            className="p-5 cursor-pointer hover:bg-slate-50 transition-colors border-slate-200 shadow-none rounded-lg"
+            className="p-5 cursor-pointer hover:bg-emerald-50 hover:scale-105 hover:shadow-xl transition-all duration-300 border-2 border-blue-200 hover:border-emerald-400 rounded-lg"
             onClick={() => navigate(`/school/${id}/teacher/sessions`)}
           >
-            <Calendar className="h-5 w-5 text-slate-600 mb-2" />
-            <h3 className="font-semibold text-slate-900 text-sm">Mes Séances</h3>
-            <p className="text-xs text-slate-600">Enregistrer une séance</p>
+            <Calendar className="h-5 w-5 text-blue-500 mb-2" />
+            <h3 className="font-semibold text-blue-600 text-sm">Mes Séances</h3>
+            <p className="text-xs text-blue-500">Enregistrer une séance</p>
           </Card>
           <Card 
-            className="p-5 cursor-pointer hover:bg-slate-50 transition-colors border-slate-200 shadow-none rounded-lg"
+            className="p-5 cursor-pointer hover:bg-emerald-50 hover:scale-105 hover:shadow-xl transition-all duration-300 border-2 border-blue-200 hover:border-emerald-400 rounded-lg"
             onClick={handleCreateNewDiagnostic}
           >
-            <ClipboardList className="h-5 w-5 text-slate-600 mb-2" />
-            <h3 className="font-semibold text-slate-900 text-sm">Diagnostic</h3>
-            <p className="text-xs text-slate-600">Nouveau diagnostic</p>
+            <ClipboardList className="h-5 w-5 text-blue-500 mb-2" />
+            <h3 className="font-semibold text-blue-600 text-sm">Diagnostic</h3>
+            <p className="text-xs text-blue-500">Nouveau diagnostic</p>
           </Card>
           <Card 
-            className="p-5 cursor-pointer hover:bg-slate-50 transition-colors border-slate-200 shadow-none rounded-lg"
+            className="p-5 cursor-pointer hover:bg-emerald-50 hover:scale-105 hover:shadow-xl transition-all duration-300 border-2 border-blue-200 hover:border-emerald-400 rounded-lg"
             onClick={() => navigate(`/school/${id}/messages`)}
           >
-            <MessageSquare className="h-5 w-5 text-slate-600 mb-2" />
-            <h3 className="font-semibold text-slate-900 text-sm">Messagerie</h3>
-            <p className="text-xs text-slate-600">Mes messages</p>
+            <MessageSquare className="h-5 w-5 text-blue-500 mb-2" />
+            <h3 className="font-semibold text-blue-600 text-sm">Messagerie</h3>
+            <p className="text-xs text-blue-500">Mes messages</p>
           </Card>
         </div>
 
         {/* Diagnostics Section */}
-        <Card className="p-5 border-slate-200 shadow-none rounded-lg">
+        <Card className="p-5 border-2 border-blue-200 shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
-              <ClipboardList className="h-5 w-5 text-slate-600" />
+              <ClipboardList className="h-5 w-5 text-blue-500" />
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">Diagnostics pédagogiques</h2>
-                <p className="text-xs text-slate-600">Réalisez des diagnostics selon les grilles officielles</p>
+                <h2 className="text-sm font-semibold text-blue-600">Diagnostics pédagogiques</h2>
+                <p className="text-xs text-blue-500">Réalisez des diagnostics selon les grilles officielles</p>
               </div>
             </div>
             <Button 
               onClick={handleCreateNewDiagnostic}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium h-9"
+              className="text-sm font-medium h-9"
             >
               <Plus className="mr-2 h-4 w-4" />
               Nouveau diagnostic
@@ -225,27 +224,26 @@ const TeacherDashboard = () => {
               {diagnosticSessions.map((session) => {
                 const gridInfo = DIAGNOSTIC_GRIDS.find(g => g.type === session.diagnostic_type);
                 return (
-                  <Card key={session.id} className="p-4 border-slate-200 hover:bg-slate-50 transition-colors shadow-none rounded-lg">
+                  <Card key={session.id} className="p-4 border-2 border-blue-200 hover:bg-emerald-50 hover:border-emerald-400 transition-all duration-300 shadow-md rounded-lg">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <BarChart3 className="h-4 w-4 text-slate-600" />
-                          <h4 className="font-semibold text-slate-900 text-sm">{gridInfo?.title || session.diagnostic_type}</h4>
+                          <BarChart3 className="h-4 w-4 text-blue-500" />
+                          <h4 className="font-semibold text-blue-600 text-sm">{gridInfo?.title || session.diagnostic_type}</h4>
                         </div>
-                        <div className="flex gap-4 text-xs text-slate-600">
-                          <span>Niveau: <strong className="text-slate-900">{session.grade_level}</strong></span>
+                        <div className="flex gap-4 text-xs text-blue-500">
+                          <span>Niveau: <strong className="text-blue-600">{session.grade_level}</strong></span>
                           {session.class_name && (
-                            <span>Classe: <strong className="text-slate-900">{session.class_name}</strong></span>
+                            <span>Classe: <strong className="text-blue-600">{session.class_name}</strong></span>
                           )}
-                          <span>Élèves: <strong className="text-slate-900">{session.total_students}</strong></span>
-                          <span>Date: <strong className="text-slate-900">{new Date(session.session_date).toLocaleDateString('fr-FR')}</strong></span>
+                          <span>Élèves: <strong className="text-blue-600">{session.total_students}</strong></span>
+                          <span>Date: <strong className="text-blue-600">{new Date(session.session_date).toLocaleDateString('fr-FR')}</strong></span>
                         </div>
                       </div>
                       <Button 
                         variant="outline" 
                         size="sm" 
                         onClick={() => handleViewResults(session.id)}
-                        className="border-slate-300 text-slate-700 hover:bg-slate-50"
                       >
                         <Eye className="mr-2 h-4 w-4" />
                         Voir résultats
@@ -257,14 +255,13 @@ const TeacherDashboard = () => {
             </div>
           ) : (
             <div className="text-center py-8">
-              <ClipboardList className="h-12 w-12 text-slate-400 mx-auto mb-3" />
-              <p className="text-slate-600 text-sm mb-4">
+              <ClipboardList className="h-12 w-12 text-blue-400 mx-auto mb-3" />
+              <p className="text-blue-500 text-sm mb-4">
                 Aucun diagnostic réalisé pour le moment
               </p>
               <Button 
                 onClick={handleCreateNewDiagnostic} 
                 variant="outline"
-                className="border-slate-300 text-slate-700 hover:bg-slate-50"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Créer votre premier diagnostic
@@ -276,26 +273,25 @@ const TeacherDashboard = () => {
         {/* Activities Section */}
         <Card className="p-5 border-slate-200 shadow-none rounded-lg">
           <div className="flex items-center gap-3 mb-5">
-            <BookOpen className="h-5 w-5 text-slate-600" />
+            <BookOpen className="h-5 w-5 text-blue-500" />
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">Activités pédagogiques</h2>
-              <p className="text-xs text-slate-600">Activités disponibles après réalisation d'un diagnostic</p>
+              <h2 className="text-sm font-semibold text-blue-600">Activités pédagogiques</h2>
+              <p className="text-xs text-blue-500">Activités disponibles après réalisation d'un diagnostic</p>
             </div>
           </div>
 
           {!hasDiagnostic ? (
-            <div className="text-center py-8 bg-slate-50 rounded-lg">
-              <ClipboardList className="h-12 w-12 text-slate-400 mx-auto mb-3" />
-              <p className="text-slate-900 font-medium text-sm mb-2">
+            <div className="text-center py-8 bg-blue-50 rounded-lg border-2 border-blue-200">
+              <ClipboardList className="h-12 w-12 text-blue-400 mx-auto mb-3" />
+              <p className="text-blue-600 font-medium text-sm mb-2">
                 Diagnostic requis
               </p>
-              <p className="text-slate-600 text-xs mb-4">
+              <p className="text-blue-500 text-xs mb-4">
                 Veuillez d'abord réaliser un diagnostic avant d'accéder aux activités correspondantes.
               </p>
               <Button 
                 onClick={handleCreateNewDiagnostic} 
                 variant="outline"
-                className="border-slate-300 text-slate-700 hover:bg-slate-50"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Réaliser un diagnostic
@@ -304,7 +300,7 @@ const TeacherDashboard = () => {
           ) : activities.length > 0 ? (
             <div className="grid gap-3">
               {activities.map((activity) => (
-                <Card key={activity.id} className="p-4 border-slate-200 hover:bg-slate-50 transition-colors shadow-none rounded-lg">
+                <Card key={activity.id} className="p-4 border-2 border-blue-200 hover:bg-emerald-50 hover:border-emerald-400 hover:shadow-md transition-all duration-300 rounded-lg">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
@@ -315,16 +311,15 @@ const TeacherDashboard = () => {
                         }`}>
                           {activity.type}
                         </span>
-                        <span className="text-xs text-slate-600">{activity.level}</span>
+                        <span className="text-xs text-blue-500">{activity.level}</span>
                       </div>
-                      <h4 className="font-semibold text-slate-900 text-sm mb-1">{activity.title}</h4>
-                      <p className="text-xs text-slate-600">{activity.description}</p>
+                      <h4 className="font-semibold text-blue-600 text-sm mb-1">{activity.title}</h4>
+                      <p className="text-xs text-blue-500">{activity.description}</p>
                     </div>
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => navigate(`/activity/${activity.id}`)}
-                      className="border-slate-300 text-slate-700 hover:bg-slate-50"
                     >
                       Démarrer
                     </Button>
@@ -334,7 +329,7 @@ const TeacherDashboard = () => {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-slate-600 text-sm">
+              <p className="text-blue-500 text-sm">
                 Aucune activité disponible pour le moment — veuillez contacter l'administrateur.
               </p>
             </div>

@@ -172,20 +172,20 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
       {/* Header - Fixed 64px height */}
-      <header className="h-16 border-b border-slate-200 bg-white sticky top-0 z-50">
+      <header className="h-16 border-b-2 border-blue-200 bg-gradient-to-r from-blue-50 to-white sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-full">
           <div className="flex items-center justify-between h-full">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
-                <BookOpen className="h-5 w-5 text-slate-600" />
+                <BookOpen className="h-5 w-5 text-blue-500" />
                 <div>
-                  <h1 className="text-base font-semibold text-slate-900 tracking-tight leading-tight">Espace Étudiant</h1>
+                  <h1 className="text-base font-semibold text-blue-600 tracking-tight leading-tight">Espace Étudiant</h1>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs text-slate-600">{user?.fullName || user?.email || 'Étudiant'}</span>
-                    <span className="text-xs text-slate-400">·</span>
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-300">
+                    <span className="text-xs text-blue-500">{user?.fullName || user?.email || 'Étudiant'}</span>
+                    <span className="text-xs text-blue-300">·</span>
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-300">
                       Étudiant
                     </span>
                   </div>
@@ -196,7 +196,7 @@ const StudentDashboard = () => {
               variant="ghost" 
               size="sm"
               onClick={handleLogout}
-              className="text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+              className="text-blue-600 hover:text-emerald-600 hover:bg-emerald-50"
             >
               <LogOut className="mr-2 h-4 w-4" />
               Déconnexion
@@ -208,13 +208,13 @@ const StudentDashboard = () => {
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* Calendar */}
-          <Card className="lg:col-span-2 border-slate-200 shadow-none rounded-lg">
-            <CardHeader className="p-5 pb-3">
+          <Card className="lg:col-span-2 border-2 border-blue-200 shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300">
+            <CardHeader className="p-5 pb-3 bg-gradient-to-r from-blue-50 to-white rounded-t-lg">
               <div className="flex items-center gap-3 mb-3">
-                <CalendarIcon className="h-5 w-5 text-slate-600" />
-                <CardTitle className="text-sm font-semibold text-slate-900">Calendrier des Activités</CardTitle>
+                <CalendarIcon className="h-5 w-5 text-blue-500" />
+                <CardTitle className="text-sm font-semibold text-blue-600">Calendrier des Activités</CardTitle>
               </div>
-              <CardDescription className="text-xs text-slate-600">
+              <CardDescription className="text-xs text-blue-500">
                 Consultez vos activités publiées
               </CardDescription>
             </CardHeader>
@@ -223,33 +223,33 @@ const StudentDashboard = () => {
                 onChange={handleDateChange}
                 value={selectedDate}
                 tileContent={tileContent}
-                className="w-full border border-slate-200 rounded-lg"
-                tileClassName="hover:bg-slate-50 transition-colors duration-200"
+                className="w-full border-2 border-blue-200 rounded-lg"
+                tileClassName="hover:bg-emerald-50 transition-colors duration-200"
               />
             </CardContent>
           </Card>
 
           {/* Activity Details */}
-          <Card className="border-slate-200 shadow-none rounded-lg">
-            <CardHeader className="p-5 pb-3">
-              <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                <BookOpen className="h-4 w-4 text-slate-600" />
+          <Card className="border-2 border-blue-200 shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300">
+            <CardHeader className="p-5 pb-3 bg-gradient-to-r from-blue-50 to-white rounded-t-lg">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold text-blue-600">
+                <BookOpen className="h-4 w-4 text-blue-500" />
                 Détails des Activités
               </CardTitle>
             </CardHeader>
             <CardContent className="px-5 pb-5 space-y-3">
               {selectedActivities.length > 0 ? (
                 selectedActivities.map((activity) => (
-                  <div key={activity.id} className="border border-slate-200 p-3 rounded-lg bg-white">
-                    <h3 className="text-sm font-semibold text-slate-900">{activity.title}</h3>
-                    <p className="text-xs text-slate-600 mt-1">{activity.description}</p>
-                    <p className="text-xs text-slate-500 mt-2">
+                  <div key={activity.id} className="border-2 border-blue-200 p-3 rounded-lg bg-white hover:border-emerald-400 hover:shadow-md transition-all duration-300">
+                    <h3 className="text-sm font-semibold text-blue-600">{activity.title}</h3>
+                    <p className="text-xs text-blue-500 mt-1">{activity.description}</p>
+                    <p className="text-xs text-blue-400 mt-2">
                       Créée le: {new Date(activity.createdAt).toLocaleDateString()}
                     </p>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full mt-3 border-slate-300 text-slate-700 hover:bg-slate-50"
+                      className="w-full mt-3"
                       onClick={() => navigate(`/activity/${activity.id}`)}
                     >
                       Voir l'activité
@@ -257,7 +257,7 @@ const StudentDashboard = () => {
                   </div>
                 ))
               ) : (
-                <p className="text-center text-xs text-slate-500 py-8">
+                <p className="text-center text-xs text-blue-500 py-8">
                   Sélectionnez une date pour voir les activités
                 </p>
               )}
@@ -266,14 +266,14 @@ const StudentDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <Card className="mt-5 border-slate-200 shadow-none rounded-lg">
-          <CardHeader className="p-5 pb-3">
-            <CardTitle className="text-sm font-semibold text-slate-900">Actions disponibles</CardTitle>
+        <Card className="mt-5 border-2 border-blue-200 shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300">
+          <CardHeader className="p-5 pb-3 bg-gradient-to-r from-blue-50 to-white rounded-t-lg">
+            <CardTitle className="text-sm font-semibold text-blue-600">Actions disponibles</CardTitle>
           </CardHeader>
           <CardContent className="px-5 pb-5 space-y-2">
             <Button 
               variant="ghost" 
-              className="w-full justify-start text-slate-700 hover:bg-slate-100"
+              className="w-full justify-start"
               onClick={handleLogout}
             >
               <LogOut className="mr-2 h-4 w-4" />
@@ -281,7 +281,7 @@ const StudentDashboard = () => {
             </Button>
             <Button 
               variant="ghost" 
-              className="w-full justify-start text-slate-700 hover:bg-slate-100"
+              className="w-full justify-start"
               onClick={() => navigate('/')}
             >
               <BookOpen className="mr-2 h-4 w-4" />
