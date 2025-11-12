@@ -24,7 +24,7 @@ const SchoolCard = ({ school }: SchoolCardProps) => {
 
   return (
     <Card
-      className="group relative overflow-hidden border-slate-200 bg-white hover:shadow-lg transition-all duration-200 cursor-pointer"
+      className="group relative overflow-hidden border-2 border-blue-200 bg-white hover:shadow-xl hover:border-emerald-400 transition-all duration-300 cursor-pointer hover:scale-105"
       onClick={() => navigate(`/school/${school.id}/login`)}
     >
       <div className="p-6">
@@ -34,34 +34,34 @@ const SchoolCard = ({ school }: SchoolCardProps) => {
             <img 
               src={school.logo_url} 
               alt={`Logo ${school.name}`}
-              className="h-16 w-16 object-contain rounded-lg border border-slate-200"
+              className="h-16 w-16 object-contain rounded-lg border-2 border-blue-200 group-hover:border-emerald-400 transition-colors duration-200"
             />
           )}
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-slate-900 mb-1 group-hover:text-blue-600 transition-all duration-200">
+            <h3 className="text-lg font-semibold text-blue-600 mb-1 group-hover:text-emerald-600 transition-all duration-200">
               {school.name}
             </h3>
-            <div className="flex items-center gap-2 text-sm text-slate-600">
+            <div className="flex items-center gap-2 text-sm text-blue-500">
               <MapPin className="h-4 w-4" />
               <span>{school.city}</span>
-              <span className="text-slate-300">•</span>
+              <span className="text-blue-300">•</span>
               <span>{school.region}</span>
             </div>
           </div>
-          <ChevronRight className="h-5 w-5 text-slate-600 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-200" />
+          <ChevronRight className="h-5 w-5 text-blue-500 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all duration-200" />
         </div>
 
         {/* Badges */}
         <div className="flex flex-wrap gap-2 mb-4">
-          <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-blue-200">
+          <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-300">
             {school.level}
           </Badge>
           <Badge
             variant="outline"
             className={
               school.status === 'Public'
-                ? 'border-emerald-300 text-emerald-600'
-                : 'border-blue-300 text-blue-600'
+                ? 'border-emerald-400 text-emerald-600 hover:bg-emerald-50'
+                : 'border-blue-400 text-blue-600 hover:bg-blue-50'
             }
           >
             {school.status}
@@ -69,7 +69,7 @@ const SchoolCard = ({ school }: SchoolCardProps) => {
         </div>
 
         {/* Info */}
-        <div className="flex items-center gap-4 text-sm text-slate-600">
+        <div className="flex items-center gap-4 text-sm text-blue-600">
           <div className="flex items-center gap-1">
             <Users className="h-4 w-4" />
             <span>{school.students} élèves</span>
