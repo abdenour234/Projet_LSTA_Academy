@@ -207,21 +207,21 @@ export default function TeacherSessions() {
               Nouvelle Séance
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto border-slate-200 rounded-lg">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto border-2 border-blue-200 rounded-lg">
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-slate-900">📝 Enregistrement rapide de séance</DialogTitle>
+              <DialogTitle className="text-lg font-semibold text-blue-600">📝 Enregistrement rapide de séance</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="class" className="text-xs font-medium text-slate-700">Classe *</Label>
+                  <Label htmlFor="class" className="text-xs font-medium text-blue-600">Classe *</Label>
                   <Select
                     value={formData.class_id}
                     onValueChange={(value) =>
                       setFormData({ ...formData, class_id: value })
                     }
                   >
-                    <SelectTrigger className="border-slate-300">
+                    <SelectTrigger className="border-2 border-blue-200 focus:border-emerald-400">
                       <SelectValue placeholder="Sélectionner une classe" />
                     </SelectTrigger>
                     <SelectContent>
@@ -234,31 +234,30 @@ export default function TeacherSessions() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="date" className="text-xs font-medium text-slate-700">Date (auto-détectée)</Label>
+                  <Label htmlFor="date" className="text-xs font-medium text-blue-600">Date (auto-détectée)</Label>
                   <Input
                     id="date"
                     type="date"
                     value={formData.session_date}
-                    className="border-slate-300 text-sm"
+                    className="border-2 border-blue-200 text-sm focus:border-emerald-400"
                     onChange={(e) =>
                       setFormData({ ...formData, session_date: e.target.value })
                     }
-                    className="border-slate-300"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <Label className="text-base mb-3 block font-medium text-slate-900">✅ Activités réalisées (cochez)</Label>
-                <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto p-4 bg-slate-50 rounded-lg">
+                <Label className="text-base mb-3 block font-medium text-blue-600">✅ Activités réalisées (cochez)</Label>
+                <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
                   {activities.map((activity) => (
                     <div
                       key={activity.id}
-                      className={`flex items-center space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                      className={`flex items-center space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-all hover:scale-105 ${
                         selectedActivities.has(activity.title)
-                          ? "border-blue-600 bg-blue-50"
-                          : "border-slate-200 bg-white hover:border-blue-300"
+                          ? "border-blue-600 bg-blue-100 shadow-md"
+                          : "border-blue-200 bg-white hover:border-emerald-400"
                       }`}
                       onClick={() => toggleActivity(activity.title)}
                     >

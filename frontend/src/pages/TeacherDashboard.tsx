@@ -271,7 +271,7 @@ const TeacherDashboard = () => {
         </Card>
 
         {/* Activities Section */}
-        <Card className="p-5 border-slate-200 shadow-none rounded-lg">
+        <Card className="p-5 border-2 border-blue-200 shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300">
           <div className="flex items-center gap-3 mb-5">
             <BookOpen className="h-5 w-5 text-blue-500" />
             <div>

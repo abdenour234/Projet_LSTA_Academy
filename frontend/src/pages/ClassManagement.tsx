@@ -516,33 +516,33 @@ export default function ClassManagement() {
       <div className="flex justify-end items-center mb-6">
         <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
-            <Button className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium h-9">
+            <Button className="bg-blue-600 hover:bg-emerald-500 text-white text-sm font-medium h-9">
               <Plus className="w-4 h-4 mr-2" />
               Nouvelle Classe
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] border-2 border-blue-200">
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-slate-900">
+              <DialogTitle className="text-lg font-semibold text-blue-600">
                 {editingClass ? "Modifier" : "Nouvelle"} Classe
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="name" className="text-sm font-medium text-slate-900">Nom de la classe</Label>
+                <Label htmlFor="name" className="text-sm font-medium text-blue-600">Nom de la classe</Label>
                 <Input 
                   id="name" 
                   value={formData.name} 
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
                   placeholder="6ème A" 
                   required
-                  className="mt-1.5 border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-2"
+                  className="mt-1.5 border-2 border-blue-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-400 focus:ring-offset-2"
                 />
               </div>
               <div>
-                <Label htmlFor="level" className="text-sm font-medium text-slate-900">Niveau</Label>
+                <Label htmlFor="level" className="text-sm font-medium text-blue-600">Niveau</Label>
                 <Select value={formData.level} onValueChange={(value) => setFormData({ ...formData, level: value })}>
-                  <SelectTrigger className="mt-1.5 border-slate-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                  <SelectTrigger className="mt-1.5 border-2 border-blue-200 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
                     <SelectValue placeholder="Sélectionner" />
                   </SelectTrigger>
                   <SelectContent>
@@ -553,7 +553,7 @@ export default function ClassManagement() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="annee" className="text-sm font-medium text-slate-900">Année scolaire</Label>
+                <Label htmlFor="annee" className="text-sm font-medium text-blue-600">Année scolaire</Label>
                 <Input 
                   id="annee" 
                   value={formData.academicYear} 
@@ -602,23 +602,23 @@ export default function ClassManagement() {
       </div>
 
       {/* Classes Table - Professional Design */}
-      <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+      <div className="border-2 border-blue-200 rounded-lg overflow-hidden bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
         <Table>
           <TableHeader>
-            <TableRow className="bg-slate-50 border-b border-slate-200 hover:bg-slate-50">
-              <TableHead className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Nom</TableHead>
-              <TableHead className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Niveau</TableHead>
-              <TableHead className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Année scolaire</TableHead>
-              <TableHead className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">
+            <TableRow className="bg-blue-50 border-b-2 border-blue-200 hover:bg-blue-50">
+              <TableHead className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Nom</TableHead>
+              <TableHead className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Niveau</TableHead>
+              <TableHead className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Année scolaire</TableHead>
+              <TableHead className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">
                 <Users className="w-4 h-4 inline mr-1.5" />Effectif
               </TableHead>
-              <TableHead className="text-right px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Actions</TableHead>
+              <TableHead className="text-right px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {classes.length === 0 ? (
               <TableRow className="hover:bg-white">
-                <TableCell colSpan={5} className="text-center text-slate-600 py-12">
+                <TableCell colSpan={5} className="text-center text-blue-500 py-12">
                   Aucune classe enregistrée
                 </TableCell>
               </TableRow>
@@ -626,19 +626,19 @@ export default function ClassManagement() {
               classes.map((classItem, index) => (
                 <TableRow 
                   key={classItem.id}
-                  className={`${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'} hover:bg-slate-100 transition-colors`}
+                  className={`${index % 2 === 0 ? 'bg-white' : 'bg-blue-50'} hover:bg-emerald-50 transition-colors`}
                 >
-                  <TableCell className="px-4 py-4 font-medium text-slate-900">{classItem.name}</TableCell>
-                  <TableCell className="px-4 py-4 text-sm text-slate-700">{classItem.level}</TableCell>
-                  <TableCell className="px-4 py-4 text-sm text-slate-700">{classItem.academicYear}</TableCell>
-                  <TableCell className="px-4 py-4 text-sm font-medium text-slate-900 tabular-nums">{classItem.studentCount}</TableCell>
+                  <TableCell className="px-4 py-4 font-medium text-blue-600">{classItem.name}</TableCell>
+                  <TableCell className="px-4 py-4 text-sm text-blue-500">{classItem.level}</TableCell>
+                  <TableCell className="px-4 py-4 text-sm text-blue-500">{classItem.academicYear}</TableCell>
+                  <TableCell className="px-4 py-4 text-sm font-medium text-blue-600 tabular-nums">{classItem.studentCount}</TableCell>
                   <TableCell className="px-4 py-4 text-right">
                     <div className="flex gap-2 justify-end">
                       <Button 
                         size="sm" 
                         variant="ghost" 
                         onClick={() => handleExportClass(classItem)}
-                        className="text-slate-600 hover:text-slate-900 hover:bg-white/80 h-8 w-8 p-0"
+                        className="text-blue-500 hover:text-emerald-600 hover:bg-emerald-50 h-8 w-8 p-0"
                         title="Exporter"
                       >
                         <Download className="w-4 h-4" />
@@ -650,7 +650,7 @@ export default function ClassManagement() {
                           setSelectedClass(classItem); 
                           setIsStudentDialogOpen(true); 
                         }}
-                        className="text-slate-600 hover:text-slate-900 hover:bg-white/80 h-8 w-8 p-0"
+                        className="text-blue-500 hover:text-emerald-600 hover:bg-emerald-50 h-8 w-8 p-0"
                         title="Ajouter des élèves"
                       >
                         <UserPlus className="w-4 h-4" />

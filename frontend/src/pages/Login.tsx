@@ -154,12 +154,12 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleChange}
                 required
                 disabled={loading}
-                className="border-slate-300 text-sm"
+                className="border-2 border-blue-200 text-sm focus:border-emerald-400"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-xs font-medium text-slate-700">Mot de passe</Label>
+              <Label htmlFor="password" className="text-xs font-medium text-blue-600">Mot de passe</Label>
               <Input
                 id="password"
                 name="password"
@@ -169,13 +169,13 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleChange}
                 required
                 disabled={loading}
-                className="border-slate-300 text-sm"
+                className="border-2 border-blue-200 text-sm focus:border-emerald-400"
               />
             </div>
 
             <Button 
               type="submit" 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium h-9" 
+              className="w-full text-sm font-medium h-9" 
               disabled={loading}
             >
               {loading ? (
@@ -190,8 +190,8 @@ const handleSubmit = async (e: React.FormEvent) => {
           </form>
 
           {/* Roles Info */}
-          <div className="mt-5 pt-5 border-t border-slate-200">
-            <p className="text-xs text-slate-600 text-center mb-3">
+          <div className="mt-5 pt-5 border-t-2 border-blue-200">
+            <p className="text-xs text-blue-500 text-center mb-3">
               Accès selon votre rôle:
             </p>
             <div className="grid grid-cols-2 gap-2 text-xs">
