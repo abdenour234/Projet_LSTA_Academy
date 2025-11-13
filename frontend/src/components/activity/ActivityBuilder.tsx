@@ -75,16 +75,24 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
       const preview = file.type.startsWith('image/') ? tempUrl : undefined;
       
       // Stocker le fichier en attente avec les métadonnées correctes
+      // IMPORTANT: Use the SAME elementId as the existing element
       setPendingFiles(prev => new Map(prev).set(elementId, {
         file,
         preview,
         elementId
       }));
       
-      // Mettre à jour l'élément avec l'URL temporaire
+      // Mettre à jour l'élément avec l'URL temporaire ET marquer qu'il a un fichier pending
       updateElement(elementId, { 
         content: tempUrl,
-        fileName: file.name
+        fileName: file.name,
+        hasPendingUpload: true as any // Mark that this element has a pending upload
+      });
+      
+      console.log('[FILE_UPLOAD] File added to element:', {
+        elementId,
+        fileName: file.name,
+        fileType: file.type
       });
       
       toast({ 
@@ -187,6 +195,22 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
       return;
     }
 
+    // Validation: Check if there are file elements without content and without pending uploads
+    const emptyFileElements = elements.filter(el => 
+      ['image', 'pdf', 'video'].includes(el.type) && 
+      !el.content && 
+      !pendingFiles.has(el.id)
+    );
+    
+    if (emptyFileElements.length > 0 && publish) {
+      toast({
+        title: 'Fichiers manquants',
+        description: `${emptyFileElements.length} élément(s) n'ont pas de fichier associé. Veuillez uploader les fichiers ou supprimer ces éléments.`,
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const activityData = {
@@ -215,6 +239,8 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
 
       // Étape 2: Créer des éléments pour les fichiers en attente et les uploader
       if (pendingFiles.size > 0 && currentActivityId) {
+        setUploading(true); // Show uploading state
+        
         const newElements: ActivityElement[] = [];
         const formData = new FormData();
         const elementIds: string[] = [];
@@ -260,13 +286,33 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
           activityId: currentActivityId,
           fileCount: Array.from(pendingFiles.values()).length,
           elementIds: elementIds,
-          newElements: newElements
+          newElements: newElements,
+          files: Array.from(pendingFiles.values()).map(f => ({
+            name: f.file.name,
+            size: f.file.size,
+            type: f.file.type,
+            elementId: f.elementId
+          }))
         });
+
+        // Get auth token and verify it exists
+        const authToken = localStorage.getItem('auth_token');
+        if (!authToken) {
+          console.error('[ACTIVITY_BUILDER] No auth token found!');
+          toast({
+            title: 'Session expirée',
+            description: 'Veuillez vous reconnecter',
+            variant: 'destructive'
+          });
+          return;
+        }
+
+        console.log('[ACTIVITY_BUILDER] Auth token present:', authToken.substring(0, 20) + '...');
 
         const response = await fetch(API_CONFIG.getUrl(`/activity-files/upload/${currentActivityId}`), {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            'Authorization': `Bearer ${authToken}`,
           },
           body: formData,
         });
@@ -277,38 +323,93 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
           statusText: response.statusText
         });
 
+        if (!response.ok) {
+          // Upload failed - show detailed error
+          const errorText = await response.text();
+          console.error('[ACTIVITY_BUILDER] Upload failed:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorText
+          });
+          
+          toast({
+            title: 'Erreur d\'upload',
+            description: `Échec de l'upload des fichiers (${response.status}). Vérifiez votre connexion et réessayez.`,
+            variant: 'destructive'
+          });
+          
+          return; // Don't continue with save
+        }
+
         if (response.ok) {
           const result = await response.json();
           console.log('[ACTIVITY_BUILDER] Upload result:', result);
           
-          // Mettre à jour les nouveaux éléments avec les vraies URLs
+          // Mettre à jour les éléments avec les vraies URLs
           if (result.success && result.files) {
-            result.files.forEach((uploadedFile: any) => {
-              // Backend now returns relative paths, use directly with API_CONFIG
-              const fullUrl = API_CONFIG.getUrl(uploadedFile.url);
-              const element = newElements.find(el => el.id === uploadedFile.elementId);
-              if (element) {
-                element.content = fullUrl;
-                element.fileId = uploadedFile.id;
-                element.fileName = uploadedFile.fileName;
+            // Create a map of elementId -> uploaded file data for quick lookup
+            const uploadedFilesMap = new Map(
+              result.files.map((f: any) => [f.elementId, f])
+            );
+            
+            console.log('[ACTIVITY_BUILDER] Uploaded files map:', {
+              uploadedFileIds: Array.from(uploadedFilesMap.keys()),
+              totalUploaded: uploadedFilesMap.size
+            });
+            
+            // Update ALL elements - replace blob URLs with real URLs for uploaded files
+            const updatedElements = elements.map(element => {
+              const uploadedFile = uploadedFilesMap.get(element.id);
+              
+              if (uploadedFile) {
+                // This element had a file uploaded - update with real URL
+                const fullUrl = API_CONFIG.getUrl(uploadedFile.url);
+                console.log('[ACTIVITY_BUILDER] Updating element with uploaded file:', {
+                  elementId: element.id,
+                  oldContent: element.content,
+                  newContent: fullUrl,
+                  fileName: uploadedFile.fileName
+                });
+                
+                return {
+                  ...element,
+                  content: fullUrl,
+                  fileId: uploadedFile.id,
+                  fileName: uploadedFile.fileName,
+                  hasPendingUpload: undefined // Remove the pending flag
+                };
               }
+              
+              // Keep existing elements unchanged
+              return element;
             });
             
-            // ✅ FIX: Remove elements that are being replaced by newly uploaded files
-            // We want to keep existing elements that are NOT being uploaded
-            const uploadedElementIds = new Set(result.files.map((f: any) => f.elementId));
-            const filteredElements = elements.filter(el => !uploadedElementIds.has(el.id));
+            // Add any NEW elements that were created from multi-file upload
+            const newFileElements = newElements
+              .filter(newEl => uploadedFilesMap.has(newEl.id))
+              .map(newEl => {
+                const uploadedFile = uploadedFilesMap.get(newEl.id);
+                const fullUrl = API_CONFIG.getUrl(uploadedFile.url);
+                return {
+                  ...newEl,
+                  content: fullUrl,
+                  fileId: uploadedFile.id,
+                  fileName: uploadedFile.fileName
+                };
+              });
             
-            console.log('[ACTIVITY_BUILDER] Before merge:', {
-              existingElements: elements.length,
-              filteredElements: filteredElements.length,
-              newElements: newElements.length,
-              newElementsWithUrls: newElements.filter(el => el.content).length
+            // Combine existing (updated) elements + new file-only elements
+            const allElements = [...updatedElements, ...newFileElements];
+            
+            console.log('[ACTIVITY_BUILDER] Final elements after upload:', {
+              existingElementsCount: elements.length,
+              updatedElementsCount: updatedElements.length,
+              newFileElementsCount: newFileElements.length,
+              totalElementsCount: allElements.length,
+              elementsWithContent: allElements.filter(el => el.content).length,
+              allElements: allElements
             });
             
-            // Combiner les éléments filtrés avec les nouveaux (qui ont maintenant les vraies URLs)
-            const allElements = [...filteredElements, ...newElements];
-            console.log('[ACTIVITY_BUILDER] After merge - allElements:', allElements);
             setElements(allElements);
             
             // RE-SAUVEGARDER l'activité avec les vraies URLs
@@ -324,8 +425,32 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
             };
             
             console.log('[ACTIVITY_BUILDER] Saving activity with layoutData:', updatedActivityData.layoutData);
-            await activityApi.update(currentActivityId, updatedActivityData);
-            console.log('[ACTIVITY_BUILDER] Activity saved successfully');
+            
+            try {
+              const updateResult = await activityApi.update(currentActivityId, updatedActivityData);
+              console.log('[ACTIVITY_BUILDER] Activity update result:', updateResult);
+              
+              if (!updateResult) {
+                throw new Error('Update returned null/undefined');
+              }
+              
+              console.log('[ACTIVITY_BUILDER] Activity saved successfully with file URLs');
+            } catch (updateError) {
+              console.error('[ACTIVITY_BUILDER] CRITICAL: Failed to save activity with file URLs:', updateError);
+              toast({
+                title: 'Erreur critique',
+                description: 'Les fichiers sont uploadés mais l\'activité n\'a pas été mise à jour. Réessayez de sauvegarder.',
+                variant: 'destructive'
+              });
+              throw updateError; // Re-throw to trigger outer catch
+            }
+          } else {
+            console.error('[ACTIVITY_BUILDER] Upload succeeded but no files in result:', result);
+            toast({
+              title: 'Erreur partielle',
+              description: 'Les fichiers ont été uploadés mais la mise à jour a échoué',
+              variant: 'destructive'
+            });
           }
 
           // Nettoyer les previews et vider les fichiers en attente
@@ -340,7 +465,11 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
             title: 'Fichiers uploadés',
             description: `${result.files.length} fichier(s) uploadé(s) avec succès (TTL: 7 jours)`
           });
+        } else {
+          console.error('[ACTIVITY_BUILDER] Upload response not OK:', response.status);
         }
+        
+        setUploading(false); // Clear uploading state
       }
 
       toast({ 
@@ -627,13 +756,21 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
 
       {/* Action Bar */}
       <div className="col-span-12 flex justify-end gap-2">
-        <Button variant="outline" onClick={() => handleSave(false)} disabled={saving}>
-          <Save className="h-4 w-4 mr-2" />
-          Enregistrer brouillon
+        <Button variant="outline" onClick={() => handleSave(false)} disabled={saving || uploading}>
+          {saving || uploading ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4 mr-2" />
+          )}
+          {uploading ? 'Upload en cours...' : 'Enregistrer brouillon'}
         </Button>
-        <Button onClick={() => handleSave(true)} disabled={saving}>
-          <Eye className="h-4 w-4 mr-2" />
-          Publier l'activité
+        <Button onClick={() => handleSave(true)} disabled={saving || uploading}>
+          {saving || uploading ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Eye className="h-4 w-4 mr-2" />
+          )}
+          {uploading ? 'Upload en cours...' : 'Publier l\'activité'}
         </Button>
       </div>
     </div>
