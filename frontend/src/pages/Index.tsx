@@ -125,8 +125,18 @@ const Index = () => {
                 style={{
                   animationDelay: `${index * 100}ms`,
                 }}
+                className="relative"
               >
                 <SchoolCard school={school} />
+                <div className="absolute top-2 right-2 flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => window.location.href = `/school/${school.id}/manage`}
+                  >
+                    Gérer
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

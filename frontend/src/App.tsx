@@ -55,9 +55,8 @@ const App = () => (
             <Route path="/schools" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<AdminSignup />} />
-          <Route path="/change-password" element={<ChangePassword />} />
-            
-            {/* Legacy routes - redirect to unified login */}
+            <Route path="/change-password" element={<ChangePassword />} />
+            <Route path="/school/:id/manage" element={<require('./pages/SchoolManage').default />} />
             <Route path="/superadmin/login" element={<Login />} />
             <Route path="/school/:id/login" element={<Login />} />
             
