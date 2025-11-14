@@ -93,9 +93,9 @@ const SchoolCard = ({ school }: SchoolCardProps) => {
             </div>
           )}
         </div>
-        {/* Manage button for superadmin */}
-        <div className="mt-4 flex justify-end">
-          <Button size="sm" variant="secondary" onClick={() => navigate(`/school/${school.id}/manage`)}>
+        {/* Manage button always visible at bottom */}
+        <div className="mt-6 flex justify-end">
+          <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); navigate(`/school/${school.id}/manage`); }}>
             Gérer
           </Button>
         </div>
