@@ -295,7 +295,7 @@ const AdminDashboard = () => {
                 Matières
               </Button>
               <Button 
-                onClick={() => navigate(`/school/${id}/admin/teacher-management`)}
+                onClick={() => navigate(`/school/${id}/admin/teachers`)}
                 variant="ghost"
                 className="text-sm h-9 font-medium"
               >
