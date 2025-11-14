@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LogOut, Plus, Trash2, BarChart3, Eye, Edit, Users, GraduationCap, Clock, MessageSquare, Mail, BookOpen, Search } from 'lucide-react';
+import { LogOut, Plus, Trash2, BarChart3, Eye, Edit, Users, GraduationCap, Clock, MessageSquare, Mail, BookOpen, Search, Library } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -287,7 +287,15 @@ const AdminDashboard = () => {
             </div>
             <div className="flex items-center gap-2">
               <Button 
-                onClick={() => navigate(`/school/${id}/admin/teachers`)}
+                onClick={() => navigate(`/school/${id}/admin/subjects`)}
+                variant="ghost"
+                className="text-sm h-9 font-medium"
+              >
+                <Library className="h-4 h-4 mr-2" />
+                Matières
+              </Button>
+              <Button 
+                onClick={() => navigate(`/school/${id}/admin/teacher-management`)}
                 variant="ghost"
                 className="text-sm h-9 font-medium"
               >

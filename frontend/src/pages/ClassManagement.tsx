@@ -20,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Users, Download, ArrowLeft, LogOut, UserPlus, Copy } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Download, ArrowLeft, LogOut, UserPlus, Copy, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { classApi, authApi } from "@/lib/api";
 
@@ -642,6 +642,15 @@ export default function ClassManagement() {
                         title="Exporter"
                       >
                         <Download className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => navigate(`/school/${schoolId}/admin/classes/${classItem.id}/subjects`)}
+                        className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 h-8 w-8 p-0"
+                        title="Gérer les matières"
+                      >
+                        <BookOpen className="w-4 h-4" />
                       </Button>
                       <Button 
                         size="sm" 

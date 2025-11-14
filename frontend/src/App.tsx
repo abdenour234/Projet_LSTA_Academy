@@ -35,6 +35,9 @@ import UnderConstruction from "./pages/UnderConstruction";
 import Methode from "./pages/Methode";
 import Clubs from "./pages/Clubs";
 import ChangePassword from "./pages/ChangePassword";
+import SubjectManagement from "./pages/SubjectManagement";
+import TeacherManagementPage from "./pages/TeacherManagementPage";
+import ClassSubjectAssignment from "./pages/ClassSubjectAssignment";
 
 const queryClient = new QueryClient();
 
@@ -186,10 +189,34 @@ const App = () => (
               } 
             />
             <Route 
+              path="/school/:id/admin/classes/:classId/subjects" 
+              element={
+                <PrivateRoute requiredRole="ADMIN">
+                  <ClassSubjectAssignment />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/school/:id/admin/subjects" 
+              element={
+                <PrivateRoute requiredRole="ADMIN">
+                  <SubjectManagement />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
               path="/school/:id/admin/teachers" 
               element={
                 <PrivateRoute requiredRole="ADMIN">
                   <TeacherManagement />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/school/:id/admin/teacher-management" 
+              element={
+                <PrivateRoute requiredRole="ADMIN">
+                  <TeacherManagementPage />
                 </PrivateRoute>
               } 
             />
