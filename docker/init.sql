@@ -72,29 +72,6 @@ CREATE INDEX IF NOT EXISTS idx_students_user_id ON public.students(user_id);
 CREATE INDEX IF NOT EXISTS idx_students_school_id ON public.students(school_id);
 CREATE INDEX IF NOT EXISTS idx_students_class_id ON public.students(class_id);
 
--- TABLE: activities
-CREATE TABLE IF NOT EXISTS public.activities (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id BIGINT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
-  class_id UUID REFERENCES public.classes(id) ON DELETE SET NULL,
-  subject_id UUID REFERENCES public.subjects(id) ON DELETE SET NULL,
-  type TEXT NOT NULL,
-  title TEXT NOT NULL,
-  description TEXT,
-  level TEXT NOT NULL,
-  layout_data TEXT,
-  is_published BOOLEAN DEFAULT false,
-  approval_status TEXT DEFAULT 'PENDING' CHECK (approval_status IN ('PENDING', 'APPROVED', 'DENIED')),
-  approved_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
-  created_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
-CREATE INDEX IF NOT EXISTS idx_activities_approval_status ON public.activities(approval_status);
-CREATE INDEX IF NOT EXISTS idx_activities_subject_id ON public.activities(subject_id);
-CREATE INDEX IF NOT EXISTS idx_activities_class_id ON public.activities(class_id);
-
 -- TABLE: activity_files
 CREATE TABLE IF NOT EXISTS public.activity_files (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -181,6 +158,29 @@ CREATE TABLE IF NOT EXISTS public.class_subjects (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   UNIQUE(class_id, subject_id)
 );
+
+-- TABLE: activities (moved here after classes and subjects are created)
+CREATE TABLE IF NOT EXISTS public.activities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  school_id BIGINT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
+  class_id UUID REFERENCES public.classes(id) ON DELETE SET NULL,
+  subject_id UUID REFERENCES public.subjects(id) ON DELETE SET NULL,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  level TEXT NOT NULL,
+  layout_data TEXT,
+  is_published BOOLEAN DEFAULT false,
+  approval_status TEXT DEFAULT 'PENDING' CHECK (approval_status IN ('PENDING', 'APPROVED', 'DENIED')),
+  approved_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  created_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_activities_approval_status ON public.activities(approval_status);
+CREATE INDEX IF NOT EXISTS idx_activities_subject_id ON public.activities(subject_id);
+CREATE INDEX IF NOT EXISTS idx_activities_class_id ON public.activities(class_id);
 
 -- TABLE: teacher_classes (many-to-many) - DEPRECATED, kept for backward compatibility
 CREATE TABLE IF NOT EXISTS public.teacher_classes (
