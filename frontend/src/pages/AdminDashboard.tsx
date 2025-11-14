@@ -376,7 +376,7 @@ const AdminDashboard = () => {
                   setClassLevelFilter('all');
                   setClassStatusFilter('all');
                 }}
-                className="text-sm text-slate-600 hover:text-slate-900 font-medium px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors"
+                className="text-sm text-blue-500 hover:text-blue-600 font-medium px-3 py-2 hover:bg-blue-50 rounded-lg transition-colors"
               >
                 Réinitialiser
               </button>
@@ -388,14 +388,14 @@ const AdminDashboard = () => {
               {/* Loading Skeleton - Maintains layout */}
               <table className="w-full">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Classe</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Niveau</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Enseignant principal</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Élèves</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Activités</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Statut</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Actions</th>
+                  <tr className="bg-blue-50 border-b border-blue-200">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Classe</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Niveau</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Enseignant principal</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Élèves</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Activités</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Statut</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -504,7 +504,7 @@ const AdminDashboard = () => {
                             variant="ghost" 
                             size="sm"
                             onClick={() => navigate(`/school/${id}/admin/classes`)}
-                            className="text-slate-600 hover:text-slate-900 hover:bg-white/80 h-8"
+                            className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 h-8"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -529,11 +529,11 @@ const AdminDashboard = () => {
           ) : (
             <div className="border border-slate-200 rounded-lg p-12 text-center bg-white">
               <Users className="h-12 w-12 text-slate-400 mx-auto mb-3" />
-              <p className="text-sm font-medium text-slate-900 mb-1">Aucune classe</p>
+              <p className="text-sm font-medium text-blue-600 mb-1">Aucune classe</p>
               <p className="text-sm text-slate-600 mb-4">Commencez par créer votre première classe</p>
               <Button 
                 onClick={() => navigate(`/school/${id}/admin/classes`)}
-                className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium h-9"
+                className="bg-blue-600 hover:bg-emerald-500 text-white text-sm font-medium h-9"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Créer une classe
@@ -546,7 +546,7 @@ const AdminDashboard = () => {
         <div>
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Enseignants</h2>
+              <h2 className="text-lg font-semibold text-blue-600">Enseignants</h2>
               <p className="text-sm text-blue-500 mt-0.5">Personnel enseignant de l'école</p>
             </div>
             <Button 
@@ -585,7 +585,7 @@ const AdminDashboard = () => {
                   setTeacherSearchTerm('');
                   setTeacherStatusFilter('all');
                 }}
-                className="text-sm text-blue-500 hover:text-emerald-600 font-medium px-3 py-2 hover:bg-emerald-50 rounded-lg transition-colors"
+                className="text-sm text-blue-500 hover:text-blue-600 font-medium px-3 py-2 hover:bg-blue-50 rounded-lg transition-colors"
               >
                 Réinitialiser
               </button>
@@ -598,11 +598,11 @@ const AdminDashboard = () => {
                 <thead>
                   <tr className="bg-blue-50 border-b-2 border-blue-200">
                     <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Nom</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Email</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Spécialité</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Classes assignées</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Statut</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Actions</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Email</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Spécialité</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Classes assignées</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Statut</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -623,13 +623,13 @@ const AdminDashboard = () => {
             <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Nom</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Email</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Spécialité</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Classes assignées</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Statut</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Actions</th>
+                  <tr className="bg-blue-50 border-b border-blue-200">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Nom</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Email</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Spécialité</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Classes assignées</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Statut</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -642,22 +642,22 @@ const AdminDashboard = () => {
                       <tr 
                         key={teacher.id} 
                         className={`${
-                          index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
-                        } hover:bg-slate-100 transition-colors cursor-pointer`}
+                          index % 2 === 0 ? 'bg-white' : 'bg-blue-50'
+                        } hover:bg-emerald-50 transition-colors cursor-pointer`}
                         onClick={() => navigate(`/school/${id}/admin/teachers`)}
                       >
                         <td className="px-4 py-4">
-                          <div className="font-medium text-slate-900">
+                          <div className="font-medium text-blue-600">
                             {teacher.fullName || `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim()}
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-sm text-slate-700">
-                          {teacher.email || <span className="text-slate-400">—</span>}
+                        <td className="px-4 py-4 text-sm text-blue-500">
+                          {teacher.email || <span className="text-blue-400">—</span>}
                         </td>
-                        <td className="px-4 py-4 text-sm text-slate-700">
-                          {teacher.specialty || <span className="text-slate-400">—</span>}
+                        <td className="px-4 py-4 text-sm text-blue-500">
+                          {teacher.specialty || <span className="text-blue-400">—</span>}
                         </td>
-                        <td className="px-4 py-4 text-sm font-medium text-slate-900 tabular-nums">
+                        <td className="px-4 py-4 text-sm font-medium text-blue-600 tabular-nums">
                           {assignedClasses.length > 0 ? (
                             <span>{assignedClasses.length} classe{assignedClasses.length > 1 ? 's' : ''}</span>
                           ) : (
@@ -680,7 +680,7 @@ const AdminDashboard = () => {
                             variant="ghost" 
                             size="sm"
                             onClick={() => navigate(`/school/${id}/admin/teachers`)}
-                            className="text-slate-600 hover:text-slate-900 hover:bg-white/80 h-8"
+                            className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 h-8"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -705,11 +705,11 @@ const AdminDashboard = () => {
           ) : (
             <div className="border border-slate-200 rounded-lg p-12 text-center bg-white">
               <GraduationCap className="h-12 w-12 text-slate-400 mx-auto mb-3" />
-              <p className="text-sm font-medium text-slate-900 mb-1">Aucun enseignant</p>
+              <p className="text-sm font-medium text-blue-600 mb-1">Aucun enseignant</p>
               <p className="text-sm text-slate-600 mb-4">Ajoutez des enseignants à votre école</p>
               <Button 
                 onClick={() => navigate(`/school/${id}/admin/teachers`)}
-                className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium h-9"
+                className="bg-blue-600 hover:bg-emerald-500 text-white text-sm font-medium h-9"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Ajouter un enseignant
@@ -722,7 +722,7 @@ const AdminDashboard = () => {
         <div>
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Activités disponibles</h2>
+              <h2 className="text-lg font-semibold text-blue-600">Activités disponibles</h2>
               <p className="text-sm text-slate-600 mt-0.5">Créées par le SuperAdmin</p>
             </div>
           </div>
@@ -733,7 +733,7 @@ const AdminDashboard = () => {
               <select
                 value={activityTypeFilter}
                 onChange={(e) => setActivityTypeFilter(e.target.value)}
-                className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-2 transition-shadow"
+                className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-blue-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-400 focus:ring-offset-2 transition-shadow"
               >
                 <option value="all">Tous les types</option>
                 <option value="Orale">Orale</option>
@@ -747,12 +747,12 @@ const AdminDashboard = () => {
             <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Titre</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Type</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Niveau</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Classes ciblées</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Actions</th>
+                  <tr className="bg-blue-50 border-b border-blue-200">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Titre</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Type</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Niveau</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Classes ciblées</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -764,14 +764,14 @@ const AdminDashboard = () => {
                       <tr 
                         key={activity.id} 
                         className={`${
-                          index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
-                        } hover:bg-slate-100 transition-colors cursor-pointer`}
+                          index % 2 === 0 ? 'bg-white' : 'bg-blue-50'
+                        } hover:bg-emerald-50 transition-colors cursor-pointer`}
                         onClick={() => navigate(`/activity/${activity.id}`)}
                       >
                         <td className="px-4 py-4">
-                          <div className="font-medium text-slate-900">{activity.title}</div>
+                          <div className="font-medium text-blue-600">{activity.title}</div>
                           {activity.description && (
-                            <div className="text-xs text-slate-500 mt-0.5 line-clamp-1">{activity.description}</div>
+                            <div className="text-xs text-blue-400 mt-0.5 line-clamp-1">{activity.description}</div>
                           )}
                         </td>
                         <td className="px-4 py-4">
@@ -788,15 +788,15 @@ const AdminDashboard = () => {
                             {activity.level}
                           </span>
                         </td>
-                        <td className="px-4 py-4 text-sm font-medium text-slate-900 tabular-nums">
-                          {targetedClasses > 0 ? `${targetedClasses} classe${targetedClasses > 1 ? 's' : ''}` : <span className="text-slate-400">Toutes</span>}
+                        <td className="px-4 py-4 text-sm font-medium text-blue-600 tabular-nums">
+                          {targetedClasses > 0 ? `${targetedClasses} classe${targetedClasses > 1 ? 's' : ''}` : <span className="text-blue-400">Toutes</span>}
                         </td>
                         <td className="px-4 py-4 text-right sticky right-0 bg-inherit" onClick={(e) => e.stopPropagation()}>
                           <Button 
                             variant="ghost" 
                             size="sm"
                             onClick={() => navigate(`/activity/${activity.id}`)}
-                            className="text-slate-600 hover:text-slate-900 hover:bg-white/80 h-8"
+                            className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 h-8"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -821,7 +821,7 @@ const AdminDashboard = () => {
           ) : (
             <div className="border border-slate-200 rounded-lg p-12 text-center bg-white">
               <BookOpen className="h-12 w-12 text-slate-400 mx-auto mb-3" />
-              <p className="text-sm font-medium text-slate-900 mb-1">Aucune activité</p>
+              <p className="text-sm font-medium text-blue-600 mb-1">Aucune activité</p>
               <p className="text-sm text-slate-600">Les activités créées apparaîtront ici</p>
             </div>
           )}
@@ -831,20 +831,20 @@ const AdminDashboard = () => {
         {diagnosticSessions.length > 0 && (
           <div>
             <div className="mb-3">
-              <h2 className="text-lg font-semibold text-slate-900">Diagnostics pédagogiques</h2>
+              <h2 className="text-lg font-semibold text-blue-600">Diagnostics pédagogiques</h2>
               <p className="text-sm text-slate-600 mt-0.5">Sessions réalisées par les enseignants</p>
             </div>
 
             <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Type</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Niveau</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Classe</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Élèves</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Date</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-slate-700 uppercase tracking-wide">Actions</th>
+                  <tr className="bg-blue-50 border-b border-blue-200">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Type</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Niveau</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Classe</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Élèves</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Date</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -854,25 +854,25 @@ const AdminDashboard = () => {
                       <tr 
                         key={session.id} 
                         className={`${
-                          index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
-                        } hover:bg-slate-100 transition-colors cursor-pointer`}
+                          index % 2 === 0 ? 'bg-white' : 'bg-blue-50'
+                        } hover:bg-emerald-50 transition-colors cursor-pointer`}
                         onClick={() => handleViewResults(session.id)}
                       >
                         <td className="px-4 py-4">
-                          <div className="font-medium text-slate-900">{gridInfo?.title || session.diagnostic_type}</div>
+                          <div className="font-medium text-blue-600">{gridInfo?.title || session.diagnostic_type}</div>
                         </td>
                         <td className="px-4 py-4">
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
                             {session.grade_level}
                           </span>
                         </td>
-                        <td className="px-4 py-4 text-sm text-slate-700">
-                          {session.class_name || <span className="text-slate-400">—</span>}
+                        <td className="px-4 py-4 text-sm text-blue-500">
+                          {session.class_name || <span className="text-blue-400">—</span>}
                         </td>
-                        <td className="px-4 py-4 text-sm font-medium text-slate-900 tabular-nums">
+                        <td className="px-4 py-4 text-sm font-medium text-blue-600 tabular-nums">
                           {session.total_students}
                         </td>
-                        <td className="px-4 py-4 text-sm text-slate-700">
+                        <td className="px-4 py-4 text-sm text-blue-500">
                           {new Date(session.session_date).toLocaleDateString('fr-FR', { 
                             day: 'numeric', 
                             month: 'short', 
@@ -884,7 +884,7 @@ const AdminDashboard = () => {
                             variant="ghost" 
                             size="sm"
                             onClick={() => handleViewResults(session.id)}
-                            className="text-slate-600 hover:text-slate-900 hover:bg-white/80 h-8"
+                            className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 h-8"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
