@@ -38,6 +38,7 @@ import Clubs from "./pages/Clubs";
 import ChangePassword from "./pages/ChangePassword";
 import SubjectManagement from "./pages/SubjectManagement";
 import ClassSubjectAssignment from "./pages/ClassSubjectAssignment";
+import SchoolManage from "./pages/SchoolManage";
 
 const queryClient = new QueryClient();
 
@@ -56,7 +57,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<AdminSignup />} />
             <Route path="/change-password" element={<ChangePassword />} />
-            <Route path="/school/:id/manage" element={<require('./pages/SchoolManage').default />} />
+            <Route path="/school/:id/manage" element={<SchoolManage />} />
             <Route path="/superadmin/login" element={<Login />} />
             <Route path="/school/:id/login" element={<Login />} />
             

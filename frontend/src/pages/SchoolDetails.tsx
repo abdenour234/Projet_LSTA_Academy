@@ -153,6 +153,14 @@ const SchoolDetails = () => {
                     <Button variant="ghost" className="mb-4" onClick={() => navigate(-1)}>
                       <ArrowLeft className="h-4 w-4 mr-2" /> Retour
                     </Button>
+                    {/* Always show Manage button if schoolId exists */}
+                    {schoolId && (
+                      <div className="mb-4 flex justify-end">
+                        <Button size="sm" variant="secondary" onClick={() => navigate(`/school/${schoolId}/manage`)}>
+                          Gérer
+                        </Button>
+                      </div>
+                    )}
                     {loading ? (
                       <LoadingState />
                     ) : school ? (
@@ -166,12 +174,6 @@ const SchoolDetails = () => {
                         <CardContent>
                           <div className="flex items-center gap-6 mb-4">
                             <div><strong>Élèves:</strong> {school.students}</div>
-                          </div>
-                          {/* Manage button for superadmin */}
-                          <div className="mt-4 flex justify-end">
-                            <Button size="sm" variant="secondary" onClick={() => navigate(`/school/${school.id}/manage`)}>
-                              Gérer
-                            </Button>
                           </div>
                           {/* Activities, etc. */}
                         </CardContent>
