@@ -52,12 +52,18 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
       try {
         const [classesData, subjectsData] = await Promise.all([
           classApi.getClassesBySchoolId(parseInt(schoolId)),
-          subjectApi.getBySchoolId(schoolId)
+          subjectApi.getBySchoolId(parseInt(schoolId))
         ]);
+        console.log('[ActivityBuilder] Loaded data:', { classesData, subjectsData });
         setClasses(classesData);
         setSubjects(subjectsData);
       } catch (error) {
         console.error('Error loading classes/subjects:', error);
+        toast({
+          title: 'Erreur de chargement',
+          description: 'Impossible de charger les classes ou matières',
+          variant: 'destructive'
+        });
       }
     };
     loadData();
@@ -212,15 +218,6 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
       toast({ 
         title: 'Titre requis',
         description: 'Veuillez ajouter un titre à l\'activité',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    if (!selectedClassId) {
-      toast({ 
-        title: 'Classe requise',
-        description: 'Veuillez sélectionner une classe',
         variant: 'destructive'
       });
       return;
@@ -555,21 +552,6 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
             <div>
               <Label>Niveau</Label>
               <Input value={level} onChange={(e) => setLevel(e.target.value)} />
-            </div>
-            <div>
-              <Label>Classe *</Label>
-              <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une classe" />
-                </SelectTrigger>
-                <SelectContent>
-                  {classes.map((classe) => (
-                    <SelectItem key={classe.id} value={classe.id}>
-                      {classe.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
             <div>
               <Label>Matière (Subject) *</Label>
