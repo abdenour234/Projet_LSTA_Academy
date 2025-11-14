@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { teacherManagementApi, profileApi, subjectApi } from '@/lib/api';
+import { teacherManagementApi, subjectApi } from '@/lib/api';
 import { Teacher, TeacherDTO, Subject } from '@/types/school';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,14 +39,13 @@ import { toast } from '@/hooks/use-toast';
 export default function TeacherManagement() {
   const { user } = useAuth();
   const [teachers, setTeachers] = useState<any[]>([]);
-  const [profiles, setProfiles] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [formData, setFormData] = useState<TeacherDTO>({
     profileId: '',
-    schoolId: user?.schoolId || 0,
+    schoolId: Number(user?.schoolId) || 0,
     specialty: '',
     phoneNumber: '',
     isActive: true,
@@ -61,20 +60,14 @@ export default function TeacherManagement() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [teachersData, profilesData, subjectsData] = await Promise.all([
-        teacherManagementApi.getBySchoolId(user!.schoolId, undefined, false),
-        profileApi.getBySchoolId(user!.schoolId.toString()),
-        subjectApi.getBySchoolId(user!.schoolId, true), // Only active subjects
+      const schoolId = Number(user!.schoolId);
+      const [teachersData, subjectsData] = await Promise.all([
+        teacherManagementApi.getBySchoolId(schoolId, undefined, false),
+        subjectApi.getBySchoolId(schoolId, true), // Only active subjects
       ]);
 
-      // Enhance teachers with profile data
-      const teachersWithProfiles = teachersData.map((teacher: Teacher) => {
-        const profile = profilesData.find((p: any) => p.id === teacher.profileId);
-        return { ...teacher, profile };
-      });
-
-      setTeachers(teachersWithProfiles);
-      setProfiles(profilesData);
+      // Teachers from API already include profile data
+      setTeachers(teachersData);
       setSubjects(subjectsData);
     } catch (error: any) {
       toast({
@@ -101,7 +94,7 @@ export default function TeacherManagement() {
       setEditingTeacher(null);
       setFormData({
         profileId: '',
-        schoolId: user!.schoolId,
+        schoolId: Number(user!.schoolId),
         specialty: '',
         phoneNumber: '',
         isActive: true,
@@ -115,7 +108,7 @@ export default function TeacherManagement() {
     setEditingTeacher(null);
     setFormData({
       profileId: '',
-      schoolId: user!.schoolId,
+      schoolId: Number(user!.schoolId),
       specialty: '',
       phoneNumber: '',
       isActive: true,
@@ -187,13 +180,6 @@ export default function TeacherManagement() {
       });
     }
   };
-
-  // Get available profiles (those without a teacher record)
-  const availableProfiles = profiles.filter(
-    (profile) =>
-      !teachers.some((t) => t.profileId === profile.id) ||
-      editingTeacher?.profileId === profile.id
-  );
 
   if (loading) {
     return (
@@ -312,31 +298,20 @@ export default function TeacherManagement() {
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="profile">Profil Utilisateur *</Label>
-                <Select
+                <Label htmlFor="profileId">ID du Profil Utilisateur *</Label>
+                <Input
+                  id="profileId"
                   value={formData.profileId}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, profileId: value })
+                  onChange={(e) =>
+                    setFormData({ ...formData, profileId: e.target.value })
                   }
                   disabled={!!editingTeacher}
+                  placeholder="Entrez l'ID du profil (UUID)"
                   required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez un profil" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableProfiles.map((profile) => (
-                      <SelectItem key={profile.id} value={profile.id}>
-                        {profile.fullName} ({profile.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {!editingTeacher && availableProfiles.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    Aucun profil disponible. Créez d'abord un profil utilisateur.
-                  </p>
-                )}
+                />
+                <p className="text-sm text-muted-foreground">
+                  L'ID du profil utilisateur à associer à cet enseignant
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -395,7 +370,7 @@ export default function TeacherManagement() {
               <Button type="button" variant="outline" onClick={handleCloseDialog}>
                 Annuler
               </Button>
-              <Button type="submit" disabled={availableProfiles.length === 0 && !editingTeacher}>
+              <Button type="submit">
                 {editingTeacher ? 'Mettre à jour' : 'Créer'}
               </Button>
             </DialogFooter>
