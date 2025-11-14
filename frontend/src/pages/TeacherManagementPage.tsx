@@ -315,41 +315,29 @@ export default function TeacherManagement() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="specialty">Spécialité *</Label>
-                {subjects.length > 0 ? (
-                  <Select
-                    value={formData.specialty}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, specialty: value })
-                    }
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez une spécialité" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {subjects.map((subject) => (
-                        <SelectItem key={subject.id} value={subject.name}>
-                          {subject.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <>
-                    <Input
-                      id="specialty"
-                      placeholder="Ex: Mathématiques, Physique..."
-                      value={formData.specialty}
-                      onChange={(e) =>
-                        setFormData({ ...formData, specialty: e.target.value })
-                      }
-                      required
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      Aucune matière disponible. Vous pouvez saisir une spécialité personnalisée.
-                    </p>
-                  </>
+                <Label htmlFor="specialty">Spécialité (Matière) *</Label>
+                <Select
+                  value={formData.specialty}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, specialty: value })
+                  }
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez une matière" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject.id} value={subject.name}>
+                        {subject.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {subjects.length === 0 && (
+                  <p className="text-sm text-amber-600">
+                    Aucune matière disponible. Veuillez d'abord créer des matières dans la section "Gestion des Matières".
+                  </p>
                 )}
               </div>
 
@@ -370,7 +358,7 @@ export default function TeacherManagement() {
               <Button type="button" variant="outline" onClick={handleCloseDialog}>
                 Annuler
               </Button>
-              <Button type="submit">
+              <Button type="submit" disabled={!editingTeacher && subjects.length === 0}>
                 {editingTeacher ? 'Mettre à jour' : 'Créer'}
               </Button>
             </DialogFooter>

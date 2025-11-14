@@ -197,7 +197,13 @@ export default function ClassSubjectAssignment() {
   const getTeachersForSubject = (subjectId: string) => {
     const subject = subjects.find((s) => s.id === subjectId);
     if (!subject) return teachers;
-    return teachers.filter((t) => t.specialty === subject.name);
+    
+    // Case-insensitive and trimmed comparison for better matching
+    const subjectName = subject.name.toLowerCase().trim();
+    return teachers.filter((t) => {
+      const teacherSpecialty = (t.specialty || '').toLowerCase().trim();
+      return teacherSpecialty === subjectName;
+    });
   };
 
   const filteredTeachers = formData.subjectId
