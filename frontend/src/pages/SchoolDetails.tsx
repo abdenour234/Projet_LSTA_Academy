@@ -148,34 +148,40 @@ const SchoolDetails = () => {
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
-                size="sm"
-                onClick={() => navigate('/superadmin/dashboard')}
-                className="text-slate-700 hover:text-slate-900 hover:bg-slate-100"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Retour
-              </Button>
-              <div className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-slate-600" />
-                <h1 className="text-base font-semibold text-slate-900">{school.name}</h1>
-              </div>
-              <p className="text-xs text-slate-600">
-                {school.city}, {school.region} • {school.level} • {school.status}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-600">
-                {activities.length} activités
-              </span>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
-        <Card>
-          <CardHeader>
+                return (
+                  <div className="min-h-screen bg-white">
+                    <Button variant="ghost" className="mb-4" onClick={() => navigate(-1)}>
+                      <ArrowLeft className="h-4 w-4 mr-2" /> Retour
+                    </Button>
+                    {loading ? (
+                      <LoadingState />
+                    ) : school ? (
+                      <Card className="mb-6">
+                        <CardHeader>
+                          <CardTitle>{school.name}</CardTitle>
+                          <CardDescription>
+                            {school.city}, {school.region} • {school.level} • {school.status}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex items-center gap-6 mb-4">
+                            <div><strong>Élèves:</strong> {school.students}</div>
+                          </div>
+                          {/* Manage button for superadmin */}
+                          <div className="mt-4 flex justify-end">
+                            <Button size="sm" variant="secondary" onClick={() => navigate(`/school/${school.id}/manage`)}>
+                              Gérer
+                            </Button>
+                          </div>
+                          {/* Activities, etc. */}
+                        </CardContent>
+                      </Card>
+                      {/* ...existing code... */}
+                    ) : (
+                      <div className="p-8">Aucune école trouvée.</div>
+                    )}
+                  </div>
+                );
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5" />
               Activités de l'école
