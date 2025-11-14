@@ -1,25 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { teacherManagementApi, subjectApi } from '@/lib/api';
-import { Teacher, TeacherDTO, Subject } from '@/types/school';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -28,51 +19,72 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Plus, Mail, Phone, Key, Copy } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { authApi, teacherManagementApi, subjectApi } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Eye, EyeOff, User } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
 
-/**
- * TeacherManagement Component
- * Allows admins to manage teachers with their specialties
- */
+interface Teacher {
+  id: string;
+  profile?: {
+    fullName: string;
+    email: string;
+  };
+  specialty: string;
+  phoneNumber?: string;
+  isActive: boolean;
+}
+
+interface Subject {
+  id: string;
+  name: string;
+}
+
 export default function TeacherManagement() {
-  const { user } = useAuth();
-  const [teachers, setTeachers] = useState<any[]>([]);
+  const { id: schoolId } = useParams();
+  const { toast } = useToast();
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
-  const [formData, setFormData] = useState<TeacherDTO>({
-    profileId: '',
-    schoolId: Number(user?.schoolId) || 0,
-    specialty: '',
-    phoneNumber: '',
-    isActive: true,
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newTeacher, setNewTeacher] = useState({
+    full_name: '',
+    matiere: '',
+    phone: '',
   });
+  const [generatedCredentials, setGeneratedCredentials] = useState<{
+    email: string;
+    password: string;
+  } | null>(null);
 
   useEffect(() => {
-    if (user?.schoolId) {
-      loadData();
-    }
-  }, [user?.schoolId]);
+    loadData();
+  }, [schoolId]);
 
   const loadData = async () => {
     try {
+      if (!schoolId) return;
       setLoading(true);
-      const schoolId = Number(user!.schoolId);
+      
       const [teachersData, subjectsData] = await Promise.all([
-        teacherManagementApi.getBySchoolId(schoolId, undefined, false),
-        subjectApi.getBySchoolId(schoolId, true), // Only active subjects
+        teacherManagementApi.getBySchoolId(Number(schoolId), undefined, false),
+        subjectApi.getBySchoolId(Number(schoolId), true),
       ]);
 
-      // Teachers from API already include profile data
       setTeachers(teachersData);
       setSubjects(subjectsData);
     } catch (error: any) {
+      console.error('Error loading data:', error);
       toast({
         title: 'Erreur',
-        description: error.message || 'Impossible de charger les données',
+        description: 'Erreur lors du chargement des données',
         variant: 'destructive',
       });
     } finally {
@@ -80,105 +92,86 @@ export default function TeacherManagement() {
     }
   };
 
-  const handleOpenDialog = (teacher?: any) => {
-    if (teacher) {
-      setEditingTeacher(teacher);
-      setFormData({
-        profileId: teacher.profileId,
-        schoolId: teacher.schoolId,
-        specialty: teacher.specialty,
-        phoneNumber: teacher.phoneNumber || '',
-        isActive: teacher.isActive,
-      });
-    } else {
-      setEditingTeacher(null);
-      setFormData({
-        profileId: '',
-        schoolId: Number(user!.schoolId),
-        specialty: '',
-        phoneNumber: '',
-        isActive: true,
-      });
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 10; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    setDialogOpen(true);
+    return password;
   };
 
-  const handleCloseDialog = () => {
-    setDialogOpen(false);
-    setEditingTeacher(null);
-    setFormData({
-      profileId: '',
-      schoolId: Number(user!.schoolId),
-      specialty: '',
-      phoneNumber: '',
-      isActive: true,
+  const generateEmail = (fullName: string) => {
+    const namePart = fullName
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z\s]/g, '')
+      .split(' ')
+      .filter((w) => w)
+      .join('.');
+    const randomNum = Math.floor(Math.random() * 1000);
+    return `${namePart}.${randomNum}@school${schoolId}.com`;
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: 'Copié',
+      description: 'Copié dans le presse-papiers',
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddTeacher = async () => {
+    if (!schoolId) return;
+
+    // Generate email and password
+    const email = generateEmail(newTeacher.full_name);
+    const password = generatePassword();
 
     try {
-      if (editingTeacher) {
-        await teacherManagementApi.update(editingTeacher.id, formData);
-        toast({
-          title: 'Succès',
-          description: 'Enseignant mis à jour avec succès',
-        });
-      } else {
-        await teacherManagementApi.create(formData);
-        toast({
-          title: 'Succès',
-          description: 'Enseignant créé avec succès',
-        });
-      }
-      handleCloseDialog();
+      // Step 1: Create user account with registerByAdmin
+      const registerResponse = await authApi.registerByAdmin({
+        email,
+        password,
+        fullName: newTeacher.full_name,
+        role: 'TEACHER',
+        schoolId: Number(schoolId),
+        phone: newTeacher.phone || undefined,
+      });
+
+      // Step 2: Create teacher entity with the profile ID
+      await teacherManagementApi.create({
+        profileId: registerResponse.userId,
+        schoolId: Number(schoolId),
+        specialty: newTeacher.matiere,
+        phoneNumber: newTeacher.phone || '',
+        isActive: true,
+      });
+
+      setGeneratedCredentials({ email, password });
+      setNewTeacher({ full_name: '', matiere: '', phone: '' });
+      
+      toast({
+        title: 'Succès',
+        description: 'Enseignant créé avec succès',
+      });
+
       loadData();
     } catch (error: any) {
+      console.error('Error creating teacher:', error);
       toast({
         title: 'Erreur',
-        description: error.message || 'Une erreur est survenue',
+        description: error.message || 'Erreur lors de la création de l\'enseignant',
         variant: 'destructive',
       });
     }
   };
 
-  const handleToggleStatus = async (teacher: Teacher) => {
-    try {
-      await teacherManagementApi.toggleStatus(teacher.id);
-      toast({
-        title: 'Succès',
-        description: `Enseignant ${teacher.isActive ? 'désactivé' : 'activé'} avec succès`,
-      });
-      loadData();
-    } catch (error: any) {
-      toast({
-        title: 'Erreur',
-        description: error.message || 'Impossible de modifier le statut',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet enseignant ?')) {
-      return;
-    }
-
-    try {
-      await teacherManagementApi.delete(id);
-      toast({
-        title: 'Succès',
-        description: 'Enseignant supprimé avec succès',
-      });
-      loadData();
-    } catch (error: any) {
-      toast({
-        title: 'Erreur',
-        description: error.message || 'Impossible de supprimer l\'enseignant',
-        variant: 'destructive',
-      });
-    }
+  const handleCloseAddDialog = () => {
+    setIsAddDialogOpen(false);
+    setNewTeacher({ full_name: '', matiere: '', phone: '' });
+    setGeneratedCredentials(null);
   };
 
   if (loading) {
@@ -195,42 +188,46 @@ export default function TeacherManagement() {
         <div>
           <h1 className="text-3xl font-bold">Gestion des Enseignants</h1>
           <p className="text-muted-foreground mt-1">
-            Gérez les enseignants et leurs spécialités
+            Créez et gérez les enseignants de votre établissement
           </p>
         </div>
-        <Button onClick={() => handleOpenDialog()}>
+        <Button onClick={() => setIsAddDialogOpen(true)} disabled={subjects.length === 0}>
           <Plus className="w-4 h-4 mr-2" />
           Nouvel Enseignant
         </Button>
       </div>
 
+      {subjects.length === 0 && (
+        <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className="text-amber-800">
+            Veuillez d'abord créer des matières dans la section "Gestion des Matières" avant d'ajouter des enseignants.
+          </p>
+        </div>
+      )}
+
       <div className="bg-card rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nom</TableHead>
+              <TableHead>Nom Complet</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Spécialité</TableHead>
+              <TableHead>Matière (Spécialité)</TableHead>
               <TableHead>Téléphone</TableHead>
               <TableHead>Statut</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {teachers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  Aucun enseignant trouvé. Créez-en un pour commencer.
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  Aucun enseignant. Cliquez sur "Nouvel Enseignant" pour commencer.
                 </TableCell>
               </TableRow>
             ) : (
               teachers.map((teacher) => (
                 <TableRow key={teacher.id}>
                   <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-muted-foreground" />
-                      {teacher.profile?.fullName || 'N/A'}
-                    </div>
+                    {teacher.profile?.fullName || 'N/A'}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {teacher.profile?.email || 'N/A'}
@@ -246,36 +243,6 @@ export default function TeacherManagement() {
                       {teacher.isActive ? 'Actif' : 'Inactif'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleToggleStatus(teacher)}
-                        title={teacher.isActive ? 'Désactiver' : 'Activer'}
-                      >
-                        {teacher.isActive ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleOpenDialog(teacher)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(teacher.id)}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -283,43 +250,41 @@ export default function TeacherManagement() {
         </Table>
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {/* Add Teacher Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingTeacher ? 'Modifier l\'Enseignant' : 'Nouvel Enseignant'}
+              {generatedCredentials ? 'Identifiants Générés' : 'Nouvel Enseignant'}
             </DialogTitle>
             <DialogDescription>
-              {editingTeacher
-                ? 'Modifiez les informations de l\'enseignant'
+              {generatedCredentials
+                ? 'Communiquez ces identifiants à l\'enseignant'
                 : 'Ajoutez un nouvel enseignant avec sa spécialité'}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit}>
+
+          {!generatedCredentials ? (
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="profileId">ID du Profil Utilisateur *</Label>
+                <Label htmlFor="full_name">Nom Complet *</Label>
                 <Input
-                  id="profileId"
-                  value={formData.profileId}
+                  id="full_name"
+                  placeholder="Ex: Jean Dupont"
+                  value={newTeacher.full_name}
                   onChange={(e) =>
-                    setFormData({ ...formData, profileId: e.target.value })
+                    setNewTeacher({ ...newTeacher, full_name: e.target.value })
                   }
-                  disabled={!!editingTeacher}
-                  placeholder="Entrez l'ID du profil (UUID)"
                   required
                 />
-                <p className="text-sm text-muted-foreground">
-                  L'ID du profil utilisateur à associer à cet enseignant
-                </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="specialty">Spécialité (Matière) *</Label>
+                <Label htmlFor="matiere">Spécialité (Matière) *</Label>
                 <Select
-                  value={formData.specialty}
+                  value={newTeacher.matiere}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, specialty: value })
+                    setNewTeacher({ ...newTeacher, matiere: value })
                   }
                   required
                 >
@@ -334,11 +299,6 @@ export default function TeacherManagement() {
                     ))}
                   </SelectContent>
                 </Select>
-                {subjects.length === 0 && (
-                  <p className="text-sm text-amber-600">
-                    Aucune matière disponible. Veuillez d'abord créer des matières dans la section "Gestion des Matières".
-                  </p>
-                )}
               </div>
 
               <div className="space-y-2">
@@ -347,22 +307,74 @@ export default function TeacherManagement() {
                   id="phone"
                   type="tel"
                   placeholder="Ex: 0612345678"
-                  value={formData.phoneNumber}
+                  value={newTeacher.phone}
                   onChange={(e) =>
-                    setFormData({ ...formData, phoneNumber: e.target.value })
+                    setNewTeacher({ ...newTeacher, phone: e.target.value })
                   }
                 />
               </div>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleCloseDialog}>
-                Annuler
-              </Button>
-              <Button type="submit" disabled={!editingTeacher && subjects.length === 0}>
-                {editingTeacher ? 'Mettre à jour' : 'Créer'}
-              </Button>
-            </DialogFooter>
-          </form>
+          ) : (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-green-600" />
+                    <span className="font-medium">Email:</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(generatedCredentials.email)}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-sm font-mono break-all">{generatedCredentials.email}</p>
+              </div>
+
+              <div className="space-y-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Key className="w-4 h-4 text-blue-600" />
+                    <span className="font-medium">Mot de passe:</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(generatedCredentials.password)}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-sm font-mono">{generatedCredentials.password}</p>
+              </div>
+
+              <p className="text-sm text-amber-600">
+                ⚠️ Conservez ces identifiants en lieu sûr. Ils ne seront plus affichés.
+              </p>
+            </div>
+          )}
+
+          <DialogFooter>
+            {!generatedCredentials ? (
+              <>
+                <Button type="button" variant="outline" onClick={handleCloseAddDialog}>
+                  Annuler
+                </Button>
+                <Button
+                  onClick={handleAddTeacher}
+                  disabled={
+                    !newTeacher.full_name || !newTeacher.matiere || subjects.length === 0
+                  }
+                >
+                  Créer
+                </Button>
+              </>
+            ) : (
+              <Button onClick={handleCloseAddDialog}>Fermer</Button>
+            )}
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
