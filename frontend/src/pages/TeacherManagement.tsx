@@ -136,13 +136,21 @@ export default function TeacherManagement() {
         password,
         fullName: newTeacher.full_name,
         role: 'TEACHER',
-        schoolId: Number(schoolId),
-        phone: newTeacher.phone || undefined,
+        schoolId: schoolId,
       });
 
+      console.log('Register response:', registerResponse);
+
       // Step 2: Create teacher entity with the profile ID
+      // The response contains { user: {...}, message: string }
+      const profileId = registerResponse.user?.id || registerResponse.user?.userId;
+      
+      if (!profileId) {
+        throw new Error('Profile ID not found in registration response');
+      }
+
       await teacherManagementApi.create({
-        profileId: registerResponse.userId,
+        profileId: profileId,
         schoolId: Number(schoolId),
         specialty: newTeacher.matiere,
         phoneNumber: newTeacher.phone || '',
