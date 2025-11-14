@@ -18,6 +18,7 @@ import SuperAdminActivityEditor from "./pages/SuperAdminActivityEditor";
 import SuperAdminActivityCreator from "./pages/SuperAdminActivityCreator";
 import StudentDashboard from "./pages/StudentDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
+import TeacherActivityApproval from "./pages/TeacherActivityApproval";
 import AdminDashboard from "./pages/AdminDashboard";
 import DiagnosticNewSession from "./pages/DiagnosticNewSession";
 import DiagnosticSession from "./pages/DiagnosticSession";
@@ -166,6 +167,14 @@ const App = () => (
               element={
                 <PrivateRoute requiredRole="TEACHER">
                   <TeacherSessions />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/school/:id/teacher/activities/approval" 
+              element={
+                <PrivateRoute requiredRole="TEACHER">
+                  <TeacherActivityApproval />
                 </PrivateRoute>
               } 
             />

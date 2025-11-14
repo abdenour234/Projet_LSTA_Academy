@@ -66,17 +66,37 @@ public class ActivityController {
         return ResponseEntity.ok(activityRepository.findByType(type));
     }
 
-    // UPDATED: Accept optional classId for filtering
+    // UPDATED: Filter by approval status for students - only show APPROVED activities
     @GetMapping("/published")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT')")
     public ResponseEntity<List<Activity>> getPublishedActivities(
             @RequestParam Long schoolId,
-            @RequestParam(required = false) UUID classId) {
-        if (classId != null) {
-            return ResponseEntity.ok(activityRepository.findBySchoolIdAndClassIdAndIsPublished(schoolId, classId, true));
+            @RequestParam(required = false) UUID classId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        
+        // Extract user context to determine role
+        UserContext user = ownershipValidator.extractUserContext(authHeader);
+        
+        List<Activity> activities;
+        
+        // For students, only return APPROVED activities
+        // For teachers and admins, return all published activities
+        if ("STUDENT".equals(user.role)) {
+            if (classId != null) {
+                activities = activityRepository.findBySchoolIdAndClassIdAndApprovalStatus(schoolId, classId, "APPROVED");
+            } else {
+                activities = activityRepository.findBySchoolIdAndApprovalStatus(schoolId, "APPROVED");
+            }
         } else {
-            return ResponseEntity.ok(activityRepository.findBySchoolIdAndIsPublished(schoolId, true));
+            // Teachers and admins see all published activities regardless of approval
+            if (classId != null) {
+                activities = activityRepository.findBySchoolIdAndClassIdAndIsPublished(schoolId, classId, true);
+            } else {
+                activities = activityRepository.findBySchoolIdAndIsPublished(schoolId, true);
+            }
         }
+        
+        return ResponseEntity.ok(activities);
     }
 
     @PostMapping
