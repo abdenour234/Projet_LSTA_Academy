@@ -51,7 +51,7 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
     const loadData = async () => {
       try {
         const [classesData, subjectsData] = await Promise.all([
-          classApi.getClassesBySchoolId(parseInt(schoolId)),
+          classApi.getBySchoolId(schoolId.toString()),
           subjectApi.getBySchoolId(parseInt(schoolId))
         ]);
         console.log('[ActivityBuilder] Loaded data:', { classesData, subjectsData });
