@@ -1,15 +1,16 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload, Type, Image, FileText, Video, Save, Eye, Loader2, Files, X, File, ImageIcon } from 'lucide-react';
-import { activityApi, API_CONFIG } from '@/lib/api';
+import { activityApi, API_CONFIG, classApi, subjectApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { ActivityElement, ActivityElementType } from '@/types/activity';
 import { uploadActivityFile } from '@/lib/uploadToStorage';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ActivityBuilderProps {
   activityId?: string;
@@ -34,12 +35,33 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
   const [description, setDescription] = useState(initialData?.description || '');
   const [type, setType] = useState(initialData?.type || 'Cours');
   const [level, setLevel] = useState(initialData?.level || 'Primaire');
+  const [selectedClassId, setSelectedClassId] = useState<string>(classId || initialData?.classId || '');
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
+  const [classes, setClasses] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
   const [elements, setElements] = useState<ActivityElement[]>(initialData?.elements || []);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   // Stocker les fichiers en attente d'upload avec métadonnées
   const [pendingFiles, setPendingFiles] = useState<Map<string, { file: File; preview?: string; elementId: string }>>(new Map());
+
+  // Load classes and subjects
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [classesData, subjectsData] = await Promise.all([
+          classApi.getClassesBySchoolId(parseInt(schoolId)),
+          subjectApi.getBySchoolId(schoolId)
+        ]);
+        setClasses(classesData);
+        setSubjects(subjectsData);
+      } catch (error) {
+        console.error('Error loading classes/subjects:', error);
+      }
+    };
+    loadData();
+  }, [schoolId]);
 
   const addElement = (elementType: ActivityElementType) => {
     const newElement: ActivityElement = {
@@ -195,6 +217,24 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
       return;
     }
 
+    if (!selectedClassId) {
+      toast({ 
+        title: 'Classe requise',
+        description: 'Veuillez sélectionner une classe',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (!selectedSubjectId) {
+      toast({ 
+        title: 'Matière requise',
+        description: 'Veuillez sélectionner une matière',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     // Validation: Check if there are file elements without content and without pending uploads
     const emptyFileElements = elements.filter(el => 
       ['image', 'pdf', 'video'].includes(el.type) && 
@@ -219,7 +259,8 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
         type,
         level,
         schoolId,
-        classId,
+        classId: selectedClassId,
+        subjectId: selectedSubjectId,
         layoutData: JSON.stringify({ elements }),
         isPublished: publish,
       };
@@ -514,6 +555,36 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
             <div>
               <Label>Niveau</Label>
               <Input value={level} onChange={(e) => setLevel(e.target.value)} />
+            </div>
+            <div>
+              <Label>Classe *</Label>
+              <Select value={selectedClassId} onValueChange={setSelectedClassId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une classe" />
+                </SelectTrigger>
+                <SelectContent>
+                  {classes.map((classe) => (
+                    <SelectItem key={classe.id} value={classe.id}>
+                      {classe.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Matière (Subject) *</Label>
+              <Select value={selectedSubjectId} onValueChange={setSelectedSubjectId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une matière" />
+                </SelectTrigger>
+                <SelectContent>
+                  {subjects.map((subject) => (
+                    <SelectItem key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </Card>

@@ -671,5 +671,18 @@ export const classSubjectApi = {
   removeAllSubjects: (classId: string) => api.delete(`/class-subjects/class/${classId}/all`),
 };
 
+// Teacher Activity API endpoints (approval workflow)
+export const teacherActivityApi = {
+  getPendingActivities: () => api.get<any[]>('/teacher/activities/pending'),
+  
+  getMyActivities: () => api.get<any[]>('/teacher/activities/my-activities'),
+  
+  approveActivity: (activityId: string) => 
+    api.post<any>(`/teacher/activities/${activityId}/approve`, {}),
+  
+  denyActivity: (activityId: string) => 
+    api.post<any>(`/teacher/activities/${activityId}/deny`, {}),
+};
+
 // Export everything
 export default api;

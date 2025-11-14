@@ -75,15 +75,25 @@ CREATE INDEX IF NOT EXISTS idx_students_class_id ON public.students(class_id);
 -- TABLE: activities
 CREATE TABLE IF NOT EXISTS public.activities (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id BIGINT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,  -- Changed from TEXT to BIGINT
-  type TEXT NOT NULL,  -- Removed CHECK constraint to allow any activity type
+  school_id BIGINT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
+  class_id UUID REFERENCES public.classes(id) ON DELETE SET NULL,
+  subject_id UUID REFERENCES public.subjects(id) ON DELETE SET NULL,
+  type TEXT NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
   level TEXT NOT NULL,
-  created_by UUID,
+  layout_data TEXT,
+  is_published BOOLEAN DEFAULT false,
+  approval_status TEXT DEFAULT 'PENDING' CHECK (approval_status IN ('PENDING', 'APPROVED', 'DENIED')),
+  approved_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  created_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
+
+CREATE INDEX IF NOT EXISTS idx_activities_approval_status ON public.activities(approval_status);
+CREATE INDEX IF NOT EXISTS idx_activities_subject_id ON public.activities(subject_id);
+CREATE INDEX IF NOT EXISTS idx_activities_class_id ON public.activities(class_id);
 
 -- TABLE: activity_files
 CREATE TABLE IF NOT EXISTS public.activity_files (
