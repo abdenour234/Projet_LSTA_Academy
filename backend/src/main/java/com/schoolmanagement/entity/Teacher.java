@@ -34,6 +34,10 @@ public class Teacher {
     @Column(name = "profile_id", nullable = false, unique = true)
     private UUID profileId;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "profile_id", insertable = false, updatable = false)
+    private Profile profile;
+
     @Column(name = "school_id", nullable = false)
     private Long schoolId;
 
