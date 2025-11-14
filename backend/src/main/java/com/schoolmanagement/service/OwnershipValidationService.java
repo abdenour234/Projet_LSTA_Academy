@@ -80,16 +80,11 @@ public class OwnershipValidationService {
         Classe classe = classeRepository.findById(classId)
                 .orElseThrow(() -> new AccessDeniedException("Class not found"));
 
-        // Validate school matches
-        if (!classe.getSchoolId().equals(requestedSchoolId)) {
-            throw new AccessDeniedException("Class does not belong to the specified school");
-        }
-
         // For ADMIN/TEACHER: validate they are accessing their own school
         UUID currentUserId = extractUserIdFromAuth(auth);
         if (currentUserId != null) {
             Profile currentUser = profileRepository.findById(currentUserId).orElse(null);
-            if (currentUser != null && !currentUser.getSchoolId().equals(requestedSchoolId)) {
+            if (currentUser != null && !currentUser.getSchoolId().equals(classe.getSchoolId())) {
                 throw new AccessDeniedException("Cannot access resources from another school");
             }
         }

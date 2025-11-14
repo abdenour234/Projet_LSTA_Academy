@@ -375,16 +375,16 @@ export default function ClassSubjectAssignment() {
               <div className="space-y-2">
                 <Label htmlFor="teacher">Enseignant</Label>
                 <Select
-                  value={formData.teacherId}
+                  value={formData.teacherId || 'unassigned'}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, teacherId: value })
+                    setFormData({ ...formData, teacherId: value === 'unassigned' ? '' : value })
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionnez un enseignant" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Non assigné</SelectItem>
+                    <SelectItem value="unassigned">Non assigné</SelectItem>
                     {filteredTeachers.map((teacher) => (
                       <SelectItem key={teacher.id} value={teacher.id}>
                         {teacher.profile?.fullName || 'N/A'} ({teacher.specialty})
