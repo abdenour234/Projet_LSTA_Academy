@@ -193,16 +193,21 @@ export default function ClassSubjectAssignment() {
       editingAssignment?.subjectId === subject.id
   );
 
-  // Filter teachers by selected subject specialty
+  // Filter teachers by selected subject ID
   const getTeachersForSubject = (subjectId: string) => {
-    const subject = subjects.find((s) => s.id === subjectId);
-    if (!subject) return teachers;
+    if (!subjectId) return teachers;
     
-    // Case-insensitive and trimmed comparison for better matching
-    const subjectName = subject.name.toLowerCase().trim();
+    // Match teachers whose subject.id or subjectId matches the selected subject
     return teachers.filter((t) => {
-      const teacherSpecialty = (t.specialty || '').toLowerCase().trim();
-      return teacherSpecialty === subjectName;
+      // Check if teacher has subject object with matching id
+      if (t.subject && t.subject.id === subjectId) {
+        return true;
+      }
+      // Fallback: check if teacher has subjectId field
+      if (t.subjectId === subjectId) {
+        return true;
+      }
+      return false;
     });
   };
 
@@ -296,7 +301,7 @@ export default function ClassSubjectAssignment() {
                             {assignment.teacher.profile?.fullName || 'N/A'}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {assignment.teacher.specialty}
+                            {assignment.teacher.subject?.name || assignment.teacher.specialty || 'Spécialité non définie'}
                           </div>
                         </div>
                       ) : (
@@ -393,7 +398,7 @@ export default function ClassSubjectAssignment() {
                     <SelectItem value="unassigned">Non assigné</SelectItem>
                     {filteredTeachers.map((teacher) => (
                       <SelectItem key={teacher.id} value={teacher.id}>
-                        {teacher.profile?.fullName || 'N/A'} ({teacher.specialty})
+                        {teacher.profile?.fullName || 'N/A'} ({teacher.subject?.name || teacher.specialty || 'Spécialité non définie'})
                       </SelectItem>
                     ))}
                   </SelectContent>

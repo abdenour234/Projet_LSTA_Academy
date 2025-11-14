@@ -105,6 +105,17 @@ public class ActivityController {
             @RequestBody Activity activity,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         
+        System.out.println("=== CREATE ACTIVITY DEBUG ===");
+        System.out.println("Received activity:");
+        System.out.println("  Title: " + activity.getTitle());
+        System.out.println("  SubjectId: " + activity.getSubjectId());
+        System.out.println("  ClassId: " + activity.getClassId());
+        System.out.println("  SchoolId: " + activity.getSchoolId());
+        System.out.println("  Type: " + activity.getType());
+        System.out.println("  Level: " + activity.getLevel());
+        System.out.println("  IsPublished: " + activity.getIsPublished());
+        System.out.println("  ApprovalStatus: " + activity.getApprovalStatus());
+        
         // Sanitize text inputs
         if (activity.getTitle() != null) {
             activity.setTitle(inputSanitizer.sanitizeText(activity.getTitle()));
@@ -120,6 +131,12 @@ public class ActivityController {
         }
         
         Activity saved = activityRepository.save(activity);
+        System.out.println("Activity saved successfully:");
+        System.out.println("  ID: " + saved.getId());
+        System.out.println("  ClassId: " + saved.getClassId());
+        System.out.println("  SubjectId: " + saved.getSubjectId());
+        System.out.println("  ApprovalStatus: " + saved.getApprovalStatus());
+        System.out.println("================================");
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 

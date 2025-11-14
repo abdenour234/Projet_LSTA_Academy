@@ -37,6 +37,10 @@ interface Teacher {
     fullName: string;
     email: string;
   };
+  subject?: {
+    id: string;
+    name: string;
+  };
   specialty: string;
   phoneNumber?: string;
   isActive: boolean;
@@ -56,7 +60,7 @@ export default function TeacherManagement() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newTeacher, setNewTeacher] = useState({
     full_name: '',
-    matiere: '',
+    subjectId: '', // Changed to store subject UUID
     phone: '',
   });
   const [generatedCredentials, setGeneratedCredentials] = useState<{
@@ -152,13 +156,13 @@ export default function TeacherManagement() {
       await teacherManagementApi.create({
         profileId: profileId,
         schoolId: Number(schoolId),
-        specialty: newTeacher.matiere,
+        subjectId: newTeacher.subjectId, // Send subject UUID
         phoneNumber: newTeacher.phone || '',
         isActive: true,
       });
 
       setGeneratedCredentials({ email, password });
-      setNewTeacher({ full_name: '', matiere: '', phone: '' });
+      setNewTeacher({ full_name: '', subjectId: '', phone: '' });
       
       toast({
         title: 'Succès',
@@ -178,7 +182,7 @@ export default function TeacherManagement() {
 
   const handleCloseAddDialog = () => {
     setIsAddDialogOpen(false);
-    setNewTeacher({ full_name: '', matiere: '', phone: '' });
+    setNewTeacher({ full_name: '', subjectId: '', phone: '' });
     setGeneratedCredentials(null);
   };
 
@@ -241,7 +245,13 @@ export default function TeacherManagement() {
                     {teacher.profile?.email || 'N/A'}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{teacher.specialty}</Badge>
+                    {teacher.subject ? (
+                      <Badge variant="outline">{teacher.subject.name}</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground">
+                        {teacher.specialty || '—'}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {teacher.phoneNumber || '—'}
@@ -290,9 +300,9 @@ export default function TeacherManagement() {
               <div className="space-y-2">
                 <Label htmlFor="matiere">Spécialité (Matière) *</Label>
                 <Select
-                  value={newTeacher.matiere}
+                  value={newTeacher.subjectId}
                   onValueChange={(value) =>
-                    setNewTeacher({ ...newTeacher, matiere: value })
+                    setNewTeacher({ ...newTeacher, subjectId: value })
                   }
                   required
                 >
@@ -301,7 +311,7 @@ export default function TeacherManagement() {
                   </SelectTrigger>
                   <SelectContent>
                     {subjects.map((subject) => (
-                      <SelectItem key={subject.id} value={subject.name}>
+                      <SelectItem key={subject.id} value={subject.id}>
                         {subject.name}
                       </SelectItem>
                     ))}
@@ -373,7 +383,7 @@ export default function TeacherManagement() {
                 <Button
                   onClick={handleAddTeacher}
                   disabled={
-                    !newTeacher.full_name || !newTeacher.matiere || subjects.length === 0
+                    !newTeacher.full_name || !newTeacher.subjectId || subjects.length === 0
                   }
                 >
                   Créer

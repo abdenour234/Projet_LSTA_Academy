@@ -675,6 +675,8 @@ export const classSubjectApi = {
 export const teacherActivityApi = {
   getPendingActivities: () => api.get<any[]>('/teacher/activities/pending'),
   
+  getPendingCount: () => api.get<{ count: number }>('/teacher/activities/pending/count'),
+  
   getMyActivities: () => api.get<any[]>('/teacher/activities/my-activities'),
   
   approveActivity: (activityId: string) => 

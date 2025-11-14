@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LogOut, BookOpen, ClipboardList, Plus, ArrowRight, BarChart3, Eye, Calendar, MessageSquare } from 'lucide-react';
+import { LogOut, BookOpen, ClipboardList, Plus, ArrowRight, BarChart3, Eye, Calendar, MessageSquare, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { authApi, schoolApi, activityApi, auth } from '@/lib/api';
+import { authApi, schoolApi, activityApi, auth, teacherActivityApi } from '@/lib/api';
 import { DIAGNOSTIC_GRIDS } from '@/config/diagnosticGrids';
 import { normalizeRole, getRoleDashboardRoute } from '@/lib/roleUtils';
 
@@ -18,6 +19,7 @@ const TeacherDashboard = () => {
   const [diagnosticSessions, setDiagnosticSessions] = useState<any[]>([]);
   const [userName, setUserName] = useState('');
   const [hasDiagnostic, setHasDiagnostic] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -91,6 +93,17 @@ const TeacherDashboard = () => {
         // Convert both to strings for type-safe comparison
         const schoolActivities = activitiesData?.filter((a: any) => String(a.schoolId) === String(id)) || [];
         setActivities(schoolActivities);
+
+        // Load pending activities count for notification badge
+        if (userRole === 'TEACHER') {
+          try {
+            const countData = await teacherActivityApi.getPendingCount();
+            setPendingCount(countData.count || 0);
+          } catch (error) {
+            console.error('[TEACHER_DASHBOARD] Error loading pending count:', error);
+            setPendingCount(0);
+          }
+        }
 
         // TODO: Load diagnostic sessions
         // const sessionsData = await api.get(`/diagnostic-sessions/teacher/${user.id}`);
@@ -173,7 +186,23 @@ const TeacherDashboard = () => {
 
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-5">
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+          <Card 
+            className="p-5 cursor-pointer hover:bg-emerald-50 hover:scale-105 hover:shadow-xl transition-all duration-300 border-2 border-blue-200 hover:border-emerald-400 rounded-lg relative"
+            onClick={() => navigate(`/school/${id}/teacher/activities/approval`)}
+          >
+            <CheckCircle className="h-5 w-5 text-blue-500 mb-2" />
+            <h3 className="font-semibold text-blue-600 text-sm">Approbation</h3>
+            <p className="text-xs text-blue-500">Approuver les activités</p>
+            {pendingCount > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs font-bold"
+              >
+                {pendingCount}
+              </Badge>
+            )}
+          </Card>
           <Card 
             className="p-5 cursor-pointer hover:bg-emerald-50 hover:scale-105 hover:shadow-xl transition-all duration-300 border-2 border-blue-200 hover:border-emerald-400 rounded-lg"
             onClick={() => navigate(`/school/${id}/teacher/sessions`)}

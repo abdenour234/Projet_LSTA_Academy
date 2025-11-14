@@ -6,6 +6,8 @@ import com.schoolmanagement.repository.ActivityRepository;
 import com.schoolmanagement.repository.TeacherRepository;
 import com.schoolmanagement.security.ResourceOwnershipValidator;
 import com.schoolmanagement.security.ResourceOwnershipValidator.UserContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,12 +25,12 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/teacher/activities")
 @CrossOrigin(origins = "*")
 public class TeacherActivityController {
-
+    
+    private static final Logger log = LoggerFactory.getLogger(TeacherActivityController.class);
+    
     private final ActivityRepository activityRepository;
     private final TeacherRepository teacherRepository;
-    private final ResourceOwnershipValidator ownershipValidator;
-
-    public TeacherActivityController(
+    private final ResourceOwnershipValidator ownershipValidator;    public TeacherActivityController(
             ActivityRepository activityRepository,
             TeacherRepository teacherRepository,
             ResourceOwnershipValidator ownershipValidator) {
@@ -54,17 +56,63 @@ public class TeacherActivityController {
         Teacher teacher = teacherRepository.findByProfileId(user.userId)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
         
+        log.info("=== TEACHER PENDING ACTIVITIES DEBUG ===");
+        log.info("Teacher ID: {}", teacher.getId());
+        log.info("Teacher Subject ID: {}", teacher.getSubjectId());
+        log.info("Teacher School ID: {}", user.schoolId);
+        
         // Get all pending activities for the school
         List<Activity> pendingActivities = activityRepository
                 .findBySchoolIdAndApprovalStatus(Long.parseLong(user.schoolId), "PENDING");
         
-        // Filter by teacher's specialty (subject)
+        log.info("Total pending activities in school: {}", pendingActivities.size());
+        pendingActivities.forEach(activity -> {
+            log.info("  Activity ID: {}, Title: {}, SubjectId: {}, Status: {}",
+                    activity.getId(), activity.getTitle(), activity.getSubjectId(), activity.getApprovalStatus());
+        });
+        
+        // Filter by teacher's subject ID
         List<Activity> teacherPendingActivities = pendingActivities.stream()
-                .filter(activity -> activity.getSubjectId() != null && 
-                        activity.getSubjectId().toString().equals(teacher.getSpecialty()))
+                .filter(activity -> {
+                    boolean matches = activity.getSubjectId() != null && 
+                                    activity.getSubjectId().equals(teacher.getSubjectId());
+                    log.info("  Activity {} subject match: {} (Activity: {} vs Teacher: {})",
+                            activity.getId(), matches, activity.getSubjectId(), teacher.getSubjectId());
+                    return matches;
+                })
                 .collect(Collectors.toList());
         
+        log.info("Filtered activities for teacher: {}", teacherPendingActivities.size());
+        log.info("=========================================");
+        
         return ResponseEntity.ok(teacherPendingActivities);
+    }
+
+    /**
+     * Get count of pending activities for notification badge
+     */
+    @GetMapping("/pending/count")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<Map<String, Integer>> getPendingCount(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        
+        UserContext user = ownershipValidator.extractUserContext(authHeader);
+        
+        // Find teacher by profile ID
+        Teacher teacher = teacherRepository.findByProfileId(user.userId)
+                .orElseThrow(() -> new RuntimeException("Teacher not found"));
+        
+        // Get all pending activities for the school
+        List<Activity> pendingActivities = activityRepository
+                .findBySchoolIdAndApprovalStatus(Long.parseLong(user.schoolId), "PENDING");
+        
+        // Count activities matching teacher's subject
+        long count = pendingActivities.stream()
+                .filter(activity -> activity.getSubjectId() != null && 
+                        activity.getSubjectId().equals(teacher.getSubjectId()))
+                .count();
+        
+        return ResponseEntity.ok(Map.of("count", (int) count));
     }
 
     /**
@@ -85,10 +133,10 @@ public class TeacherActivityController {
         // Get all activities for the school
         List<Activity> allActivities = activityRepository.findBySchoolId(Long.parseLong(user.schoolId));
         
-        // Filter by teacher's specialty
+        // Filter by teacher's subject ID
         List<Activity> teacherActivities = allActivities.stream()
                 .filter(activity -> activity.getSubjectId() != null && 
-                        activity.getSubjectId().toString().equals(teacher.getSpecialty()))
+                        activity.getSubjectId().equals(teacher.getSubjectId()))
                 .collect(Collectors.toList());
         
         return ResponseEntity.ok(teacherActivities);
@@ -122,7 +170,7 @@ public class TeacherActivityController {
         
         // Verify activity's subject matches teacher's specialty
         if (activity.getSubjectId() == null || 
-            !activity.getSubjectId().toString().equals(teacher.getSpecialty())) {
+            !activity.getSubjectId().equals(teacher.getSubjectId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "You can only approve activities for your specialty"));
         }
@@ -168,7 +216,7 @@ public class TeacherActivityController {
         
         // Verify activity's subject matches teacher's specialty
         if (activity.getSubjectId() == null || 
-            !activity.getSubjectId().toString().equals(teacher.getSpecialty())) {
+            !activity.getSubjectId().equals(teacher.getSubjectId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "You can only deny activities for your specialty"));
         }

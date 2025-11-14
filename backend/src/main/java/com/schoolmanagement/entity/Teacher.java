@@ -42,11 +42,20 @@ public class Teacher {
     private Long schoolId;
 
     /**
-     * The teacher's specialty - the subject they teach.
-     * This is a custom label and doesn't need to exactly match a Subject name.
-     * Example: "Mathematics", "Physics", "English Literature", etc.
+     * The teacher's subject - references the Subject entity.
+     * Each teacher teaches ONE subject (their specialty).
      */
-    @Column(nullable = false)
+    @Column(name = "subject_id", nullable = false)
+    private UUID subjectId;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "subject_id", insertable = false, updatable = false)
+    private Subject subject;
+
+    /**
+     * Optional specialty label (kept for backward compatibility)
+     */
+    @Column(nullable = true)
     private String specialty;
 
     @Column(name = "phone_number")

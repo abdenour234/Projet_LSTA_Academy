@@ -49,7 +49,8 @@ public class TeacherService {
         Teacher teacher = new Teacher();
         teacher.setProfileId(dto.getProfileId());
         teacher.setSchoolId(dto.getSchoolId());
-        teacher.setSpecialty(dto.getSpecialty());
+        teacher.setSubjectId(dto.getSubjectId());
+        teacher.setSpecialty(dto.getSpecialty()); // Optional, for backward compatibility
         teacher.setPhoneNumber(dto.getPhoneNumber());
         teacher.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
 
@@ -63,6 +64,9 @@ public class TeacherService {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Teacher not found with id: " + id));
 
+        if (dto.getSubjectId() != null) {
+            teacher.setSubjectId(dto.getSubjectId());
+        }
         teacher.setSpecialty(dto.getSpecialty());
         teacher.setPhoneNumber(dto.getPhoneNumber());
         if (dto.getIsActive() != null) {

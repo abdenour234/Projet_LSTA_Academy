@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { LogOut, Plus, Trash2, BarChart3, Eye, Edit, Users, GraduationCap, Clock, MessageSquare, Mail, BookOpen, Search, Library } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { authApi, schoolApi, activityApi, auth, teacherApi, classApi, studentApi } from '@/lib/api';
 import { DIAGNOSTIC_GRIDS } from '@/config/diagnosticGrids';
@@ -760,13 +761,30 @@ const AdminDashboard = () => {
                     <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Type</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Niveau</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Classes ciblées</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Statut</th>
                     <th className="text-right px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredActivities.map((activity, index) => {
-                    // Count targeted classes
-                    const targetedClasses = activity.targetClasses?.length || 0;
+                    // Find the class name for this activity
+                    const activityClass = activity.classId 
+                      ? classes.find(c => c.id === activity.classId)
+                      : null;
+                    const classDisplayName = activityClass 
+                      ? activityClass.name 
+                      : null;
+                    
+                    // Determine approval status badge
+                    const approvalStatus = activity.approvalStatus || 'PENDING';
+                    const statusVariant = 
+                      approvalStatus === 'APPROVED' ? 'default' : 
+                      approvalStatus === 'DENIED' ? 'destructive' : 
+                      'secondary';
+                    const statusLabel = 
+                      approvalStatus === 'APPROVED' ? 'Approuvé' : 
+                      approvalStatus === 'DENIED' ? 'Refusé' : 
+                      'En attente';
                     
                     return (
                       <tr 
@@ -797,7 +815,18 @@ const AdminDashboard = () => {
                           </span>
                         </td>
                         <td className="px-4 py-4 text-sm font-medium text-blue-600 tabular-nums">
-                          {targetedClasses > 0 ? `${targetedClasses} classe${targetedClasses > 1 ? 's' : ''}` : <span className="text-blue-400">Toutes</span>}
+                          {classDisplayName ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                              {classDisplayName}
+                            </span>
+                          ) : (
+                            <span className="text-blue-400">Toutes</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4">
+                          <Badge variant={statusVariant} className="text-xs">
+                            {statusLabel}
+                          </Badge>
                         </td>
                         <td className="px-4 py-4 text-right sticky right-0 bg-inherit" onClick={(e) => e.stopPropagation()}>
                           <Button 

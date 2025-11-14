@@ -57,6 +57,10 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
         console.log('[ActivityBuilder] Loaded data:', { classesData, subjectsData });
         setClasses(classesData);
         setSubjects(subjectsData);
+        // Always pre-select first class if none is selected and classes exist
+        if (!selectedClassId && classesData.length > 0) {
+          setSelectedClassId(classesData[0].id);
+        }
       } catch (error) {
         console.error('Error loading classes/subjects:', error);
         toast({
@@ -248,6 +252,15 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
       return;
     }
 
+    // Validate class selection
+    if (classes.length > 0 && !selectedClassId) {
+      toast({
+        title: 'Classe requise',
+        description: 'Veuillez sélectionner une classe.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setSaving(true);
     try {
       const activityData = {
@@ -256,11 +269,15 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
         type,
         level,
         schoolId,
-        classId: selectedClassId,
+        classId: selectedClassId && selectedClassId !== 'ALL_CLASSES' ? selectedClassId : null,
         subjectId: selectedSubjectId,
         layoutData: JSON.stringify({ elements }),
         isPublished: publish,
       };
+
+      console.log('[ActivityBuilder] Saving activity with data:', activityData);
+      console.log('[ActivityBuilder] selectedSubjectId:', selectedSubjectId);
+      console.log('[ActivityBuilder] selectedClassId:', selectedClassId);
 
       let currentActivityId = activityId;
 
@@ -269,6 +286,7 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
         await activityApi.update(activityId, activityData);
       } else {
         const created = await activityApi.create(activityData);
+        console.log('[ActivityBuilder] Created activity response:', created);
         if (created && created.id) {
           currentActivityId = created.id;
           setActivityId(created.id);
@@ -457,7 +475,8 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
               type,
               level,
               schoolId,
-              classId,
+              classId: selectedClassId && selectedClassId !== 'ALL_CLASSES' ? selectedClassId : null,
+              subjectId: selectedSubjectId,
               layoutData: JSON.stringify({ elements: allElements }),
               isPublished: publish,
             };
@@ -563,6 +582,28 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
                   {subjects.map((subject) => (
                     <SelectItem key={subject.id} value={subject.id}>
                       {subject.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Classe (Class)</Label>
+              <Select 
+                value={selectedClassId || undefined} 
+                onValueChange={(value) => {
+                  console.log('[ActivityBuilder] Class selected:', value);
+                  setSelectedClassId(value || '');
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une classe (optionnel)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL_CLASSES">Toutes les classes</SelectItem>
+                  {classes.map((classe) => (
+                    <SelectItem key={classe.id} value={classe.id}>
+                      {classe.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
