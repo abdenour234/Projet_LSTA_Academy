@@ -148,58 +148,69 @@ const SchoolDetails = () => {
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
-                return (
-                  <div className="min-h-screen bg-white">
-                    <Button variant="ghost" className="mb-4" onClick={() => navigate(-1)}>
-                      <ArrowLeft className="h-4 w-4 mr-2" /> Retour
-                    </Button>
-                    {/* Always show Manage button if schoolId exists */}
-                    {schoolId && (
-                      <div className="mb-4 flex justify-end">
-                        <Button size="sm" variant="secondary" onClick={() => navigate(`/school/${schoolId}/manage`)}>
-                          Gérer
-                        </Button>
-                      </div>
-                    )}
-                    {loading ? (
-                      <LoadingState />
-                    ) : school ? (
-                      <Card className="mb-6">
-                        <CardHeader>
-                          <CardTitle>{school.name}</CardTitle>
-                          <CardDescription>
-                            {school.city}, {school.region} • {school.level} • {school.status}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex items-center gap-6 mb-4">
-                            <div><strong>Élèves:</strong> {school.students}</div>
-                          </div>
-                          {/* Activities, etc. */}
-                        </CardContent>
-                      </Card>
-                      {/* ...existing code... */}
-                    ) : (
-                      <div className="p-8">Aucune école trouvée.</div>
-                    )}
+                size="sm"
+                onClick={() => navigate(-1)}
+                className="gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Retour
+              </Button>
+              {school && (
+                <h1 className="text-lg font-semibold">{school.name}</h1>
+              )}
+            </div>
+            {schoolId && (
+              <Button 
+                size="sm" 
+                variant="secondary" 
+                onClick={() => navigate(`/school/${schoolId}/manage`)}
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Gérer
+              </Button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        {loading ? (
+          <LoadingState />
+        ) : school ? (
+          <>
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Informations de l'école</CardTitle>
+                <CardDescription>
+                  {school.city}, {school.region} • {school.level} • {school.status}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-6 mb-4">
+                  <div><strong>Élèves:</strong> {school.students}</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Activités de l'école
+                </CardTitle>
+                <CardDescription>
+                  Liste de toutes les activités créées par cette école
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {activities.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Aucune activité trouvée pour cette école</p>
                   </div>
-                );
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              Activités de l'école
-            </CardTitle>
-            <CardDescription>
-              Liste de toutes les activités créées par cette école
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {activities.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Aucune activité trouvée pour cette école</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
+                ) : (
+                  <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
@@ -271,6 +282,10 @@ const SchoolDetails = () => {
             )}
           </CardContent>
         </Card>
+          </>
+        ) : (
+          <div className="p-8">Aucune école trouvée.</div>
+        )}
       </main>
 
       {/* Delete Confirmation Dialog */}
