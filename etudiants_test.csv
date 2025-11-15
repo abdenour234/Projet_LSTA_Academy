@@ -1,11 +1,11 @@
-pr�nom;nom de famille;date de naissance;sex;code massar;Contact parent
+prénom;nom de famille;date de naissance;sex;code massar;Contact parent
 Marie;Dupont;15/03/2010;Female;H10000;6000000
-Jean;Martin;22/07/2009;Male;H10000;600000
-Sophie;Bernard;08/11/2011;Female;H10000;600000
-Lucas;Dubois;14/05/2008;Male;H10000;600000
-Emma;Thomas;30/09/2010;Female;H10000;600000
-Pierre;Roux;05/12/2009;Male;H10000;600000
-Chloé;Garcia;19/02/2011;Female;H10000;6000000
-Antoine;Simon;27/08/2008;Male;H10000;6000000
-Léa;Laurent;11/04/2010;Female;H10000;600000
-Hugo;Muller;03/10/2009;Male;H10000;600000
+Jean;Martin;22/07/2009;Male;H10500;600000
+Sophie;Bernard;08/11/2011;Female;H10800;600000
+Lucas;Dubois;14/05/2008;Male;H11000;600000
+Emma;Thomas;30/09/2010;Female;H10100;600000
+Pierre;Roux;05/12/2009;Male;H12300;600000
+Chloé;Garcia;19/02/2011;Female;H10005;6000000
+Antoine;Simon;27/08/2008;Male;H10055;6000000
+Léa;Laurent;11/04/2010;Female;H10700;600000
+Hugo;Muller;03/10/2009;Male;H11100;600000

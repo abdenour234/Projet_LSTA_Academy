@@ -67,14 +67,12 @@ CREATE TABLE IF NOT EXISTS public.students (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Create partial unique index on massar (only when massar is NOT NULL)
--- This allows multiple students with NULL massar, but ensures uniqueness when massar is provided
-CREATE UNIQUE INDEX IF NOT EXISTS idx_students_massar_unique ON public.students(massar) WHERE massar IS NOT NULL;
-
 -- Create index for student user lookups
 CREATE INDEX IF NOT EXISTS idx_students_user_id ON public.students(user_id);
 CREATE INDEX IF NOT EXISTS idx_students_school_id ON public.students(school_id);
 CREATE INDEX IF NOT EXISTS idx_students_class_id ON public.students(class_id);
+-- Note: No unique constraint on massar - duplicates are allowed for now
+CREATE INDEX IF NOT EXISTS idx_students_massar ON public.students(massar) WHERE massar IS NOT NULL;
 
 -- TABLE: activity_files
 CREATE TABLE IF NOT EXISTS public.activity_files (
