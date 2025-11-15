@@ -59,13 +59,17 @@ CREATE TABLE IF NOT EXISTS public.students (
   class_id UUID,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
-  massar character varying(255) NOT NULL,
+  massar character varying(255),
   date_of_birth TIMESTAMP WITH TIME ZONE,
   gender TEXT CHECK (gender IN ('M', 'F')),
   phone TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
+
+-- Create partial unique index on massar (only when massar is NOT NULL)
+-- This allows multiple students with NULL massar, but ensures uniqueness when massar is provided
+CREATE UNIQUE INDEX IF NOT EXISTS idx_students_massar_unique ON public.students(massar) WHERE massar IS NOT NULL;
 
 -- Create index for student user lookups
 CREATE INDEX IF NOT EXISTS idx_students_user_id ON public.students(user_id);
