@@ -108,7 +108,11 @@ public class SecurityConfig {
             "http://localhost:3000",   // Alternative dev port
             "http://frontend:5173",    // Docker frontend
             "http://57.129.110.129:8081", // VPS IP with frontend port
-            "http://57.129.110.129"    // VPS IP (for backward compatibility)
+            "http://57.129.110.129",    // VPS IP (for backward compatibility)
+            "http://pedagoria.com",     // Domain HTTP
+            "https://pedagoria.com",    // Domain HTTPS
+            "http://pedagoria.com:8081", // Domain HTTP with port
+            "https://pedagoria.com:8081"
             
         ));
         
