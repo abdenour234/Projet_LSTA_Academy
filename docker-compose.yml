@@ -75,7 +75,7 @@ services:
         VITE_API_URL: /api  # Use relative URL - nginx will proxy to backend
     container_name: school-management-frontend
     ports:
-      - "80:80"
+      - "8081:80"
     depends_on:
       - backend
     networks:

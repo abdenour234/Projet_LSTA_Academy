@@ -34,7 +34,7 @@ server {
     }
     
     location / {
-        proxy_pass http://localhost:80;
+        proxy_pass http://localhost:8081;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -111,7 +111,7 @@ server {
     client_max_body_size 100M;
 
     location / {
-        proxy_pass http://localhost:80;
+        proxy_pass http://localhost:8081;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
