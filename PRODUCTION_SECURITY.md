@@ -58,7 +58,7 @@ server {
     
     # Frontend
     location / {
-        proxy_pass http://localhost:8081;
+        proxy_pass http://localhost:80;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -86,7 +86,7 @@ server {
 ```java
 configuration.setAllowedOrigins(Arrays.asList(
     "https://yourdomain.com",           // Production domain
-    "http://localhost:8081",            // Local testing
+    "http://localhost:80",              // Local testing
     "http://localhost:5173"             // Dev server
 ));
 ```
@@ -101,7 +101,7 @@ sudo ufw allow 443/tcp
 
 # Bloquer les ports Docker (accès uniquement via reverse proxy)
 sudo ufw deny 8080/tcp
-sudo ufw deny 8081/tcp
+# Port 80 est déjà autorisé ci-dessus pour HTTP
 sudo ufw deny 9000/tcp
 sudo ufw deny 9001/tcp
 sudo ufw deny 5432/tcp

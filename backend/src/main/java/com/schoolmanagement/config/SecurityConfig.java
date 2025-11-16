@@ -103,12 +103,17 @@ public class SecurityConfig {
         
         // Restrict to specific origins - UPDATE THESE FOR PRODUCTION
         configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:8081",   // Frontend nginx (host port)
+            "http://localhost:80",   // Frontend nginx (host port)
             "http://localhost:5173",   // Vite dev server
             "http://localhost:3000",   // Alternative dev port
             "http://frontend:5173",    // Docker frontend
-            "http://57.129.110.129:8081", // VPS IP with frontend port
-            "http://57.129.110.129"    // VPS IP (for backward compatibility)
+            "http://57.129.110.129:80", // VPS IP with frontend port
+            "http://57.129.110.129",
+            "http://pedagoria.com",
+            "https://pedagoria.com",
+            "http://pedagoria.com:80",
+            "https://pedagoria.com:80"
+            
             
         ));
         
