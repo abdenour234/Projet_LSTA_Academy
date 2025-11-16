@@ -114,6 +114,7 @@ public class SecurityConfig {
             "http://pedagoria.com:80",
             "https://pedagoria.com:80"
             
+
             
         ));
         

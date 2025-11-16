@@ -167,6 +167,7 @@ public class AuthController {
             profile.setPasswordHash(passwordEncoder.encode(request.getPassword()));
             profile.setFullName(request.getFullName() != null ? request.getFullName() : request.getEmail().split("@")[0]);
             profile.setSchoolId(savedSchool.getId());
+            profile.setMustChangePassword(true);
 
             Profile savedProfile = profileRepository.save(profile);
 
@@ -258,6 +259,7 @@ public class AuthController {
             profile.setPasswordHash(passwordEncoder.encode(password));
             profile.setFullName(fullName != null ? fullName : email.split("@")[0]);
             profile.setSchoolId(schoolId);
+            profile.setMustChangePassword(true);
 
             Profile savedProfile = profileRepository.save(profile);
 
@@ -379,6 +381,7 @@ public class AuthController {
             profile.setPasswordHash(passwordEncoder.encode(password));
             profile.setFullName(fullName != null ? fullName : email.split("@")[0]);
             profile.setSchoolId(schoolId);
+            profile.setMustChangePassword(true); 
 
             Profile savedProfile = profileRepository.save(profile);
 

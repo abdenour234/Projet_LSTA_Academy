@@ -609,6 +609,134 @@ getCurrentStudent: () => api.get<any>('/students/me', { headers: { Authorization
   delete: (id: string) => api.delete(`/students/${id}`),
 };
 
+// Ajoutez ces interfaces et API endpoints à votre fichier api.ts existant
+
+// ============================================
+// DIAGNOSTIC TYPES
+// ============================================
+
+// types/diagnostic.ts ou dans ton fichier d'API
+export interface DiagnosticSession {
+  id: string;
+  schoolId: number;
+  teacherId: string;
+  diagnosticType: string;
+  gradeLevel: string;
+  className?: string;
+  classId?: string;
+  totalStudents: number;
+  status?: string;
+  sessionDate?: string; // ISO string
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface DiagnosticStudent {
+  id: string;
+  sessionId: string;
+  studentId: string;
+  studentName: string;
+  studentOrder: number;
+}
+
+export interface DiagnosticResult {
+  id: string;
+  sessionId: string;
+  studentId: string;
+  criteriaData: Record<string, string>;
+  finalResult: string;
+  createdAt: string;
+}
+
+export interface CreateDiagnosticSessionRequest {
+  schoolId: number;
+  teacherId: string;
+  diagnosticType: string;
+  gradeLevel: string;
+  className?: string;
+  classId: string; // ID de la classe pour récupérer automatiquement les étudiants
+}
+
+export interface SaveDiagnosticResultsRequest {
+  sessionId: string;
+  results: Array<{
+    studentId: string;
+    criteriaData: Record<string, string>;
+    finalResult: string;
+  }>;
+}
+
+export interface DiagnosticStats {
+  resultDistribution: Record<string, number>;
+  criteriaStats: Record<string, Record<string, number>>;
+  studentResults: Array<{
+    studentName: string;
+    criteriaData: Record<string, string>;
+    finalResult: string;
+  }>;
+}
+
+// ============================================
+// DIAGNOSTIC API ENDPOINTS
+// ============================================
+
+export const diagnosticApi = {
+  /**
+   * Créer une nouvelle session de diagnostic
+   * Les étudiants sont automatiquement récupérés depuis la classe
+   */
+  createSession: (data: CreateDiagnosticSessionRequest) =>
+    api.post<DiagnosticSession>('/diagnostics/sessions', data),
+
+  /**
+   * Récupérer une session par ID
+   */
+  getSession: (sessionId: string) =>
+    api.get<DiagnosticSession>(`/diagnostics/sessions/${sessionId}`),
+
+  /**
+   * Récupérer toutes les sessions d'un enseignant
+   */
+  getSessionsByTeacher: (teacherId: string) =>
+    api.get<DiagnosticSession[]>(`/diagnostics/sessions/teacher/${teacherId}`),
+
+  /**
+   * Récupérer toutes les sessions d'une école
+   */
+  getSessionsBySchool: (schoolId: number) =>
+    api.get<DiagnosticSession[]>(`/diagnostics/sessions/school/${schoolId}`),
+
+  /**
+   * Récupérer les étudiants d'une session
+   */
+  getSessionStudents: (sessionId: string) =>
+    api.get<DiagnosticStudent[]>(`/diagnostics/sessions/${sessionId}/students`),
+
+  /**
+   * Sauvegarder les résultats d'un diagnostic
+   */
+  saveResults: (data: SaveDiagnosticResultsRequest) =>
+    api.post<void>('/diagnostics/results', data),
+
+  /**
+   * Récupérer les résultats d'une session
+   */
+  getResults: (sessionId: string) =>
+    api.get<DiagnosticResult[]>(`/diagnostics/sessions/${sessionId}/results`),
+
+  /**
+   * Récupérer les statistiques d'une session
+   */
+  getStats: (sessionId: string) =>
+    api.get<DiagnosticStats>(`/diagnostics/sessions/${sessionId}/stats`),
+
+  /**
+   * Supprimer une session de diagnostic
+   */
+  deleteSession: (sessionId: string) =>
+    api.delete<void>(`/diagnostics/sessions/${sessionId}`),
+};
+
 // Subject API endpoints
 export const subjectApi = {
   getAll: () => api.get<any[]>('/subjects'),

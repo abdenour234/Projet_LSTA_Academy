@@ -3,9 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { diagnosticApi } from '@/lib/api';
 import { getDiagnosticGrid } from '@/config/diagnosticGrids';
-import { Student, DiagnosticSession, DiagnosticResult } from '@/types/diagnostic';
 import { Loader2, ArrowLeft, BarChart3, PieChart } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RePieChart, Pie, Cell } from 'recharts';
 
@@ -15,9 +14,8 @@ const DiagnosticResults = () => {
   const { id: schoolId, sessionId } = useParams<{ id: string; sessionId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [session, setSession] = useState<DiagnosticSession | null>(null);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [results, setResults] = useState<DiagnosticResult[]>([]);
+  const [session, setSession] = useState<any>(null);
+  const [stats, setStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -26,38 +24,13 @@ const DiagnosticResults = () => {
 
   const loadData = async () => {
     try {
-      // Load session
-      const { data: sessionData, error: sessionError } = await supabase
-        .from('diagnostic_sessions')
-        .select('*')
-        .eq('id', sessionId)
-        .single();
-
-      if (sessionError) throw sessionError;
+      // Charger la session
+      const sessionData = await diagnosticApi.getSession(sessionId!);
       setSession(sessionData);
 
-      // Load students
-      const { data: studentsData, error: studentsError } = await supabase
-        .from('diagnostic_students')
-        .select('*')
-        .eq('session_id', sessionId)
-        .order('student_order');
-
-      if (studentsError) throw studentsError;
-      setStudents(studentsData.map(s => ({
-        id: s.id,
-        name: s.student_name,
-        order: s.student_order
-      })));
-
-      // Load results
-      const { data: resultsData, error: resultsError } = await supabase
-        .from('diagnostic_results')
-        .select('*')
-        .eq('session_id', sessionId);
-
-      if (resultsError) throw resultsError;
-      setResults(resultsData);
+      // Charger les statistiques
+      const statsData = await diagnosticApi.getStats(sessionId!);
+      setStats(statsData);
     } catch (error) {
       console.error('Error loading data:', error);
       toast({
@@ -70,7 +43,7 @@ const DiagnosticResults = () => {
     }
   };
 
-  if (isLoading || !session) {
+  if (isLoading || !session || !stats) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -78,42 +51,22 @@ const DiagnosticResults = () => {
     );
   }
 
-  const grid = getDiagnosticGrid(session.diagnostic_type);
+  const grid = getDiagnosticGrid(session.diagnosticType);
   if (!grid) return null;
 
-  // Calculate statistics
-  const resultDistribution: Record<string, number> = {};
-  results.forEach(result => {
-    resultDistribution[result.final_result] = (resultDistribution[result.final_result] || 0) + 1;
-  });
-
-  const pieData = Object.entries(resultDistribution).map(([name, value]) => ({
+  // Préparer les données pour le graphique circulaire
+  const totalStudents = Object.values(stats.resultDistribution).reduce((a: any, b: any) => a + b, 0);
+  const pieData = Object.entries(stats.resultDistribution).map(([name, value]: [string, any]) => ({
     name,
     value,
-    percentage: ((value / results.length) * 100).toFixed(1)
+    percentage: ((value / totalStudents) * 100).toFixed(1)
   }));
 
-  // Calculate criteria statistics
-  const criteriaStats: Record<string, Record<string, number>> = {};
-  grid.criteria.forEach(criteria => {
-    criteriaStats[criteria.id] = {};
-    criteria.options.forEach(option => {
-      criteriaStats[criteria.id][option] = 0;
-    });
-  });
-
-  results.forEach(result => {
-    Object.entries(result.criteria_data as Record<string, string>).forEach(([criteriaId, value]) => {
-      if (criteriaStats[criteriaId] && criteriaStats[criteriaId][value] !== undefined) {
-        criteriaStats[criteriaId][value]++;
-      }
-    });
-  });
-
+  // Préparer les données pour le graphique en barres
   const barData = grid.criteria.map(criteria => {
     const data: any = { name: criteria.label };
     criteria.options.forEach(option => {
-      data[option] = criteriaStats[criteria.id][option] || 0;
+      data[option] = stats.criteriaStats[criteria.id]?.[option] || 0;
     });
     return data;
   });
@@ -139,22 +92,22 @@ const DiagnosticResults = () => {
         <div className="flex gap-6 text-sm">
           <div>
             <span className="text-muted-foreground">Niveau: </span>
-            <strong className="text-foreground">{session.grade_level}</strong>
+            <strong className="text-foreground">{session.gradeLevel}</strong>
           </div>
-          {session.class_name && (
+          {session.className && (
             <div>
               <span className="text-muted-foreground">Classe: </span>
-              <strong className="text-foreground">{session.class_name}</strong>
+              <strong className="text-foreground">{session.className}</strong>
             </div>
           )}
           <div>
             <span className="text-muted-foreground">Élèves: </span>
-            <strong className="text-foreground">{students.length}</strong>
+            <strong className="text-foreground">{session.totalStudents}</strong>
           </div>
           <div>
             <span className="text-muted-foreground">Date: </span>
             <strong className="text-foreground">
-              {new Date(session.session_date).toLocaleDateString('fr-FR')}
+              {new Date(session.sessionDate).toLocaleDateString('fr-FR')}
             </strong>
           </div>
         </div>
@@ -260,26 +213,21 @@ const DiagnosticResults = () => {
               </tr>
             </thead>
             <tbody>
-              {students.map((student, idx) => {
-                const result = results.find(r => r.student_id === student.id);
-                if (!result) return null;
-                
-                return (
-                  <tr key={student.id} className={idx % 2 === 0 ? 'bg-muted/30' : ''}>
-                    <td className="p-3 font-medium text-foreground">{student.name}</td>
-                    {grid.criteria.map(criteria => (
-                      <td key={criteria.id} className="p-3 text-sm">
-                        {(result.criteria_data as Record<string, string>)[criteria.id]}
-                      </td>
-                    ))}
-                    <td className="p-3">
-                      <span className="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-primary/10 text-primary">
-                        {result.final_result}
-                      </span>
+              {stats.studentResults.map((student: any, idx: number) => (
+                <tr key={idx} className={idx % 2 === 0 ? 'bg-muted/30' : ''}>
+                  <td className="p-3 font-medium text-foreground">{student.studentName}</td>
+                  {grid.criteria.map(criteria => (
+                    <td key={criteria.id} className="p-3 text-sm">
+                      {student.criteriaData[criteria.id]}
                     </td>
-                  </tr>
-                );
-              })}
+                  ))}
+                  <td className="p-3">
+                    <span className="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-primary/10 text-primary">
+                      {student.finalResult}
+                    </span>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

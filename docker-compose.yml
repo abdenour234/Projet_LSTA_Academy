@@ -26,7 +26,7 @@ services:
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
-      MINIO_SERVER_URL: http://57.129.110.129:9000
+      MINIO_SERVER_URL: https://pedagoria.com/minio
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -55,7 +55,7 @@ services:
       MINIO_BUCKET_NAME: school-management
       JWT_SECRET: your-very-secure-secret-key-change-this-in-production-minimum-512-bits
       JWT_EXPIRATION: 86400000
-      APP_BASE_URL: http://57.129.110.129:8080
+      APP_BASE_URL: https://pedagoria.com
     ports:
       - "8080:8080"
     depends_on:
