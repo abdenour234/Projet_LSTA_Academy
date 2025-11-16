@@ -1,13 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Upload, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { diagnosticApi, classApi, auth } from '@/lib/api';
 import { DIAGNOSTIC_GRIDS, GRADE_LEVELS } from '@/config/diagnosticGrids';
 import { DiagnosticType } from '@/types/diagnostic';
 
@@ -18,41 +17,49 @@ const CreateDiagnosticSession = () => {
   const [gradeLevel, setGradeLevel] = useState('');
   const [diagnosticType, setDiagnosticType] = useState<DiagnosticType | ''>('');
   const [className, setClassName] = useState('');
-  const [students, setStudents] = useState<string[]>([]);
+  const [classId, setClassId] = useState('');
+  const [classes, setClasses] = useState<any[]>([]);
+  const [selectedClass, setSelectedClass] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingClasses, setIsLoadingClasses] = useState(true);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  useEffect(() => {
+    loadClasses();
+  }, [schoolId]);
 
-    // For demo purposes, we'll just create mock students
-    // In production, you'd parse the PDF to extract student names
-    const mockStudents = [
-      'Ahmed Alaoui',
-      'Fatima Zahra',
-      'Youssef Bennani',
-      'Salma Idrissi',
-      'Omar Tazi',
-      'Nadia Amrani',
-      'Karim Mansouri',
-      'Leila Benjelloun'
-    ];
-    
-    setStudents(mockStudents);
-    
-    toast({
-      title: 'Fichier importé',
-      description: `${mockStudents.length} élèves chargés depuis le PDF`,
-    });
+  const loadClasses = async () => {
+    try {
+      const data = await classApi.getBySchoolId(schoolId!);
+      setClasses(data);
+    } catch (error) {
+      console.error('Error loading classes:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les classes',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingClasses(false);
+    }
+  };
+
+  const handleClassChange = (selectedClassId: string) => {
+    setClassId(selectedClassId);
+    const cls = classes.find(c => c.id === selectedClassId);
+    setSelectedClass(cls);
+    if (cls) {
+      setClassName(cls.name);
+      setGradeLevel(cls.level);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!gradeLevel || !diagnosticType || students.length === 0) {
+    if (!gradeLevel || !diagnosticType || !classId) {
       toast({
         title: 'Informations manquantes',
-        description: 'Veuillez remplir tous les champs et importer la liste des élèves',
+        description: 'Veuillez remplir tous les champs et sélectionner une classe',
         variant: 'destructive',
       });
       return;
@@ -61,41 +68,22 @@ const CreateDiagnosticSession = () => {
     setIsLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Create diagnostic session
-      const { data: session, error: sessionError } = await supabase
-        .from('diagnostic_sessions')
-        .insert({
-          school_id: schoolId,
-          teacher_id: user.id,
-          diagnostic_type: diagnosticType,
-          grade_level: gradeLevel,
-          class_name: className || null,
-          total_students: students.length,
-        })
-        .select()
-        .single();
-
-      if (sessionError) throw sessionError;
-
-      // Insert students
-      const studentsData = students.map((name, index) => ({
-        session_id: session.id,
-        student_name: name,
-        student_order: index + 1,
-      }));
-
-      const { error: studentsError } = await supabase
-        .from('diagnostic_students')
-        .insert(studentsData);
-
-      if (studentsError) throw studentsError;
+      // Créer la session - les étudiants seront automatiquement récupérés depuis la classe
+      const session = await diagnosticApi.createSession({
+        schoolId: parseInt(schoolId!),
+        teacherId: user.id,
+        diagnosticType: diagnosticType,
+        gradeLevel: gradeLevel,
+        className: className,
+        classId: classId,
+      });
 
       toast({
         title: 'Session créée',
-        description: 'Vous pouvez maintenant réaliser le diagnostic',
+        description: `${session.totalStudents} élèves chargés depuis la classe ${className}`,
       });
 
       navigate(`/school/${schoolId}/teacher/diagnostic/${session.id}`);
@@ -123,21 +111,37 @@ const CreateDiagnosticSession = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Grade Level Selection */}
+        {/* Class Selection */}
         <div className="space-y-2">
-          <Label>Niveau scolaire *</Label>
-          <Select value={gradeLevel} onValueChange={setGradeLevel} required>
+          <Label>Classe *</Label>
+          <Select value={classId} onValueChange={handleClassChange} required disabled={isLoadingClasses}>
             <SelectTrigger>
-              <SelectValue placeholder="Sélectionnez le niveau" />
+              <SelectValue placeholder={isLoadingClasses ? "Chargement..." : "Sélectionnez une classe"} />
             </SelectTrigger>
             <SelectContent>
-              {GRADE_LEVELS.map((level) => (
-                <SelectItem key={level} value={level}>
-                  {level}
+              {classes.map((cls) => (
+                <SelectItem key={cls.id} value={cls.id}>
+                  {cls.name} - {cls.level} ({cls.effectif} élèves)
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          {selectedClass && (
+            <p className="text-sm text-muted-foreground">
+              {selectedClass.effectif} élève(s) seront automatiquement ajoutés à la session
+            </p>
+          )}
+        </div>
+
+        {/* Grade Level (Auto-filled from class) */}
+        <div className="space-y-2">
+          <Label>Niveau scolaire *</Label>
+          <Input
+            value={gradeLevel}
+            placeholder="Rempli automatiquement depuis la classe"
+            disabled
+            className="bg-muted"
+          />
         </div>
 
         {/* Diagnostic Type Selection */}
@@ -162,42 +166,9 @@ const CreateDiagnosticSession = () => {
           )}
         </div>
 
-        {/* Class Name (Optional) */}
-        <div className="space-y-2">
-          <Label>Nom de la classe (optionnel)</Label>
-          <Input
-            placeholder="Ex: 5ème A"
-            value={className}
-            onChange={(e) => setClassName(e.target.value)}
-          />
-        </div>
-
-        {/* PDF Upload */}
-        <div className="space-y-2">
-          <Label>Liste des élèves (PDF) *</Label>
-          <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
-            <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground mb-2">
-              Importez un fichier PDF contenant la liste des élèves
-            </p>
-            <Input
-              type="file"
-              accept=".pdf"
-              onChange={handleFileUpload}
-              className="max-w-xs mx-auto"
-            />
-          </div>
-          {students.length > 0 && (
-            <div className="flex items-center gap-2 text-sm text-primary mt-2">
-              <FileText className="h-4 w-4" />
-              <span>{students.length} élèves chargés</span>
-            </div>
-          )}
-        </div>
-
         {/* Submit Button */}
         <div className="flex gap-3 pt-4">
-          <Button type="submit" disabled={isLoading} className="flex-1">
+          <Button type="submit" disabled={isLoading || !classId} className="flex-1">
             {isLoading ? 'Création...' : 'Créer la session'}
           </Button>
           <Button 

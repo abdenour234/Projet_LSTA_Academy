@@ -1,20 +1,11 @@
 -- ============================================
 -- School Management System - Complete Database Initialization
--- Version: 2.0 (RBAC Fixed)
--- Date: October 29, 2025
+-- Version: 2.0 (RBAC Fixed + Trigger Order Fixed)
+-- Date: November 14, 2025
 -- ============================================
 
 -- ============================================
--- 1. CREATE ENUMS
--- ============================================
-
--- Note: app_role enum is no longer used, roles are stored as TEXT
--- Create enum for user roles (with all 4 roles: SUPERADMIN, ADMIN, TEACHER, STUDENT)
--- DROP TYPE IF EXISTS public.app_role CASCADE;
--- CREATE TYPE public.app_role AS ENUM ('SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT');
-
--- ============================================
--- 2. CREATE TABLES
+-- 1. CREATE TABLES
 -- ============================================
 
 -- TABLE: schools
@@ -37,9 +28,10 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT,
   full_name TEXT,
-  school_id BIGINT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,  -- Changed from TEXT to BIGINT
+  school_id BIGINT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
   matiere TEXT,
   phone TEXT,
+  must_change_password BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -55,7 +47,7 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
 CREATE TABLE IF NOT EXISTS public.students (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID UNIQUE,
-  school_id BIGINT NOT NULL,  -- Changed from TEXT to BIGINT
+  school_id BIGINT NOT NULL,
   class_id UUID,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
@@ -89,7 +81,7 @@ CREATE TABLE IF NOT EXISTS public.activity_files (
 -- TABLE: diagnostics
 CREATE TABLE IF NOT EXISTS public.diagnostics (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id BIGINT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,  -- Changed from TEXT to BIGINT
+  school_id BIGINT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
   teacher_id UUID NOT NULL,
   subject TEXT NOT NULL,
   level TEXT NOT NULL,
@@ -97,25 +89,10 @@ CREATE TABLE IF NOT EXISTS public.diagnostics (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- TABLE: diagnostic_sessions
-CREATE TABLE IF NOT EXISTS public.diagnostic_sessions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id BIGINT NOT NULL,  -- Changed from TEXT to BIGINT
-  teacher_id UUID NOT NULL,
-  class_id UUID,
-  subject TEXT NOT NULL,
-  level TEXT NOT NULL,
-  session_date TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  status TEXT CHECK (status IN ('pending', 'in_progress', 'completed')),
-  results JSONB DEFAULT '{}'::jsonb,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
 -- TABLE: classes
 CREATE TABLE IF NOT EXISTS public.classes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id BIGINT NOT NULL,  -- Changed from TEXT to BIGINT
+  school_id BIGINT NOT NULL,
   name TEXT NOT NULL,
   level TEXT NOT NULL,
   filiere TEXT,
@@ -199,7 +176,7 @@ CREATE TABLE IF NOT EXISTS public.teaching_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   teacher_id UUID NOT NULL,
   class_id UUID NOT NULL REFERENCES public.classes(id) ON DELETE CASCADE,
-  school_id BIGINT NOT NULL,  -- Changed from TEXT to BIGINT
+  school_id BIGINT NOT NULL,
   session_date DATE NOT NULL,
   duration_minutes INTEGER,
   activities_realized TEXT[],
@@ -223,7 +200,7 @@ CREATE TABLE IF NOT EXISTS public.session_progress (
 CREATE TABLE IF NOT EXISTS public.user_activity_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL,
-  school_id BIGINT NOT NULL,  -- Changed from TEXT to BIGINT
+  school_id BIGINT NOT NULL,
   activity_type TEXT NOT NULL,
   duration_seconds INTEGER DEFAULT 0,
   activity_date DATE NOT NULL,
@@ -234,7 +211,7 @@ CREATE TABLE IF NOT EXISTS public.user_activity_logs (
 -- TABLE: conversations
 CREATE TABLE IF NOT EXISTS public.conversations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id BIGINT NOT NULL,  -- Changed from TEXT to BIGINT
+  school_id BIGINT NOT NULL,
   participant_ids UUID[] NOT NULL,
   subject TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
@@ -252,10 +229,47 @@ CREATE TABLE IF NOT EXISTS public.messages (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
+-- TABLE: diagnostic_sessions
+CREATE TABLE IF NOT EXISTS public.diagnostic_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  school_id BIGINT NOT NULL REFERENCES public.schools(id) ON DELETE CASCADE,
+  teacher_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  diagnostic_type TEXT NOT NULL,
+  grade_level TEXT NOT NULL,
+  class_name TEXT,
+  class_id UUID REFERENCES public.classes(id) ON DELETE SET NULL,
+  total_students INTEGER NOT NULL DEFAULT 0,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed')),
+  session_date TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- TABLE: diagnostic_students
+CREATE TABLE IF NOT EXISTS public.diagnostic_students (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id UUID NOT NULL REFERENCES public.diagnostic_sessions(id) ON DELETE CASCADE,
+  student_id UUID NOT NULL REFERENCES public.students(id) ON DELETE CASCADE,
+  student_name TEXT NOT NULL,
+  student_order INTEGER NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- TABLE: diagnostic_results
+CREATE TABLE IF NOT EXISTS public.diagnostic_results (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id UUID NOT NULL REFERENCES public.diagnostic_sessions(id) ON DELETE CASCADE,
+  student_id UUID NOT NULL REFERENCES public.diagnostic_students(id) ON DELETE CASCADE,
+  criteria_data JSONB NOT NULL DEFAULT '{}'::jsonb,
+  final_result TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
 -- TABLE: resources
 CREATE TABLE IF NOT EXISTS public.resources (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id BIGINT NOT NULL,  -- Changed from TEXT to BIGINT
+  school_id BIGINT NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
   file_url TEXT,
@@ -266,8 +280,17 @@ CREATE TABLE IF NOT EXISTS public.resources (
 );
 
 -- ============================================
--- 3. CREATE FUNCTIONS
+-- 2. CREATE FUNCTIONS (BEFORE TRIGGERS!)
 -- ============================================
+
+-- Trigger function for updated_at
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Function to check user roles
 CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role TEXT)
@@ -282,17 +305,8 @@ AS $$
   )
 $$;
 
--- Trigger function for updated_at
-CREATE OR REPLACE FUNCTION public.update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
 -- ============================================
--- 4. CREATE TRIGGERS
+-- 3. CREATE TRIGGERS (AFTER FUNCTIONS!)
 -- ============================================
 
 DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
@@ -343,77 +357,32 @@ CREATE TRIGGER update_diagnostic_sessions_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
-  -- Remplacez la ligne fautive par :
-ALTER TABLE public.profiles 
-    ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT TRUE;
--- Add class_id to activities if not exists
+DROP TRIGGER IF EXISTS update_diagnostic_results_updated_at ON public.diagnostic_results;
+CREATE TRIGGER update_diagnostic_results_updated_at
+  BEFORE UPDATE ON public.diagnostic_results
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
 
 -- ============================================
--- 5. SEED DATA
+-- 4. CREATE INDEXES FOR PERFORMANCE
 -- ============================================
 
--- Insert demo schools (remove explicit IDs, let BIGSERIAL auto-generate)
-INSERT INTO public.schools (name, city, region, level, status, address, students, last_diagnostic) VALUES
-  ('École Ibn Battuta', 'Oujda', 'Oriental', 'Primaire', 'Public', 'Quartier Al Qods, Oujda', 320, '2025-09-15'),
-  ('Collège Al Andalous', 'Fès', 'Fès-Meknès', 'Collège', 'Public', 'Avenue Hassan II, Fès', 580, '2025-08-22'),
-  ('Lycée Pasteur', 'Casablanca', 'Casablanca-Settat', 'Lycée', 'Privé', 'Boulevard Zerktouni, Casablanca', 450, '2025-10-01'),
-  ('École Al Farabi', 'Rabat', 'Rabat-Salé-Kénitra', 'Primaire', 'Public', 'Hay Riad, Rabat', 280, '2025-09-28'),
-  ('Collège Ibn Khaldoun', 'Marrakech', 'Marrakech-Safi', 'Collège', 'Public', 'Gueliz, Marrakech', 620, '2025-09-10'),
-  ('Lycée Excellence', 'Tanger', 'Tanger-Tétouan-Al Hoceïma', 'Lycée', 'Privé', 'Avenue Mohammed VI, Tanger', 380, '2025-09-25');
-
--- Create SUPERADMIN account
--- Email: admin@admin.com
--- Password: admin123 (BCrypt hashed)
-INSERT INTO public.profiles (id, email, password_hash, full_name, school_id, created_at, updated_at)
-VALUES (
-  '00000000-0000-0000-0000-000000000001'::UUID,
-  'admin@admin.com',
-  '$2b$12$/B/YKPYMs8en0f06AnSRzOgrJMTsNa5zl14S4.EdXEEPslM0Cgs1a',
-  'Super Admin',
-  1,  -- Changed from '1' (text) to 1 (bigint)
-  now(),
-  now()
-)
-ON CONFLICT (email) DO UPDATE SET
-  password_hash = EXCLUDED.password_hash,
-  full_name = EXCLUDED.full_name;
-
--- Assign SUPERADMIN role
-INSERT INTO public.user_roles (user_id, role)
-VALUES ('00000000-0000-0000-0000-000000000001'::UUID, 'SUPERADMIN')
-ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
-
--- ============================================
--- 6. CREATE INDEXES FOR PERFORMANCE
--- ============================================
-
--- ============================================
--- 6.1 FOREIGN KEY INDEXES
--- ============================================
--- Critical for JOIN performance and referential integrity
-
--- Profiles table
+-- Foreign key indexes
 CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email);
 CREATE INDEX IF NOT EXISTS idx_profiles_school_id ON public.profiles(school_id);
-
--- User roles table
 CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON public.user_roles(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_roles_role ON public.user_roles(role);
-
--- Activity files table
 CREATE INDEX IF NOT EXISTS idx_activity_files_activity_id ON public.activity_files(activity_id);
 CREATE INDEX IF NOT EXISTS idx_activity_files_uploaded_by ON public.activity_files(uploaded_by);
-
--- Diagnostics table
 CREATE INDEX IF NOT EXISTS idx_diagnostics_school_id ON public.diagnostics(school_id);
 CREATE INDEX IF NOT EXISTS idx_diagnostics_teacher_id ON public.diagnostics(teacher_id);
-
--- Diagnostic sessions table
-CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_school_id ON public.diagnostic_sessions(school_id);
-CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_teacher_id ON public.diagnostic_sessions(teacher_id);
-CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_class_id ON public.diagnostic_sessions(class_id);
-
--- Classes table
+CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_school ON public.diagnostic_sessions(school_id);
+CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_teacher ON public.diagnostic_sessions(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_class ON public.diagnostic_sessions(class_id);
+CREATE INDEX IF NOT EXISTS idx_diagnostic_students_session ON public.diagnostic_students(session_id);
+CREATE INDEX IF NOT EXISTS idx_diagnostic_students_student ON public.diagnostic_students(student_id);
+CREATE INDEX IF NOT EXISTS idx_diagnostic_results_session ON public.diagnostic_results(session_id);
+CREATE INDEX IF NOT EXISTS idx_diagnostic_results_student ON public.diagnostic_results(student_id);
 CREATE INDEX IF NOT EXISTS idx_classes_school_id ON public.classes(school_id);
 
 -- Subjects table
@@ -434,141 +403,102 @@ CREATE INDEX IF NOT EXISTS idx_class_subjects_teacher_id ON public.class_subject
 -- Teacher classes table (many-to-many) - DEPRECATED
 CREATE INDEX IF NOT EXISTS idx_teacher_classes_teacher_id ON public.teacher_classes(teacher_id);
 CREATE INDEX IF NOT EXISTS idx_teacher_classes_class_id ON public.teacher_classes(class_id);
-
--- Teaching sessions table
 CREATE INDEX IF NOT EXISTS idx_teaching_sessions_school_id ON public.teaching_sessions(school_id);
 CREATE INDEX IF NOT EXISTS idx_teaching_sessions_teacher_id ON public.teaching_sessions(teacher_id);
 CREATE INDEX IF NOT EXISTS idx_teaching_sessions_class_id ON public.teaching_sessions(class_id);
-
--- Session progress table
 CREATE INDEX IF NOT EXISTS idx_session_progress_session_id ON public.session_progress(session_id);
-
--- User activity logs table
 CREATE INDEX IF NOT EXISTS idx_user_activity_logs_user_id ON public.user_activity_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_activity_logs_school_id ON public.user_activity_logs(school_id);
-
--- Conversations table
 CREATE INDEX IF NOT EXISTS idx_conversations_school_id ON public.conversations(school_id);
-
--- Messages table
 CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON public.messages(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_messages_sender_id ON public.messages(sender_id);
-
--- Resources table
 CREATE INDEX IF NOT EXISTS idx_resources_school_id ON public.resources(school_id);
 CREATE INDEX IF NOT EXISTS idx_resources_created_by ON public.resources(created_by);
-
--- Activities table
 CREATE INDEX IF NOT EXISTS idx_activities_school_id ON public.activities(school_id);
 CREATE INDEX IF NOT EXISTS idx_activities_created_by ON public.activities(created_by);
 
--- ============================================
--- 6.2 SINGLE COLUMN INDEXES (Frequently Queried)
--- ============================================
-
--- Students table - search queries
+-- Single column indexes
 CREATE INDEX IF NOT EXISTS idx_students_first_name ON public.students(first_name);
 CREATE INDEX IF NOT EXISTS idx_students_last_name ON public.students(last_name);
-
--- Activities table - filter queries
 CREATE INDEX IF NOT EXISTS idx_activities_type ON public.activities(type);
 CREATE INDEX IF NOT EXISTS idx_activities_level ON public.activities(level);
-
--- Classes table - filter queries
 CREATE INDEX IF NOT EXISTS idx_classes_level ON public.classes(level);
 CREATE INDEX IF NOT EXISTS idx_classes_annee_scolaire ON public.classes(annee_scolaire);
-
--- Teaching sessions table - date queries
 CREATE INDEX IF NOT EXISTS idx_teaching_sessions_session_date ON public.teaching_sessions(session_date);
-
--- User activity logs table - date and type queries
 CREATE INDEX IF NOT EXISTS idx_user_activity_logs_activity_date ON public.user_activity_logs(activity_date);
 CREATE INDEX IF NOT EXISTS idx_user_activity_logs_activity_type ON public.user_activity_logs(activity_type);
-
--- Schools table - filter queries
 CREATE INDEX IF NOT EXISTS idx_schools_city ON public.schools(city);
 CREATE INDEX IF NOT EXISTS idx_schools_region ON public.schools(region);
 CREATE INDEX IF NOT EXISTS idx_schools_level ON public.schools(level);
 CREATE INDEX IF NOT EXISTS idx_schools_status ON public.schools(status);
-
--- Resources table - type filter
 CREATE INDEX IF NOT EXISTS idx_resources_file_type ON public.resources(file_type);
-
--- Diagnostic sessions table - filter queries
 CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_status ON public.diagnostic_sessions(status);
-CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_subject ON public.diagnostic_sessions(subject);
-CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_level ON public.diagnostic_sessions(level);
 
--- ============================================
--- 6.3 COMPOSITE INDEXES (Multi-column)
--- ============================================
--- Optimizes common query combinations
-
--- Teaching sessions - common query patterns
+-- Composite indexes
 CREATE INDEX IF NOT EXISTS idx_teaching_sessions_teacher_class ON public.teaching_sessions(teacher_id, class_id);
 CREATE INDEX IF NOT EXISTS idx_teaching_sessions_school_teacher ON public.teaching_sessions(school_id, teacher_id);
 CREATE INDEX IF NOT EXISTS idx_teaching_sessions_school_date ON public.teaching_sessions(school_id, session_date);
-
--- User activity logs - common query patterns
 CREATE INDEX IF NOT EXISTS idx_user_activity_logs_school_date ON public.user_activity_logs(school_id, activity_date);
 CREATE INDEX IF NOT EXISTS idx_user_activity_logs_user_date ON public.user_activity_logs(user_id, activity_date);
-
--- Classes - common filter combinations
 CREATE INDEX IF NOT EXISTS idx_classes_school_level ON public.classes(school_id, level);
 CREATE INDEX IF NOT EXISTS idx_classes_school_year ON public.classes(school_id, annee_scolaire);
-
--- Activities - common filter combinations
 CREATE INDEX IF NOT EXISTS idx_activities_school_type ON public.activities(school_id, type);
 CREATE INDEX IF NOT EXISTS idx_activities_school_level ON public.activities(school_id, level);
-
--- Diagnostic sessions - teacher diagnostics
-CREATE INDEX IF NOT EXISTS idx_diagnostic_sessions_school_teacher ON public.diagnostic_sessions(school_id, teacher_id);
-
-
-
--- Resources - school resources by type
 CREATE INDEX IF NOT EXISTS idx_resources_school_type ON public.resources(school_id, file_type);
-
--- Students - search optimization
 CREATE INDEX IF NOT EXISTS idx_students_school_class ON public.students(school_id, class_id);
 
--- ============================================
--- 6.4 SPECIALIZED INDEXES
--- ============================================
-
--- GIN index for array search on messages read_by
+-- Specialized GIN indexes
 CREATE INDEX IF NOT EXISTS idx_messages_read_by ON public.messages USING GIN(read_by);
-
--- GIN index for array search on conversations participant_ids
 CREATE INDEX IF NOT EXISTS idx_conversations_participant_ids ON public.conversations USING GIN(participant_ids);
 
--- Text search index for student names (case-insensitive search)
+-- Text search indexes
 CREATE INDEX IF NOT EXISTS idx_students_first_name_lower ON public.students(LOWER(first_name));
 CREATE INDEX IF NOT EXISTS idx_students_last_name_lower ON public.students(LOWER(last_name));
 
 -- ============================================
--- INDEX CREATION SUMMARY
+-- 5. SEED DATA
 -- ============================================
-DO $$
-BEGIN
-  RAISE NOTICE '📊 Index creation complete:';
-  RAISE NOTICE '   - Foreign key indexes: 18';
-  RAISE NOTICE '   - Single column indexes: 15';
-  RAISE NOTICE '   - Composite indexes: 11';
-  RAISE NOTICE '   - Specialized indexes: 4';
-  RAISE NOTICE '   - Total indexes: 48';
-END $$;
+
+-- Insert demo schools
+INSERT INTO public.schools (name, city, region, level, status, address, students, last_diagnostic) VALUES
+  ('École Ibn Battuta', 'Oujda', 'Oriental', 'Primaire', 'Public', 'Quartier Al Qods, Oujda', 320, '2025-09-15'),
+  ('Collège Al Andalous', 'Fès', 'Fès-Meknès', 'Collège', 'Public', 'Avenue Hassan II, Fès', 580, '2025-08-22'),
+  ('Lycée Pasteur', 'Casablanca', 'Casablanca-Settat', 'Lycée', 'Privé', 'Boulevard Zerktouni, Casablanca', 450, '2025-10-01'),
+  ('École Al Farabi', 'Rabat', 'Rabat-Salé-Kénitra', 'Primaire', 'Public', 'Hay Riad, Rabat', 280, '2025-09-28'),
+  ('Collège Ibn Khaldoun', 'Marrakech', 'Marrakech-Safi', 'Collège', 'Public', 'Gueliz, Marrakech', 620, '2025-09-10'),
+  ('Lycée Excellence', 'Tanger', 'Tanger-Tétouan-Al Hoceïma', 'Lycée', 'Privé', 'Avenue Mohammed VI, Tanger', 380, '2025-09-25')
+ON CONFLICT DO NOTHING;
+
+-- Create SUPERADMIN account (admin@admin.com / admin123)
+INSERT INTO public.profiles (id, email, password_hash, full_name, school_id, created_at, updated_at)
+VALUES (
+  '00000000-0000-0000-0000-000000000001'::UUID,
+  'admin@admin.com',
+  '$2b$12$/B/YKPYMs8en0f06AnSRzOgrJMTsNa5zl14S4.EdXEEPslM0Cgs1a',
+  'Super Admin',
+  1,
+  now(),
+  now()
+)
+ON CONFLICT (email) DO UPDATE SET
+  password_hash = EXCLUDED.password_hash,
+  full_name = EXCLUDED.full_name;
+
+-- Assign SUPERADMIN role
+INSERT INTO public.user_roles (user_id, role)
+VALUES ('00000000-0000-0000-0000-000000000001'::UUID, 'SUPERADMIN')
+ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
 -- ============================================
 -- INITIALIZATION COMPLETE
 -- ============================================
 
--- Log successful initialization
 DO $$
 BEGIN
   RAISE NOTICE '✅ Database initialization complete!';
-  RAISE NOTICE '📊 Schema version: 2.0 (RBAC Fixed)';
-  RAISE NOTICE '🔐 SUPERADMIN account created: admin@admin.com / admin123';
+  RAISE NOTICE '📊 Schema version: 2.1 (Trigger Order Fixed)';
+  RAISE NOTICE '🔐 SUPERADMIN: admin@admin.com / admin123';
   RAISE NOTICE '🏫 Demo schools: 6 schools loaded';
-  RAISE NOTICE '👥 Roles supported: SUPERADMIN, ADMIN, TEACHER, STUDENT';
+  RAISE NOTICE '👥 Roles: SUPERADMIN, ADMIN, TEACHER, STUDENT';
+  RAISE NOTICE '📈 Total indexes: 48';
 END $$;

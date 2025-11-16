@@ -5,10 +5,23 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { diagnosticApi } from '@/lib/api';
 import { getDiagnosticGrid } from '@/config/diagnosticGrids';
-import { Student, DiagnosticSession } from '@/types/diagnostic';
 import { Loader2, Save } from 'lucide-react';
+
+interface Student {
+  id: string;
+  studentName: string;
+  studentOrder: number;
+}
+
+interface DiagnosticSession {
+  id: string;
+  diagnosticType: string;
+  gradeLevel: string;
+  className?: string;
+  totalStudents: number;
+}
 
 const DiagnosticGrid = () => {
   const { id: schoolId, sessionId } = useParams<{ id: string; sessionId: string }>();
@@ -27,31 +40,19 @@ const DiagnosticGrid = () => {
 
   const loadSessionData = async () => {
     try {
-      // Load session
-      const { data: sessionData, error: sessionError } = await supabase
-        .from('diagnostic_sessions')
-        .select('*')
-        .eq('id', sessionId)
-        .single();
-
-      if (sessionError) throw sessionError;
+      // Charger la session
+      const sessionData = await diagnosticApi.getSession(sessionId!);
       setSession(sessionData);
 
-      // Load students
-      const { data: studentsData, error: studentsError } = await supabase
-        .from('diagnostic_students')
-        .select('*')
-        .eq('session_id', sessionId)
-        .order('student_order');
-
-      if (studentsError) throw studentsError;
+      // Charger les étudiants de la session
+      const studentsData = await diagnosticApi.getSessionStudents(sessionId!);
       setStudents(studentsData.map(s => ({
         id: s.id,
-        name: s.student_name,
-        order: s.student_order
+        studentName: s.studentName,
+        studentOrder: s.studentOrder
       })));
 
-      // Initialize responses object
+      // Initialiser les réponses
       const initialResponses: Record<string, Record<string, string>> = {};
       studentsData.forEach(student => {
         initialResponses[student.id] = {};
@@ -87,7 +88,8 @@ const DiagnosticGrid = () => {
   };
 
   const handleSave = async () => {
-    // Validate that all students have responses and final results
+    // Valider que tous les étudiants ont des réponses et résultats finaux
+    const grid = getDiagnosticGrid(session!.diagnosticType);
     const incompleteStudents = students.filter(student => {
       const studentResponses = responses[student.id];
       const hasFinalResult = finalResults[student.id];
@@ -107,19 +109,18 @@ const DiagnosticGrid = () => {
     setIsSaving(true);
 
     try {
-      // Save results for each student
-      const resultsData = students.map(student => ({
-        session_id: sessionId,
-        student_id: student.id,
-        criteria_data: responses[student.id],
-        final_result: finalResults[student.id]
+      // Préparer les résultats
+      const results = students.map(student => ({
+        studentId: student.id,
+        criteriaData: responses[student.id],
+        finalResult: finalResults[student.id]
       }));
 
-      const { error } = await supabase
-        .from('diagnostic_results')
-        .insert(resultsData);
-
-      if (error) throw error;
+      // Sauvegarder via l'API
+      await diagnosticApi.saveResults({
+        sessionId: sessionId!,
+        results
+      });
 
       toast({
         title: 'Diagnostic enregistré',
@@ -147,7 +148,7 @@ const DiagnosticGrid = () => {
     );
   }
 
-  const grid = getDiagnosticGrid(session.diagnostic_type);
+  const grid = getDiagnosticGrid(session.diagnosticType);
   if (!grid) return null;
 
   return (
@@ -157,9 +158,9 @@ const DiagnosticGrid = () => {
           <h2 className="text-2xl font-bold text-foreground mb-2">{grid.title}</h2>
           <p className="text-muted-foreground">{grid.description}</p>
           <div className="mt-4 flex gap-4 text-sm">
-            <span className="text-muted-foreground">Niveau: <strong className="text-foreground">{session.grade_level}</strong></span>
-            {session.class_name && (
-              <span className="text-muted-foreground">Classe: <strong className="text-foreground">{session.class_name}</strong></span>
+            <span className="text-muted-foreground">Niveau: <strong className="text-foreground">{session.gradeLevel}</strong></span>
+            {session.className && (
+              <span className="text-muted-foreground">Classe: <strong className="text-foreground">{session.className}</strong></span>
             )}
             <span className="text-muted-foreground">Élèves: <strong className="text-foreground">{students.length}</strong></span>
           </div>
@@ -186,7 +187,7 @@ const DiagnosticGrid = () => {
               {students.map((student, idx) => (
                 <tr key={student.id} className={idx % 2 === 0 ? 'bg-muted/30' : ''}>
                   <td className="p-3 font-medium text-foreground">
-                    {student.name}
+                    {student.studentName}
                   </td>
                   {grid.criteria.map(criteria => (
                     <td key={criteria.id} className="p-3">
