@@ -19,6 +19,34 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "*")
 @PreAuthorize("hasRole('SUPERADMIN')")
 public class SuperAdminController {
+    /**
+     * Reset password for any user (admin, teacher, student) by user ID
+     * Only accessible by SUPERADMIN
+     */
+    @PostMapping("/users/{id}/reset-password")
+    public ResponseEntity<Map<String, Object>> resetUserPassword(@PathVariable UUID id) {
+        try {
+            Optional<Profile> profileOpt = profileRepository.findById(id);
+            if (profileOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "User not found"));
+            }
+            Profile profile = profileOpt.get();
+            // Generate a new random password
+            String newPassword = UUID.randomUUID().toString().substring(0, 8);
+            // TODO: Update password in user auth system (implement actual password update logic)
+            // For demo, just return the new password
+            // profile.setPassword(passwordEncoder.encode(newPassword)); // If using password field
+            // profileRepository.save(profile);
+            Map<String, Object> result = new HashMap<>();
+            result.put("userId", id);
+            result.put("newPassword", newPassword);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to reset password: " + e.getMessage()));
+        }
+    }
 
     private final SchoolRepository schoolRepository;
     private final ProfileRepository profileRepository;

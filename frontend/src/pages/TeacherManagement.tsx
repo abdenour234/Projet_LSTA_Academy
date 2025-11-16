@@ -1,16 +1,16 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -18,78 +18,72 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Users, Mail, Phone, Key, Copy, ArrowLeft, LogOut } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { authApi, auth, ApiError } from "@/lib/api";
+} from '@/components/ui/table';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
+import { Plus, Mail, Phone, Key, Copy } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { authApi, teacherManagementApi, subjectApi } from '@/lib/api';
+import { Badge } from '@/components/ui/badge';
 
 interface Teacher {
   id: string;
-  full_name: string | null;
-  email: string;
-  matiere: string | null;
-  phone: string | null;
+  profile?: {
+    fullName: string;
+    email: string;
+  };
+  subject?: {
+    id: string;
+    name: string;
+  };
+  specialty: string;
+  phoneNumber?: string;
+  isActive: boolean;
 }
 
-interface Class {
+interface Subject {
   id: string;
   name: string;
-  level: string;
 }
 
 export default function TeacherManagement() {
   const { id: schoolId } = useParams();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [teacherClasses, setTeacherClasses] = useState<Record<string, string[]>>({});
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
-  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
-  const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newTeacher, setNewTeacher] = useState({
-    full_name: "",
-    matiere: "",
-    phone: "",
+    full_name: '',
+    subjectId: '', // Changed to store subject UUID
+    phone: '',
   });
-  const [generatedCredentials, setGeneratedCredentials] = useState<{email: string, password: string} | null>(null);
-
-  const handleLogout = async () => {
-    await authApi.logout();
-    navigate(`/school/${schoolId}/login`);
-  };
+  const [generatedCredentials, setGeneratedCredentials] = useState<{
+    email: string;
+    password: string;
+  } | null>(null);
 
   useEffect(() => {
-    checkAuth();
     loadData();
   }, [schoolId]);
-
-  const checkAuth = async () => {
-    if (!auth.isAuthenticated()) {
-      navigate(`/school/${schoolId}/login`);
-    }
-  };
 
   const loadData = async () => {
     try {
       if (!schoolId) return;
+      setLoading(true);
+      
+      const [teachersData, subjectsData] = await Promise.all([
+        teacherManagementApi.getBySchoolId(Number(schoolId), undefined, false),
+        subjectApi.getBySchoolId(Number(schoolId), true),
+      ]);
 
-      // For now, just set empty arrays until we migrate the teacher listing
-      // The registration function works with the backend API
-      setTeachers([]);
-      setClasses([]);
-      setTeacherClasses({});
-
+      setTeachers(teachersData);
+      setSubjects(subjectsData);
     } catch (error: any) {
       console.error('Error loading data:', error);
       toast({
@@ -102,43 +96,9 @@ export default function TeacherManagement() {
     }
   };
 
-  const handleAssignClasses = (teacher: Teacher) => {
-    setSelectedTeacher(teacher);
-    setSelectedClassIds(teacherClasses[teacher.id] || []);
-    setIsAssignDialogOpen(true);
-  };
-
-  const handleSaveAssignments = async () => {
-    if (!selectedTeacher) return;
-
-    try {
-      // TODO: Implement class assignment with backend API
-      toast({
-        title: 'Info',
-        description: 'Fonctionnalité d\'affectation des classes à venir',
-      });
-      setIsAssignDialogOpen(false);
-    } catch (error: any) {
-      console.error('Error saving assignments:', error);
-      toast({
-        title: 'Erreur',
-        description: error.message || 'Erreur lors de l\'enregistrement',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const getTeacherClassNames = (teacherId: string) => {
-    const classIds = teacherClasses[teacherId] || [];
-    return classes
-      .filter(c => classIds.includes(c.id))
-      .map(c => c.name)
-      .join(", ") || "Aucune";
-  };
-
   const generatePassword = () => {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-    let password = "";
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let password = '';
     for (let i = 0; i < 10; i++) {
       password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
@@ -148,22 +108,25 @@ export default function TeacherManagement() {
   const generateEmail = (fullName: string) => {
     const namePart = fullName
       .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/\s+/g, ".");
-    return `${namePart}@${schoolId}.ma`;
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z\s]/g, '')
+      .split(' ')
+      .filter((w) => w)
+      .join('.');
+    const randomNum = Math.floor(Math.random() * 1000);
+    return `${namePart}.${randomNum}@school${schoolId}.com`;
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: 'Copié',
+      description: 'Copié dans le presse-papiers',
+    });
   };
 
   const handleAddTeacher = async () => {
-    if (!newTeacher.full_name || !newTeacher.matiere) {
-      toast({
-        title: 'Erreur',
-        description: 'Veuillez remplir tous les champs obligatoires',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     if (!schoolId) return;
 
     // Generate email and password
@@ -171,319 +134,267 @@ export default function TeacherManagement() {
     const password = generatePassword();
 
     try {
-      // ✅ Use registerByAdmin to prevent auto-login when admin creates teachers
-      await authApi.registerByAdmin({
+      // Step 1: Create user account with registerByAdmin
+      const registerResponse = await authApi.registerByAdmin({
         email,
         password,
         fullName: newTeacher.full_name,
         role: 'TEACHER',
-        schoolId,
+        schoolId: schoolId,
+      });
+
+      console.log('Register response:', registerResponse);
+
+      // Step 2: Create teacher entity with the profile ID
+      // The response contains { user: {...}, message: string }
+      const profileId = registerResponse.user?.id || registerResponse.user?.userId;
+      
+      if (!profileId) {
+        throw new Error('Profile ID not found in registration response');
+      }
+
+      await teacherManagementApi.create({
+        profileId: profileId,
+        schoolId: Number(schoolId),
+        subjectId: newTeacher.subjectId, // Send subject UUID
+        phoneNumber: newTeacher.phone || '',
+        isActive: true,
       });
 
       setGeneratedCredentials({ email, password });
+      setNewTeacher({ full_name: '', subjectId: '', phone: '' });
       
       toast({
         title: 'Succès',
         description: 'Enseignant créé avec succès',
       });
 
-      await loadData();
-      setNewTeacher({ full_name: "", matiere: "", phone: "" });
-      
-    } catch (error) {
+      loadData();
+    } catch (error: any) {
       console.error('Error creating teacher:', error);
-      let errorMessage = 'Une erreur est survenue';
-      
-      if (error instanceof ApiError) {
-        errorMessage = typeof error.message === 'string' ? error.message : errorMessage;
-      }
-      
       toast({
         title: 'Erreur',
-        description: errorMessage,
+        description: error.message || 'Erreur lors de la création de l\'enseignant',
         variant: 'destructive',
       });
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: 'Succès',
-      description: 'Copié dans le presse-papier',
-    });
+  const handleCloseAddDialog = () => {
+    setIsAddDialogOpen(false);
+    setNewTeacher({ full_name: '', subjectId: '', phone: '' });
+    setGeneratedCredentials(null);
   };
 
   if (loading) {
-    return <div className="p-8">Chargement...</div>;
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-lg">Chargement...</div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Fixed Header - 64px height, professional style */}
-      <header className="h-16 border-b border-slate-200 bg-white sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(`/school/${schoolId}/admin/dashboard`)}
-              className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 h-9 w-9"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-lg font-semibold text-slate-900">Gestion des Enseignants</h1>
-              <p className="text-sm text-slate-600">Gérez les enseignants et leurs affectations</p>
-            </div>
-          </div>
-          <Button 
-            variant="ghost"
-            onClick={handleLogout}
-            className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 h-9"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Déconnexion
-          </Button>
+    <div className="container mx-auto p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Gestion des Enseignants</h1>
+          <p className="text-muted-foreground mt-1">
+            Créez et gérez les enseignants de votre établissement
+          </p>
         </div>
-      </header>
+        <Button onClick={() => setIsAddDialogOpen(true)} disabled={subjects.length === 0}>
+          <Plus className="w-4 h-4 mr-2" />
+          Nouvel Enseignant
+        </Button>
+      </div>
 
-      {/* Main content - max-w-7xl, consistent spacing */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
-          <div className="p-6 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-            <div>
-              <h2 className="text-base font-semibold text-slate-900">Enseignants</h2>
-              <p className="text-sm text-slate-600 mt-0.5">Liste des enseignants de l'école</p>
-            </div>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  onClick={() => setGeneratedCredentials(null)}
-                  className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium h-9"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Ajouter un enseignant
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle className="text-lg font-semibold text-slate-900">Ajouter un enseignant</DialogTitle>
-                </DialogHeader>
-                {generatedCredentials ? (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-3">
-                      <p className="font-semibold text-emerald-700">✅ Compte créé avec succès!</p>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-slate-700">Email:</span>
-                          <div className="flex items-center gap-2">
-                            <code className="text-sm font-mono bg-white px-2 py-1 rounded border border-slate-200">
-                              {generatedCredentials.email}
-                            </code>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => copyToClipboard(generatedCredentials.email)}
-                              className="h-8 w-8 text-slate-600 hover:text-slate-900"
-                            >
-                              <Copy className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-slate-700">Mot de passe:</span>
-                          <div className="flex items-center gap-2">
-                            <code className="text-sm font-mono bg-white px-2 py-1 rounded border border-slate-200">
-                              {generatedCredentials.password}
-                            </code>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => copyToClipboard(generatedCredentials.password)}
-                              className="h-8 w-8 text-slate-600 hover:text-slate-900"
-                            >
-                              <Copy className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      ⚠️ Veuillez transmettre ces identifiants à l'enseignant. Ils ne seront plus affichés.
-                    </p>
-                  </div>
-                  <Button onClick={() => setIsAddDialogOpen(false)} className="w-full">
-                    Fermer
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="full_name">Nom complet *</Label>
-                    <Input
-                      id="full_name"
-                      value={newTeacher.full_name}
-                      onChange={(e) =>
-                        setNewTeacher({ ...newTeacher, full_name: e.target.value })
-                      }
-                      placeholder="Ex: Ahmed Bennani"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="matiere">Matière *</Label>
-                    <Select
-                      value={newTeacher.matiere}
-                      onValueChange={(value) =>
-                        setNewTeacher({ ...newTeacher, matiere: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner une matière" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Mathématiques">Mathématiques</SelectItem>
-                        <SelectItem value="Français">Français</SelectItem>
-                        <SelectItem value="Arabe">Arabe</SelectItem>
-                        <SelectItem value="Sciences">Sciences</SelectItem>
-                        <SelectItem value="Histoire-Géographie">Histoire-Géographie</SelectItem>
-                        <SelectItem value="Éducation Islamique">Éducation Islamique</SelectItem>
-                        <SelectItem value="Éducation Physique">Éducation Physique</SelectItem>
-                        <SelectItem value="Arts Plastiques">Arts Plastiques</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Téléphone</Label>
-                    <Input
-                      id="phone"
-                      value={newTeacher.phone}
-                      onChange={(e) =>
-                        setNewTeacher({ ...newTeacher, phone: e.target.value })
-                      }
-                      placeholder="Ex: 0612345678"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleAddTeacher} className="flex-1">
-                      <Key className="w-4 h-4 mr-2" />
-                      Créer le compte
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsAddDialogOpen(false)}
-                    >
-                      Annuler
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </DialogContent>
-          </Dialog>
+      {subjects.length === 0 && (
+        <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className="text-amber-800">
+            Veuillez d'abord créer des matières dans la section "Gestion des Matières" avant d'ajouter des enseignants.
+          </p>
         </div>
+      )}
+
+      <div className="bg-card rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nom</TableHead>
-              <TableHead>Matière</TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Classes assignées</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Nom Complet</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Matière (Spécialité)</TableHead>
+              <TableHead>Téléphone</TableHead>
+              <TableHead>Statut</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {teachers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
-                  Aucun enseignant trouvé
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  Aucun enseignant. Cliquez sur "Nouvel Enseignant" pour commencer.
                 </TableCell>
               </TableRow>
             ) : (
               teachers.map((teacher) => (
                 <TableRow key={teacher.id}>
                   <TableCell className="font-medium">
-                    {teacher.full_name || "Non renseigné"}
+                    {teacher.profile?.fullName || 'N/A'}
                   </TableCell>
-                  <TableCell>{teacher.matiere || "-"}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {teacher.profile?.email || 'N/A'}
+                  </TableCell>
                   <TableCell>
-                    <div className="space-y-1 text-sm">
-                      {teacher.email && (
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-3 h-3" />
-                          {teacher.email}
-                        </div>
-                      )}
-                      {teacher.phone && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-3 h-3" />
-                          {teacher.phone}
-                        </div>
-                      )}
-                    </div>
+                    {teacher.subject ? (
+                      <Badge variant="outline">{teacher.subject.name}</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground">
+                        {teacher.specialty || '—'}
+                      </Badge>
+                    )}
                   </TableCell>
-                  <TableCell>{getTeacherClassNames(teacher.id)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleAssignClasses(teacher)}
-                    >
-                      <Users className="w-4 h-4 mr-2" />
-                      Affecter
-                    </Button>
+                  <TableCell className="text-muted-foreground">
+                    {teacher.phoneNumber || '—'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={teacher.isActive ? 'default' : 'secondary'}>
+                      {teacher.isActive ? 'Actif' : 'Inactif'}
+                    </Badge>
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-        </div>
+      </div>
 
-      <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
-        <DialogContent>
+      {/* Add Teacher Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              Affecter des classes - {selectedTeacher?.full_name}
+              {generatedCredentials ? 'Identifiants Générés' : 'Nouvel Enseignant'}
             </DialogTitle>
+            <DialogDescription>
+              {generatedCredentials
+                ? 'Communiquez ces identifiants à l\'enseignant'
+                : 'Ajoutez un nouvel enseignant avec sa spécialité'}
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            {classes.map((classItem) => (
-              <div key={classItem.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={classItem.id}
-                  checked={selectedClassIds.includes(classItem.id)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedClassIds([...selectedClassIds, classItem.id]);
-                    } else {
-                      setSelectedClassIds(
-                        selectedClassIds.filter((id) => id !== classItem.id)
-                      );
-                    }
-                  }}
+
+          {!generatedCredentials ? (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="full_name">Nom Complet *</Label>
+                <Input
+                  id="full_name"
+                  placeholder="Ex: Jean Dupont"
+                  value={newTeacher.full_name}
+                  onChange={(e) =>
+                    setNewTeacher({ ...newTeacher, full_name: e.target.value })
+                  }
+                  required
                 />
-                <label
-                  htmlFor={classItem.id}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {classItem.name} - {classItem.level}
-                </label>
               </div>
-            ))}
-          </div>
-          <div className="flex gap-2 mt-4">
-            <Button onClick={handleSaveAssignments} className="flex-1">
-              Enregistrer
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setIsAssignDialogOpen(false)}
-            >
-              Annuler
-            </Button>
-          </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="matiere">Spécialité (Matière) *</Label>
+                <Select
+                  value={newTeacher.subjectId}
+                  onValueChange={(value) =>
+                    setNewTeacher({ ...newTeacher, subjectId: value })
+                  }
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez une matière" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject.id} value={subject.id}>
+                        {subject.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Téléphone</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="Ex: 0612345678"
+                  value={newTeacher.phone}
+                  onChange={(e) =>
+                    setNewTeacher({ ...newTeacher, phone: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-green-600" />
+                    <span className="font-medium">Email:</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(generatedCredentials.email)}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-sm font-mono break-all">{generatedCredentials.email}</p>
+              </div>
+
+              <div className="space-y-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Key className="w-4 h-4 text-blue-600" />
+                    <span className="font-medium">Mot de passe:</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(generatedCredentials.password)}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-sm font-mono">{generatedCredentials.password}</p>
+              </div>
+
+              <p className="text-sm text-amber-600">
+                ⚠️ Conservez ces identifiants en lieu sûr. Ils ne seront plus affichés.
+              </p>
+            </div>
+          )}
+
+          <DialogFooter>
+            {!generatedCredentials ? (
+              <>
+                <Button type="button" variant="outline" onClick={handleCloseAddDialog}>
+                  Annuler
+                </Button>
+                <Button
+                  onClick={handleAddTeacher}
+                  disabled={
+                    !newTeacher.full_name || !newTeacher.subjectId || subjects.length === 0
+                  }
+                >
+                  Créer
+                </Button>
+              </>
+            ) : (
+              <Button onClick={handleCloseAddDialog}>Fermer</Button>
+            )}
+          </DialogFooter>
         </DialogContent>
       </Dialog>
-      </main>
     </div>
   );
 }

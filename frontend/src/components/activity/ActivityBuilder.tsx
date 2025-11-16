@@ -1,15 +1,16 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload, Type, Image, FileText, Video, Save, Eye, Loader2, Files, X, File, ImageIcon } from 'lucide-react';
-import { activityApi, API_CONFIG } from '@/lib/api';
+import { activityApi, API_CONFIG, classApi, subjectApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { ActivityElement, ActivityElementType } from '@/types/activity';
 import { uploadActivityFile } from '@/lib/uploadToStorage';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ActivityBuilderProps {
   activityId?: string;
@@ -34,12 +35,43 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
   const [description, setDescription] = useState(initialData?.description || '');
   const [type, setType] = useState(initialData?.type || 'Cours');
   const [level, setLevel] = useState(initialData?.level || 'Primaire');
+  const [selectedClassId, setSelectedClassId] = useState<string>(classId || initialData?.classId || '');
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
+  const [classes, setClasses] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
   const [elements, setElements] = useState<ActivityElement[]>(initialData?.elements || []);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   // Stocker les fichiers en attente d'upload avec métadonnées
   const [pendingFiles, setPendingFiles] = useState<Map<string, { file: File; preview?: string; elementId: string }>>(new Map());
+
+  // Load classes and subjects
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [classesData, subjectsData] = await Promise.all([
+          classApi.getBySchoolId(schoolId.toString()),
+          subjectApi.getBySchoolId(parseInt(schoolId))
+        ]);
+        console.log('[ActivityBuilder] Loaded data:', { classesData, subjectsData });
+        setClasses(classesData);
+        setSubjects(subjectsData);
+        // Always pre-select first class if none is selected and classes exist
+        if (!selectedClassId && classesData.length > 0) {
+          setSelectedClassId(classesData[0].id);
+        }
+      } catch (error) {
+        console.error('Error loading classes/subjects:', error);
+        toast({
+          title: 'Erreur de chargement',
+          description: 'Impossible de charger les classes ou matières',
+          variant: 'destructive'
+        });
+      }
+    };
+    loadData();
+  }, [schoolId]);
 
   const addElement = (elementType: ActivityElementType) => {
     const newElement: ActivityElement = {
@@ -195,6 +227,15 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
       return;
     }
 
+    if (!selectedSubjectId) {
+      toast({ 
+        title: 'Matière requise',
+        description: 'Veuillez sélectionner une matière',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     // Validation: Check if there are file elements without content and without pending uploads
     const emptyFileElements = elements.filter(el => 
       ['image', 'pdf', 'video'].includes(el.type) && 
@@ -211,6 +252,15 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
       return;
     }
 
+    // Validate class selection
+    if (classes.length > 0 && !selectedClassId) {
+      toast({
+        title: 'Classe requise',
+        description: 'Veuillez sélectionner une classe.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setSaving(true);
     try {
       const activityData = {
@@ -219,10 +269,15 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
         type,
         level,
         schoolId,
-        classId,
+        classId: selectedClassId && selectedClassId !== 'ALL_CLASSES' ? selectedClassId : null,
+        subjectId: selectedSubjectId,
         layoutData: JSON.stringify({ elements }),
         isPublished: publish,
       };
+
+      console.log('[ActivityBuilder] Saving activity with data:', activityData);
+      console.log('[ActivityBuilder] selectedSubjectId:', selectedSubjectId);
+      console.log('[ActivityBuilder] selectedClassId:', selectedClassId);
 
       let currentActivityId = activityId;
 
@@ -231,6 +286,7 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
         await activityApi.update(activityId, activityData);
       } else {
         const created = await activityApi.create(activityData);
+        console.log('[ActivityBuilder] Created activity response:', created);
         if (created && created.id) {
           currentActivityId = created.id;
           setActivityId(created.id);
@@ -419,7 +475,8 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
               type,
               level,
               schoolId,
-              classId,
+              classId: selectedClassId && selectedClassId !== 'ALL_CLASSES' ? selectedClassId : null,
+              subjectId: selectedSubjectId,
               layoutData: JSON.stringify({ elements: allElements }),
               isPublished: publish,
             };
@@ -514,6 +571,43 @@ export const ActivityBuilder = ({ activityId: initialActivityId, initialData, sc
             <div>
               <Label>Niveau</Label>
               <Input value={level} onChange={(e) => setLevel(e.target.value)} />
+            </div>
+            <div>
+              <Label>Matière (Subject) *</Label>
+              <Select value={selectedSubjectId} onValueChange={setSelectedSubjectId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une matière" />
+                </SelectTrigger>
+                <SelectContent>
+                  {subjects.map((subject) => (
+                    <SelectItem key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Classe (Class)</Label>
+              <Select 
+                value={selectedClassId || undefined} 
+                onValueChange={(value) => {
+                  console.log('[ActivityBuilder] Class selected:', value);
+                  setSelectedClassId(value || '');
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une classe (optionnel)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL_CLASSES">Toutes les classes</SelectItem>
+                  {classes.map((classe) => (
+                    <SelectItem key={classe.id} value={classe.id}>
+                      {classe.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </Card>

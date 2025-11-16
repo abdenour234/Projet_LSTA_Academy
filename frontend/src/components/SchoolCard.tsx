@@ -25,7 +25,6 @@ const SchoolCard = ({ school }: SchoolCardProps) => {
   return (
     <Card
       className="group relative overflow-hidden border-2 border-blue-200 bg-white hover:shadow-xl hover:border-emerald-400 transition-all duration-300 cursor-pointer hover:scale-105"
-      onClick={() => navigate(`/school/${school.id}/login`)}
     >
       <div className="p-6">
         {/* Header */}
@@ -74,12 +73,31 @@ const SchoolCard = ({ school }: SchoolCardProps) => {
             <Users className="h-4 w-4" />
             <span>{school.students} élèves</span>
           </div>
+          {/* Show teacher and user counts if available */}
+          {typeof school.teachers !== 'undefined' && (
+            <div className="flex items-center gap-1">
+              <Users className="h-4 w-4" />
+              <span>{school.teachers} profs</span>
+            </div>
+          )}
+          {typeof school.users !== 'undefined' && (
+            <div className="flex items-center gap-1">
+              <Users className="h-4 w-4" />
+              <span>{school.users} users</span>
+            </div>
+          )}
           {school.last_diagnostic && (
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
               <span>Dernier diagnostic: {formatDate(school.last_diagnostic)}</span>
             </div>
           )}
+        </div>
+        {/* Manage button always visible at bottom */}
+        <div className="mt-6 flex justify-end">
+          <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); navigate(`/school/${school.id}/manage`); }}>
+            Gérer
+          </Button>
         </div>
       </div>
 

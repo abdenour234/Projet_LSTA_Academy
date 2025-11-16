@@ -18,4 +18,11 @@ public interface ActivityRepository extends JpaRepository<Activity, UUID> {
     List<Activity> findByIsPublished(Boolean isPublished);
     List<Activity> findBySchoolIdAndIsPublished(Long schoolId, Boolean isPublished);
     List<Activity> findBySchoolIdAndClassIdAndIsPublished(Long schoolId, UUID classId, boolean isPublished);
+    
+    // Approval-related queries
+    List<Activity> findByApprovalStatus(String approvalStatus);
+    List<Activity> findBySchoolIdAndApprovalStatus(Long schoolId, String approvalStatus);
+    List<Activity> findBySubjectIdAndApprovalStatus(UUID subjectId, String approvalStatus);
+    List<Activity> findByClassIdAndApprovalStatus(UUID classId, String approvalStatus);
+    List<Activity> findBySchoolIdAndClassIdAndApprovalStatus(Long schoolId, UUID classId, String approvalStatus);
 }

@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS public.students (
   class_id UUID,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
-  massar character varying(255) NOT NULL,
+  massar character varying(255),
   date_of_birth TIMESTAMP WITH TIME ZONE,
   gender TEXT CHECK (gender IN ('M', 'F')),
   phone TEXT,
@@ -63,19 +63,8 @@ CREATE TABLE IF NOT EXISTS public.students (
 CREATE INDEX IF NOT EXISTS idx_students_user_id ON public.students(user_id);
 CREATE INDEX IF NOT EXISTS idx_students_school_id ON public.students(school_id);
 CREATE INDEX IF NOT EXISTS idx_students_class_id ON public.students(class_id);
-
--- TABLE: activities
-CREATE TABLE IF NOT EXISTS public.activities (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id BIGINT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
-  type TEXT NOT NULL,
-  title TEXT NOT NULL,
-  description TEXT,
-  level TEXT NOT NULL,
-  created_by UUID,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
+-- Note: No unique constraint on massar - duplicates are allowed for now
+CREATE INDEX IF NOT EXISTS idx_students_massar ON public.students(massar) WHERE massar IS NOT NULL;
 
 -- TABLE: activity_files
 CREATE TABLE IF NOT EXISTS public.activity_files (
@@ -113,7 +102,67 @@ CREATE TABLE IF NOT EXISTS public.classes (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- TABLE: teacher_classes (many-to-many)
+-- TABLE: subjects (school-specific subjects)
+CREATE TABLE IF NOT EXISTS public.subjects (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  school_id BIGINT NOT NULL REFERENCES public.schools(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  UNIQUE(school_id, name)
+);
+
+-- TABLE: teachers (teachers with single specialty)
+CREATE TABLE IF NOT EXISTS public.teachers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id UUID NOT NULL UNIQUE REFERENCES public.profiles(id) ON DELETE CASCADE,
+  school_id BIGINT NOT NULL REFERENCES public.schools(id) ON DELETE CASCADE,
+  subject_id UUID NOT NULL REFERENCES public.subjects(id) ON DELETE CASCADE,
+  specialty TEXT,
+  phone_number TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- TABLE: class_subjects (linking classes with subjects and assigned teachers)
+CREATE TABLE IF NOT EXISTS public.class_subjects (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  class_id UUID NOT NULL REFERENCES public.classes(id) ON DELETE CASCADE,
+  subject_id UUID NOT NULL REFERENCES public.subjects(id) ON DELETE CASCADE,
+  teacher_id UUID REFERENCES public.teachers(id) ON DELETE SET NULL,
+  hours_per_week INTEGER,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  UNIQUE(class_id, subject_id)
+);
+
+-- TABLE: activities (moved here after classes and subjects are created)
+CREATE TABLE IF NOT EXISTS public.activities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  school_id BIGINT REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
+  class_id UUID REFERENCES public.classes(id) ON DELETE SET NULL,
+  subject_id UUID REFERENCES public.subjects(id) ON DELETE SET NULL,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  level TEXT NOT NULL,
+  layout_data TEXT,
+  is_published BOOLEAN DEFAULT false,
+  approval_status TEXT DEFAULT 'PENDING' CHECK (approval_status IN ('PENDING', 'APPROVED', 'DENIED')),
+  approved_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  created_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_activities_approval_status ON public.activities(approval_status);
+CREATE INDEX IF NOT EXISTS idx_activities_subject_id ON public.activities(subject_id);
+CREATE INDEX IF NOT EXISTS idx_activities_class_id ON public.activities(class_id);
+
+-- TABLE: teacher_classes (many-to-many) - DEPRECATED, kept for backward compatibility
 CREATE TABLE IF NOT EXISTS public.teacher_classes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   teacher_id UUID NOT NULL,
@@ -335,6 +384,23 @@ CREATE INDEX IF NOT EXISTS idx_diagnostic_students_student ON public.diagnostic_
 CREATE INDEX IF NOT EXISTS idx_diagnostic_results_session ON public.diagnostic_results(session_id);
 CREATE INDEX IF NOT EXISTS idx_diagnostic_results_student ON public.diagnostic_results(student_id);
 CREATE INDEX IF NOT EXISTS idx_classes_school_id ON public.classes(school_id);
+
+-- Subjects table
+CREATE INDEX IF NOT EXISTS idx_subjects_school_id ON public.subjects(school_id);
+CREATE INDEX IF NOT EXISTS idx_subjects_is_active ON public.subjects(is_active);
+
+-- Teachers table
+CREATE INDEX IF NOT EXISTS idx_teachers_profile_id ON public.teachers(profile_id);
+CREATE INDEX IF NOT EXISTS idx_teachers_school_id ON public.teachers(school_id);
+CREATE INDEX IF NOT EXISTS idx_teachers_specialty ON public.teachers(specialty);
+CREATE INDEX IF NOT EXISTS idx_teachers_is_active ON public.teachers(is_active);
+
+-- Class subjects table
+CREATE INDEX IF NOT EXISTS idx_class_subjects_class_id ON public.class_subjects(class_id);
+CREATE INDEX IF NOT EXISTS idx_class_subjects_subject_id ON public.class_subjects(subject_id);
+CREATE INDEX IF NOT EXISTS idx_class_subjects_teacher_id ON public.class_subjects(teacher_id);
+
+-- Teacher classes table (many-to-many) - DEPRECATED
 CREATE INDEX IF NOT EXISTS idx_teacher_classes_teacher_id ON public.teacher_classes(teacher_id);
 CREATE INDEX IF NOT EXISTS idx_teacher_classes_class_id ON public.teacher_classes(class_id);
 CREATE INDEX IF NOT EXISTS idx_teaching_sessions_school_id ON public.teaching_sessions(school_id);

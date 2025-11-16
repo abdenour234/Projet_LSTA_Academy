@@ -737,5 +737,82 @@ export const diagnosticApi = {
     api.delete<void>(`/diagnostics/sessions/${sessionId}`),
 };
 
+// Subject API endpoints
+export const subjectApi = {
+  getAll: () => api.get<any[]>('/subjects'),
+  
+  getBySchoolId: (schoolId: number, activeOnly: boolean = false) => 
+    api.get<any[]>(`/subjects/school/${schoolId}?activeOnly=${activeOnly}`),
+  
+  getById: (id: string) => api.get<any>(`/subjects/${id}`),
+  
+  create: (subject: any) => api.post<any>('/subjects', subject),
+  
+  update: (id: string, subject: any) => api.put<any>(`/subjects/${id}`, subject),
+  
+  toggleStatus: (id: string) => api.patch<any>(`/subjects/${id}/toggle-status`, {}),
+  
+  delete: (id: string) => api.delete(`/subjects/${id}`),
+};
+
+// Teacher Management API endpoints (new teacher entity with specialty)
+export const teacherManagementApi = {
+  getAll: () => api.get<any[]>('/teacher-management'),
+  
+  getBySchoolId: (schoolId: number, specialty?: string, activeOnly: boolean = false) => {
+    const params = new URLSearchParams({ activeOnly: String(activeOnly) });
+    if (specialty) params.append('specialty', specialty);
+    return api.get<any[]>(`/teacher-management/school/${schoolId}?${params.toString()}`);
+  },
+  
+  getById: (id: string) => api.get<any>(`/teacher-management/${id}`),
+  
+  getByProfileId: (profileId: string) => api.get<any>(`/teacher-management/profile/${profileId}`),
+  
+  create: (teacher: any) => api.post<any>('/teacher-management', teacher),
+  
+  update: (id: string, teacher: any) => api.put<any>(`/teacher-management/${id}`, teacher),
+  
+  toggleStatus: (id: string) => api.patch<any>(`/teacher-management/${id}/toggle-status`, {}),
+  
+  delete: (id: string) => api.delete(`/teacher-management/${id}`),
+};
+
+// Class Subject API endpoints
+export const classSubjectApi = {
+  assignSubject: (assignment: any) => api.post<any>('/class-subjects', assignment),
+  
+  updateAssignment: (id: string, assignment: any) => api.put<any>(`/class-subjects/${id}`, assignment),
+  
+  assignTeacher: (classId: string, subjectId: string, teacherId: string) =>
+    api.patch<any>(`/class-subjects/class/${classId}/subject/${subjectId}/teacher/${teacherId}`, {}),
+  
+  getSubjectsForClass: (classId: string) => api.get<any[]>(`/class-subjects/class/${classId}`),
+  
+  getClassesForTeacher: (teacherId: string) => api.get<any[]>(`/class-subjects/teacher/${teacherId}`),
+  
+  getClassesForSubject: (subjectId: string) => api.get<any[]>(`/class-subjects/subject/${subjectId}`),
+  
+  removeSubject: (classId: string, subjectId: string) =>
+    api.delete(`/class-subjects/class/${classId}/subject/${subjectId}`),
+  
+  removeAllSubjects: (classId: string) => api.delete(`/class-subjects/class/${classId}/all`),
+};
+
+// Teacher Activity API endpoints (approval workflow)
+export const teacherActivityApi = {
+  getPendingActivities: () => api.get<any[]>('/teacher/activities/pending'),
+  
+  getPendingCount: () => api.get<{ count: number }>('/teacher/activities/pending/count'),
+  
+  getMyActivities: () => api.get<any[]>('/teacher/activities/my-activities'),
+  
+  approveActivity: (activityId: string) => 
+    api.post<any>(`/teacher/activities/${activityId}/approve`, {}),
+  
+  denyActivity: (activityId: string) => 
+    api.post<any>(`/teacher/activities/${activityId}/deny`, {}),
+};
+
 // Export everything
 export default api;

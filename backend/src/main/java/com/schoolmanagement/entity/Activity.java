@@ -25,6 +25,15 @@ public class Activity {
     @Column(name = "class_id")  // NEW: Link to class
     private UUID classId;
 
+    @Column(name = "subject_id")  // Subject/Matière for the activity
+    private UUID subjectId;
+
+    @Column(name = "approval_status", nullable = false)
+    private String approvalStatus = "PENDING"; // PENDING, APPROVED, DENIED
+
+    @Column(name = "approved_by")
+    private UUID approvedBy; // Teacher who approved/denied
+
     @Column(nullable = false)
     private String type;
 
@@ -62,6 +71,9 @@ public class Activity {
         }
         if (isPublished == null) {
             isPublished = false;
+        }
+        if (approvalStatus == null) {
+            approvalStatus = "PENDING";
         }
     }
 

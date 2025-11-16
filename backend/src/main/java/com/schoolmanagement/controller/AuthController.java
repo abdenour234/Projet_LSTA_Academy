@@ -292,7 +292,18 @@ public class AuthController {
                         : null);
                     student.setGender(gender);
                     student.setParentContact(parentContact);
-                    student.setMassar(massar != null && !massar.trim().isEmpty() ? massar : null);
+                    
+                    // Auto-generate massar if not provided
+                    if (massar != null && !massar.trim().isEmpty()) {
+                        student.setMassar(massar);
+                    } else {
+                        // Generate unique massar: SCHOOL_YEAR_RANDOM (e.g., S123_2024_ABC123)
+                        String year = String.valueOf(LocalDateTime.now().getYear());
+                        String randomPart = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+                        String generatedMassar = "S" + schoolId + "_" + year + "_" + randomPart;
+                        student.setMassar(generatedMassar);
+                    }
+                    
                     student.setCreatedAt(LocalDateTime.now());
                     student.setUpdatedAt(LocalDateTime.now());
                     studentRepository.save(student);
@@ -403,7 +414,18 @@ public class AuthController {
         : null);
                     student.setGender(gender); // NEW
                     student.setParentContact(parentContact); // NEW
-                    student.setMassar(massar != null && !massar.trim().isEmpty() ? massar : null); // NOUVEAU
+                    
+                    // Auto-generate massar if not provided
+                    if (massar != null && !massar.trim().isEmpty()) {
+                        student.setMassar(massar);
+                    } else {
+                        // Generate unique massar: SCHOOL_YEAR_RANDOM (e.g., S123_2024_ABC123)
+                        String year = String.valueOf(LocalDateTime.now().getYear());
+                        String randomPart = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+                        String generatedMassar = "S" + schoolId + "_" + year + "_" + randomPart;
+                        student.setMassar(generatedMassar);
+                    }
+                    
                     student.setCreatedAt(LocalDateTime.now());
                     student.setUpdatedAt(LocalDateTime.now());
                     studentRepository.save(student);

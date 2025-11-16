@@ -18,6 +18,7 @@ import SuperAdminActivityEditor from "./pages/SuperAdminActivityEditor";
 import SuperAdminActivityCreator from "./pages/SuperAdminActivityCreator";
 import StudentDashboard from "./pages/StudentDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
+import TeacherActivityApproval from "./pages/TeacherActivityApproval";
 import AdminDashboard from "./pages/AdminDashboard";
 import DiagnosticNewSession from "./pages/DiagnosticNewSession";
 import DiagnosticSession from "./pages/DiagnosticSession";
@@ -35,6 +36,9 @@ import UnderConstruction from "./pages/UnderConstruction";
 import Methode from "./pages/Methode";
 import Clubs from "./pages/Clubs";
 import ChangePassword from "./pages/ChangePassword";
+import SubjectManagement from "./pages/SubjectManagement";
+import ClassSubjectAssignment from "./pages/ClassSubjectAssignment";
+import SchoolManage from "./pages/SchoolManage";
 
 const queryClient = new QueryClient();
 
@@ -52,9 +56,8 @@ const App = () => (
             <Route path="/schools" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<AdminSignup />} />
-          <Route path="/change-password" element={<ChangePassword />} />
-            
-            {/* Legacy routes - redirect to unified login */}
+            <Route path="/change-password" element={<ChangePassword />} />
+            <Route path="/school/:id/manage" element={<SchoolManage />} />
             <Route path="/superadmin/login" element={<Login />} />
             <Route path="/school/:id/login" element={<Login />} />
             
@@ -167,6 +170,14 @@ const App = () => (
                 </PrivateRoute>
               } 
             />
+            <Route 
+              path="/school/:id/teacher/activities/approval" 
+              element={
+                <PrivateRoute requiredRole="TEACHER">
+                  <TeacherActivityApproval />
+                </PrivateRoute>
+              } 
+            />
             
             {/* ADMIN Routes - Protected */}
             <Route 
@@ -182,6 +193,22 @@ const App = () => (
               element={
                 <PrivateRoute requiredRole="ADMIN">
                   <ClassManagement />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/school/:id/admin/classes/:classId/subjects" 
+              element={
+                <PrivateRoute requiredRole="ADMIN">
+                  <ClassSubjectAssignment />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/school/:id/admin/subjects" 
+              element={
+                <PrivateRoute requiredRole="ADMIN">
+                  <SubjectManagement />
                 </PrivateRoute>
               } 
             />

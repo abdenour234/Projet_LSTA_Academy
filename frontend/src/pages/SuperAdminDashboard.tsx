@@ -166,7 +166,7 @@ const SuperAdminDashboard = () => {
         <header className="h-16 bg-white border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-8 h-full flex items-center">
             <Shield className="h-5 w-5 text-slate-600 mr-3" />
-            <h1 className="text-base font-semibold text-slate-900">Tableau de Bord SuperAdmin</h1>
+            <h1 className="text-base font-semibold text-blue-600">Tableau de Bord SuperAdmin</h1>
           </div>
         </header>
         <main className="max-w-7xl mx-auto px-8 py-8">
@@ -309,12 +309,12 @@ const SuperAdminDashboard = () => {
                     return (
                       <div key={region}>
                         <div className="flex justify-between items-baseline mb-1.5">
-                          <span className="text-sm font-medium text-slate-700">{region}</span>
-                          <span className="text-sm font-bold text-slate-900">{count}</span>
+                          <span className="text-sm font-medium text-blue-500">{region}</span>
+                          <span className="text-sm font-bold text-blue-600">{count}</span>
                         </div>
                         <div className="w-full bg-slate-100 rounded-sm h-2">
                           <div
-                            className="bg-slate-700 h-2 rounded-sm transition-all"
+                            className="bg-blue-500 h-2 rounded-sm transition-all"
                             style={{ width: `${percentage}%` }}
                           />
                         </div>
@@ -325,10 +325,10 @@ const SuperAdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="col-span-12 md:col-span-4 border-slate-200 shadow-none rounded-lg">
+          <Card className="col-span-12 md:col-span-4 border-2 border-blue-200 shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
             <CardHeader className="p-5 pb-4">
-              <CardTitle className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-slate-600" />
+              <CardTitle className="text-sm font-semibold text-blue-600 flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-blue-500" />
                 Par Niveau
               </CardTitle>
             </CardHeader>
@@ -340,12 +340,12 @@ const SuperAdminDashboard = () => {
                   return (
                     <div key={level}>
                       <div className="flex justify-between items-baseline mb-1.5">
-                        <span className="text-sm font-medium text-slate-700">{level}</span>
-                        <span className="text-sm font-bold text-slate-900">{count}</span>
+                        <span className="text-sm font-medium text-blue-500">{level}</span>
+                        <span className="text-sm font-bold text-blue-600">{count}</span>
                       </div>
                       <div className="w-full bg-slate-100 rounded-sm h-2">
                         <div
-                          className="bg-slate-700 h-2 rounded-sm transition-all"
+                          className="bg-blue-500 h-2 rounded-sm transition-all"
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
@@ -356,10 +356,10 @@ const SuperAdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="col-span-12 md:col-span-3 border-slate-200 shadow-none rounded-lg">
+          <Card className="col-span-12 md:col-span-3 border-2 border-blue-200 shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
             <CardHeader className="p-5 pb-4">
-              <CardTitle className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-slate-600" />
+              <CardTitle className="text-sm font-semibold text-blue-600 flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-blue-500" />
                 Par Statut
               </CardTitle>
             </CardHeader>
@@ -367,8 +367,8 @@ const SuperAdminDashboard = () => {
               <div className="space-y-3">
                 {Object.entries(stats.distribution.byStatus).map(([status, count]) => (
                   <div key={status} className="flex justify-between items-baseline py-2.5 border-b border-slate-100 last:border-0">
-                    <span className="text-sm font-medium text-slate-700">{status}</span>
-                    <span className="text-xl font-bold text-slate-900">{count}</span>
+                    <span className="text-sm font-medium text-blue-500">{status}</span>
+                    <span className="text-xl font-bold text-blue-600">{count}</span>
                   </div>
                 ))}
               </div>
@@ -377,15 +377,15 @@ const SuperAdminDashboard = () => {
         </div>
 
         {/* Schools Table */}
-        <Card className="border-slate-200 shadow-none rounded-lg">
+        <Card className="border-2 border-blue-200 shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
           <CardHeader className="p-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                  <School className="h-4 w-4 text-slate-600" />
+                <CardTitle className="text-sm font-semibold text-blue-600 flex items-center gap-2">
+                  <School className="h-4 w-4 text-blue-500" />
                   Liste des Écoles
                 </CardTitle>
-                <CardDescription className="text-xs text-slate-600 mt-1">
+                <CardDescription className="text-xs text-blue-500 mt-1">
                   {stats.schools.length} écoles au total
                 </CardDescription>
               </div>
@@ -395,51 +395,51 @@ const SuperAdminDashboard = () => {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-y border-slate-200 bg-slate-50">
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">ID</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">École</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Ville</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Région</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Niveau</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Statut</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Élèves</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Profs</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Users</th>
-                    <th className="text-center px-5 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Actions</th>
+                  <tr className="border-y border-blue-200 bg-blue-50">
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-blue-700 uppercase tracking-wide">ID</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-blue-700 uppercase tracking-wide">École</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-blue-700 uppercase tracking-wide">Ville</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-blue-700 uppercase tracking-wide">Région</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-blue-700 uppercase tracking-wide">Niveau</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-blue-700 uppercase tracking-wide">Statut</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-blue-700 uppercase tracking-wide">Élèves</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-blue-700 uppercase tracking-wide">Profs</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-blue-700 uppercase tracking-wide">Users</th>
+                    <th className="text-center px-5 py-3 text-xs font-semibold text-blue-700 uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {stats.schools.map((school, idx) => (
                     <tr
                       key={school.id}
-                      className={`${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'} hover:bg-slate-100 transition-colors`}
+                      className={`${idx % 2 === 0 ? 'bg-white' : 'bg-blue-50'} hover:bg-emerald-50 transition-colors`}
                     >
-                      <td className="px-5 py-4 text-sm font-mono text-slate-500">{school.id}</td>
-                      <td className="px-5 py-4 text-sm font-semibold text-slate-900">{school.name}</td>
-                      <td className="px-5 py-4 text-sm text-slate-700">{school.city}</td>
-                      <td className="px-5 py-4 text-sm text-slate-700">{school.region}</td>
+                      <td className="px-5 py-4 text-sm font-mono text-blue-500">{school.id}</td>
+                      <td className="px-5 py-4 text-sm font-semibold text-blue-600">{school.name}</td>
+                      <td className="px-5 py-4 text-sm text-blue-500">{school.city}</td>
+                      <td className="px-5 py-4 text-sm text-blue-500">{school.region}</td>
                       <td className="px-5 py-4">
-                        <span className="inline-block px-2.5 py-1 bg-slate-100 border border-slate-300 text-slate-800 text-xs font-medium rounded">
+                        <span className="inline-block px-2.5 py-1 bg-blue-100 border border-blue-300 text-blue-700 text-xs font-medium rounded">
                           {school.level}
                         </span>
                       </td>
                       <td className="px-5 py-4">
                         <span className={`inline-block px-2.5 py-1 text-xs font-medium border rounded ${
                           school.status === 'Public' 
-                            ? 'bg-slate-50 border-slate-300 text-slate-700' 
-                            : 'bg-slate-100 border-slate-400 text-slate-800'
+                            ? 'bg-blue-50 border-blue-300 text-blue-600' 
+                            : 'bg-emerald-50 border-emerald-300 text-emerald-600'
                         }`}>
                           {school.status}
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-sm font-semibold text-slate-900">{school.students}</td>
-                      <td className="px-5 py-4 text-sm text-slate-700">{school.teachers}</td>
-                      <td className="px-5 py-4 text-sm text-slate-700">{school.totalUsers}</td>
+                      <td className="px-5 py-4 text-sm font-semibold text-blue-600">{school.students}</td>
+                      <td className="px-5 py-4 text-sm text-blue-500">{school.teachers}</td>
+                      <td className="px-5 py-4 text-sm text-blue-500">{school.totalUsers}</td>
                       <td className="px-5 py-4 text-center">
                         <Button
                           variant="ghost" 
                           size="sm"
-                          className="text-slate-700 hover:text-slate-900 hover:bg-slate-200 font-medium"
+                          className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 font-medium"
                           onClick={() => navigate(`/superadmin/schools/${school.id}`)}
                         >
                           <Activity className="h-4 w-4 mr-1.5" />

@@ -44,17 +44,36 @@ public class GlobalExceptionHandler {
         
         Map<String, Object> error = new HashMap<>();
         String message = ex.getMessage();
+        String rootCauseMessage = ex.getRootCause() != null ? ex.getRootCause().getMessage() : "";
+        String fullMessage = (message + " " + rootCauseMessage).toLowerCase();
         
         // Check for common constraint violations
-        if (message != null && message.contains("unique constraint")) {
-            if (message.contains("email")) {
-                error.put("error", "An account with this email already exists");
+        if (fullMessage.contains("unique") || fullMessage.contains("duplicate")) {
+            if (fullMessage.contains("email")) {
+                error.put("error", "Un compte avec cet email existe déjà");
+            } else if (fullMessage.contains("massar") || fullMessage.contains("idx_students_massar")) {
+                error.put("error", "Un étudiant avec ce code MASSAR existe déjà");
+            } else if (fullMessage.contains("user_id")) {
+                error.put("error", "Cet identifiant utilisateur est déjà utilisé");
             } else {
-                error.put("error", "This record already exists in the database");
+                error.put("error", "Cet enregistrement existe déjà dans la base de données");
             }
+        } else if (fullMessage.contains("foreign key") || fullMessage.contains("violates")) {
+            if (fullMessage.contains("class_id")) {
+                error.put("error", "La classe spécifiée n'existe pas");
+            } else if (fullMessage.contains("school_id")) {
+                error.put("error", "L'école spécifiée n'existe pas");
+            } else {
+                error.put("error", "Référence invalide. Veuillez vérifier les données liées.");
+            }
+        } else if (fullMessage.contains("not-null") || fullMessage.contains("null value")) {
+            error.put("error", "Champ obligatoire manquant. Veuillez remplir tous les champs requis.");
         } else {
-            error.put("error", "Database constraint violation. Please check your input.");
+            error.put("error", "Violation de contrainte de base de données. Veuillez vérifier votre saisie.");
         }
+        
+        // Add detailed error for debugging (only in logs, not sent to client)
+        log.error("Constraint violation details: {}", fullMessage);
         
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
