@@ -189,31 +189,6 @@ const handleSubmit = async (e: React.FormEvent) => {
             </Button>
           </form>
 
-          {/* Roles Info */}
-          <div className="mt-5 pt-5 border-t-2 border-blue-200">
-            <p className="text-xs text-blue-500 text-center mb-3">
-              Accès selon votre rôle:
-            </p>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center gap-2 text-slate-600">
-                <Shield className="h-3 w-3 text-slate-400" />
-                <span>SuperAdmin</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-600">
-                <UserCheck className="h-3 w-3 text-slate-400" />
-                <span>Admin École</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-600">
-                <GraduationCap className="h-3 w-3 text-slate-400" />
-                <span>Enseignant</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-600">
-                <BookOpen className="h-3 w-3 text-slate-400" />
-                <span>Étudiant</span>
-              </div>
-            </div>
-          </div>
-
           {/* Signup Link */}
           <div className="mt-4 text-center">
             <p className="text-xs text-slate-600">
