@@ -11,13 +11,21 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    shm_size: 256mb  # Allocate shared memory to prevent "/PostgreSQL.xxx" errors
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s  # Give PostgreSQL time to initialize
     networks:
       - app-network
+    restart: unless-stopped  # Auto-restart on failure
+    command: >
+      postgres
+      -c shared_buffers=128MB
+      -c max_connections=100
+      -c idle_in_transaction_session_timeout=60000
 
   minio:
     image: minio/minio
