@@ -199,6 +199,14 @@ const SuperAdminDashboard = () => {
           <div className="flex items-center gap-3">
             <Button
               size="sm"
+              onClick={() => navigate('/signup')}
+              variant="default"
+            >
+              <School className="mr-2 h-4 w-4" />
+              Créer Administrateur École
+            </Button>
+            <Button
+              size="sm"
               onClick={() => navigate('/superadmin/activities/new')}
             >
               <Plus className="mr-2 h-4 w-4" />

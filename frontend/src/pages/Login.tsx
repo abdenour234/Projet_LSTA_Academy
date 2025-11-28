@@ -188,20 +188,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               )}
             </Button>
           </form>
-
-          {/* Signup Link */}
-          <div className="mt-4 text-center">
-            <p className="text-xs text-slate-600">
-              Pas encore de compte?{' '}
-              <Button
-                variant="link"
-                className="p-0 h-auto text-xs text-blue-600 hover:text-blue-700"
-                onClick={() => navigate('/signup')}
-              >
-                Créer un compte admin
-              </Button>
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

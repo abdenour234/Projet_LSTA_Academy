@@ -55,7 +55,6 @@ const App = () => (
             <Route path="/" element={<LandingPage />} />
             <Route path="/schools" element={<Index />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<AdminSignup />} />
             <Route path="/change-password" element={<ChangePassword />} />
             <Route path="/school/:id/manage" element={<SchoolManage />} />
             <Route path="/superadmin/login" element={<Login />} />
@@ -75,6 +74,14 @@ const App = () => (
               element={
                 <PrivateRoute requiredRole="SUPERADMIN">
                   <SuperAdminDashboard />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/signup" 
+              element={
+                <PrivateRoute requiredRole="SUPERADMIN">
+                  <AdminSignup />
                 </PrivateRoute>
               } 
             />
