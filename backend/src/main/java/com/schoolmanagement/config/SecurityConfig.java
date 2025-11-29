@@ -72,6 +72,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/students/**").hasAnyRole("SUPERADMIN", "ADMIN", "TEACHER", "STUDENT")
                 .requestMatchers("/api/classes/**").hasAnyRole("SUPERADMIN", "ADMIN", "TEACHER")
                 .requestMatchers("/api/teachers/**").hasAnyRole("SUPERADMIN", "ADMIN", "TEACHER")
+                .requestMatchers("/api/teacher-management/**").hasAnyRole("SUPERADMIN", "ADMIN", "TEACHER")
+                .requestMatchers("/api/teacher-attendance/**").hasAnyRole("SUPERADMIN", "ADMIN", "TEACHER")
                 
                 // Authenticated users - require proper authorization
                 .requestMatchers("/api/messages/**").authenticated()
