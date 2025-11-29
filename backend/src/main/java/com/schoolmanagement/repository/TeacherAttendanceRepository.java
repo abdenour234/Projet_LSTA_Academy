@@ -108,13 +108,13 @@ public interface TeacherAttendanceRepository extends JpaRepository<TeacherAttend
     /**
      * Get monthly statistics for a teacher and year
      */
-    @Query("SELECT FUNCTION('TO_CHAR', ta.eventDate, 'YYYY-MM') as month, " +
+    @Query("SELECT TO_CHAR(ta.eventDate, 'YYYY-MM') as month, " +
            "SUM(CASE WHEN ta.type = 'ABSENCE' THEN 1 ELSE 0 END) as absences, " +
            "SUM(CASE WHEN ta.type = 'RETARD' THEN 1 ELSE 0 END) as retards " +
            "FROM TeacherAttendance ta " +
            "WHERE ta.teacherId = :teacherId " +
-           "AND FUNCTION('EXTRACT', YEAR FROM ta.eventDate) = :year " +
-           "GROUP BY FUNCTION('TO_CHAR', ta.eventDate, 'YYYY-MM') " +
+           "AND EXTRACT(YEAR FROM ta.eventDate) = :year " +
+           "GROUP BY TO_CHAR(ta.eventDate, 'YYYY-MM') " +
            "ORDER BY month")
     List<Object[]> getMonthlyStatsByTeacherAndYear(
             @Param("teacherId") UUID teacherId,
@@ -124,13 +124,13 @@ public interface TeacherAttendanceRepository extends JpaRepository<TeacherAttend
     /**
      * Get monthly statistics for entire school
      */
-    @Query("SELECT FUNCTION('TO_CHAR', ta.eventDate, 'YYYY-MM') as month, " +
+    @Query("SELECT TO_CHAR(ta.eventDate, 'YYYY-MM') as month, " +
            "SUM(CASE WHEN ta.type = 'ABSENCE' THEN 1 ELSE 0 END) as absences, " +
            "SUM(CASE WHEN ta.type = 'RETARD' THEN 1 ELSE 0 END) as retards " +
            "FROM TeacherAttendance ta " +
            "WHERE ta.schoolId = :schoolId " +
-           "AND FUNCTION('EXTRACT', YEAR FROM ta.eventDate) = :year " +
-           "GROUP BY FUNCTION('TO_CHAR', ta.eventDate, 'YYYY-MM') " +
+           "AND EXTRACT(YEAR FROM ta.eventDate) = :year " +
+           "GROUP BY TO_CHAR(ta.eventDate, 'YYYY-MM') " +
            "ORDER BY month")
     List<Object[]> getMonthlyStatsBySchoolAndYear(
             @Param("schoolId") Long schoolId,

@@ -104,6 +104,7 @@ public class SecurityConfig {
         // Restrict to specific origins - UPDATE THESE FOR PRODUCTION
         configuration.setAllowedOrigins(Arrays.asList(
             "http://localhost:80",   // Frontend nginx (host port)
+            "http://localhost:8081",   // Frontend nginx (mapped port)
             "http://localhost:5173",   // Vite dev server
             "http://localhost:3000",   // Alternative dev port
             "http://frontend:5173",    // Docker frontend

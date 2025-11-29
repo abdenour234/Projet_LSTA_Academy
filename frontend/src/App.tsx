@@ -39,6 +39,7 @@ import ChangePassword from "./pages/ChangePassword";
 import SubjectManagement from "./pages/SubjectManagement";
 import ClassSubjectAssignment from "./pages/ClassSubjectAssignment";
 import SchoolManage from "./pages/SchoolManage";
+import TeacherAttendanceTracking from "./pages/TeacherAttendanceTracking";
 
 const queryClient = new QueryClient();
 
@@ -224,6 +225,14 @@ const App = () => (
               element={
                 <PrivateRoute requiredRole="ADMIN">
                   <TeacherManagement />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/admin/:id/teacher-attendance" 
+              element={
+                <PrivateRoute requiredRole="ADMIN">
+                  <TeacherAttendanceTracking />
                 </PrivateRoute>
               } 
             />

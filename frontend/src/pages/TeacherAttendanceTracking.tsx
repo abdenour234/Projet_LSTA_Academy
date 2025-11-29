@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,6 +91,8 @@ const COLORS = {
 
 export default function TeacherAttendanceTracking() {
   const { id: schoolId } = useParams();
+  const [searchParams] = useSearchParams();
+  const teacherIdParam = searchParams.get("teacherId");
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [teacherStats, setTeacherStats] = useState<TeacherStats[]>([]);
@@ -118,6 +120,14 @@ export default function TeacherAttendanceTracking() {
   useEffect(() => {
     loadData();
   }, [schoolId]);
+
+  // Pre-select teacher from URL parameter
+  useEffect(() => {
+    if (teacherIdParam && teachers.length > 0) {
+      setSelectedTeacher(teacherIdParam);
+      setFormData(prev => ({ ...prev, teacherId: teacherIdParam }));
+    }
+  }, [teacherIdParam, teachers]);
 
   const loadData = async () => {
     setLoading(true);
