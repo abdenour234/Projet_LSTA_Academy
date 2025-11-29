@@ -3,7 +3,7 @@
 -- Version: 2.0 (RBAC Fixed + Trigger Order Fixed)
 -- Date: November 14, 2025
 -- ============================================
-
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- ============================================
 -- 1. CREATE TABLES
 -- ============================================
