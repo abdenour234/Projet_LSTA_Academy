@@ -46,8 +46,17 @@ import {
 
 interface Teacher {
   id: string;
-  full_name: string;
-  matiere: string;
+  profile?: {
+    fullName: string;
+    email: string;
+  };
+  subject?: {
+    id: string;
+    name: string;
+  };
+  specialty: string;
+  phoneNumber?: string;
+  isActive: boolean;
 }
 
 interface AttendanceRecord {
@@ -132,8 +141,8 @@ export default function TeacherAttendanceTracking() {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Load teachers (using Supabase for now, will migrate to backend API)
-      const teachersResponse = await fetch(`/api/teachers/school/${schoolId}`);
+      // Load teachers from teacher-management API
+      const teachersResponse = await fetch(`/api/teacher-management/school/${schoolId}?activeOnly=false`);
       if (teachersResponse.ok) {
         const teachersData = await teachersResponse.json();
         setTeachers(teachersData);
@@ -295,7 +304,7 @@ export default function TeacherAttendanceTracking() {
                     <SelectContent>
                       {teachers.map((teacher) => (
                         <SelectItem key={teacher.id} value={teacher.id}>
-                          {teacher.full_name} - {teacher.matiere}
+                          {teacher.profile?.fullName || 'N/A'} - {teacher.subject?.name || teacher.specialty || 'N/A'}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -419,7 +428,7 @@ export default function TeacherAttendanceTracking() {
                   <SelectItem value="all">Tous</SelectItem>
                   {teachers.map((teacher) => (
                     <SelectItem key={teacher.id} value={teacher.id}>
-                      {teacher.full_name}
+                      {teacher.profile?.fullName || 'N/A'}
                     </SelectItem>
                   ))}
                 </SelectContent>
