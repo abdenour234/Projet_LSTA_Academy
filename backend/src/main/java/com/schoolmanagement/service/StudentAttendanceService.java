@@ -40,10 +40,12 @@ public class StudentAttendanceService {
      * Accepte soit un profile_id soit un teacher_id
      */
     private UUID resolveTeacherId(UUID id) {
+        log.info("Resolving teacher ID for: {}", id);
+        
         // D'abord essayer de le trouver comme teacher_id
         Optional<Teacher> teacherById = teacherRepository.findById(id);
         if (teacherById.isPresent()) {
-            log.debug("ID {} resolved as teacher_id", id);
+            log.info("ID {} resolved as teacher_id", id);
             return id;
         }
         
@@ -55,7 +57,9 @@ public class StudentAttendanceService {
             return teacherId;
         }
         
-        throw new RuntimeException("Enseignant non trouvé avec l'ID: " + id);
+        log.error("No teacher found for ID: {} (tried as both teacher_id and profile_id)", id);
+        throw new RuntimeException("Aucun enseignant trouvé pour l'ID: " + id + 
+            ". Cet utilisateur n'a peut-être pas de profil enseignant associé.");
     }
 
     /**
