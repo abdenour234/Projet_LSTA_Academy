@@ -80,7 +80,7 @@ export default function StudentAttendanceTracking() {
 
       try {
         setLoading(true);
-        const classes = await api.get<Class[]>(`/api/student-attendance/classes/${schoolId}/${teacherId}`);
+        const classes = await api.get<Class[]>(`/student-attendance/classes/${schoolId}/${teacherId}`);
         setClasses(classes);
       } catch (error) {
         console.error('Erreur lors du chargement des classes:', error);
@@ -107,13 +107,13 @@ export default function StudentAttendanceTracking() {
 
         // Charger les statistiques
         const stats = await api.get<StudentAttendanceStats[]>(
-          `/api/student-attendance/stats/${schoolId}/${teacherId}/${selectedClass}`
+          `/student-attendance/stats/${schoolId}/${teacherId}/${selectedClass}`
         );
         setStats(stats);
 
         // Charger les enregistrements
         const records = await api.get<AttendanceRecord[]>(
-          `/api/student-attendance/${schoolId}/${teacherId}/${selectedClass}?startDate=${startDate}&endDate=${endDate}`
+          `/student-attendance/${schoolId}/${teacherId}/${selectedClass}?startDate=${startDate}&endDate=${endDate}`
         );
         setRecords(records);
       } catch (error) {
@@ -141,7 +141,7 @@ export default function StudentAttendanceTracking() {
 
     try {
       await api.patch(
-        `/api/student-attendance/${editingRecord.id}/justification/${teacherId}?isJustified=${editingRecord.isJustified}&teacherNotes=${encodeURIComponent(editingRecord.teacherNotes || '')}`
+        `/student-attendance/${editingRecord.id}/justification/${teacherId}?isJustified=${editingRecord.isJustified}&teacherNotes=${encodeURIComponent(editingRecord.teacherNotes || '')}`
       );
 
       toast({
@@ -154,7 +154,7 @@ export default function StudentAttendanceTracking() {
 
       // Recharger les données
       const records = await api.get<AttendanceRecord[]>(
-        `/api/student-attendance/${schoolId}/${teacherId}/${selectedClass}?startDate=${startDate}&endDate=${endDate}`
+        `/student-attendance/${schoolId}/${teacherId}/${selectedClass}?startDate=${startDate}&endDate=${endDate}`
       );
       setRecords(records);
     } catch (error) {
