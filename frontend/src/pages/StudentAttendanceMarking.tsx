@@ -179,7 +179,7 @@ export default function StudentAttendanceMarking() {
         })),
       };
 
-      await api.post(`/api/student-attendance/bulk/${teacherId}`, request);
+      await api.post(`/student-attendance/bulk/${teacherId}`, request);
 
       toast({
         title: 'Succès',
