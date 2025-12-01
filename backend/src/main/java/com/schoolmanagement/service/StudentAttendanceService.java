@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,12 +36,38 @@ public class StudentAttendanceService {
     private final ClasseRepository classRepository;
 
     /**
+     * Convertir profile_id en teacher_id si nécessaire
+     * Accepte soit un profile_id soit un teacher_id
+     */
+    private UUID resolveTeacherId(UUID id) {
+        // D'abord essayer de le trouver comme teacher_id
+        Optional<Teacher> teacherById = teacherRepository.findById(id);
+        if (teacherById.isPresent()) {
+            log.debug("ID {} resolved as teacher_id", id);
+            return id;
+        }
+        
+        // Sinon, essayer comme profile_id
+        Optional<Teacher> teacherByProfile = teacherRepository.findByProfileId(id);
+        if (teacherByProfile.isPresent()) {
+            UUID teacherId = teacherByProfile.get().getId();
+            log.info("ID {} resolved as profile_id, converted to teacher_id {}", id, teacherId);
+            return teacherId;
+        }
+        
+        throw new RuntimeException("Enseignant non trouvé avec l'ID: " + id);
+    }
+
+    /**
      * Récupérer les classes d'un enseignant (format simple pour le frontend)
      */
     public List<Map<String, String>> getTeacherClasses(Long schoolId, UUID teacherId) {
         log.info("Getting classes for teacher: schoolId={}, teacherId={}", schoolId, teacherId);
         
-        Teacher teacher = teacherRepository.findById(teacherId)
+        // Convertir profile_id en teacher_id si nécessaire
+        UUID resolvedTeacherId = resolveTeacherId(teacherId);
+        
+        Teacher teacher = teacherRepository.findById(resolvedTeacherId)
             .orElseThrow(() -> new RuntimeException("Enseignant non trouvé"));
         
         log.info("Teacher found: {}, schoolId={}", teacher.getId(), teacher.getSchoolId());
@@ -51,14 +78,14 @@ public class StudentAttendanceService {
         }
 
         // Essayer d'abord via class_subjects
-        List<Classe> classes = classRepository.findBySchoolIdAndTeacherId(schoolId, teacherId);
-        log.info("Found {} classes via class_subjects for teacher {}", classes.size(), teacherId);
+        List<Classe> classes = classRepository.findBySchoolIdAndTeacherId(schoolId, resolvedTeacherId);
+        log.info("Found {} classes via class_subjects for teacher {}", classes.size(), resolvedTeacherId);
         
         // Si aucune classe via class_subjects, essayer via teacher_classes (fallback)
         if (classes.isEmpty()) {
             log.info("No classes found via class_subjects, trying teacher_classes (legacy)");
-            classes = classRepository.findBySchoolIdAndTeacherIdLegacy(schoolId, teacherId);
-            log.info("Found {} classes via teacher_classes (legacy) for teacher {}", classes.size(), teacherId);
+            classes = classRepository.findBySchoolIdAndTeacherIdLegacy(schoolId, resolvedTeacherId);
+            log.info("Found {} classes via teacher_classes (legacy) for teacher {}", classes.size(), resolvedTeacherId);
         }
         
         // Retourner une liste vide au lieu de lancer une exception si aucune classe n'est trouvée
@@ -86,8 +113,11 @@ public class StudentAttendanceService {
         log.info("Getting students for class: schoolId={}, teacherId={}, classId={}", 
                  schoolId, teacherId, classId);
         
+        // Convertir profile_id en teacher_id si nécessaire
+        UUID resolvedTeacherId = resolveTeacherId(teacherId);
+        
         // Vérifier que l'enseignant a accès à cette classe
-        Teacher teacher = teacherRepository.findById(teacherId)
+        Teacher teacher = teacherRepository.findById(resolvedTeacherId)
             .orElseThrow(() -> new RuntimeException("Enseignant non trouvé"));
         
         if (!teacher.getSchoolId().equals(schoolId)) {
@@ -95,12 +125,12 @@ public class StudentAttendanceService {
         }
 
         // Essayer d'abord via class_subjects
-        List<Classe> teacherClasses = classRepository.findBySchoolIdAndTeacherId(schoolId, teacherId);
+        List<Classe> teacherClasses = classRepository.findBySchoolIdAndTeacherId(schoolId, resolvedTeacherId);
         
         // Si aucune classe via class_subjects, essayer via teacher_classes (fallback)
         if (teacherClasses.isEmpty()) {
             log.info("No classes found via class_subjects, trying teacher_classes (legacy)");
-            teacherClasses = classRepository.findBySchoolIdAndTeacherIdLegacy(schoolId, teacherId);
+            teacherClasses = classRepository.findBySchoolIdAndTeacherIdLegacy(schoolId, resolvedTeacherId);
         }
         
         boolean hasAccess = teacherClasses.stream()
@@ -134,8 +164,11 @@ public class StudentAttendanceService {
                  teacherId, request.getSchoolId(), request.getClassId(), 
                  request.getEventDate(), request.getAbsentStudents().size());
         
+        // Convertir profile_id en teacher_id si nécessaire
+        UUID resolvedTeacherId = resolveTeacherId(teacherId);
+        
         // Vérifier que l'enseignant a accès à cette classe
-        Teacher teacher = teacherRepository.findById(teacherId)
+        Teacher teacher = teacherRepository.findById(resolvedTeacherId)
             .orElseThrow(() -> new RuntimeException("Enseignant non trouvé"));
         
         if (!teacher.getSchoolId().equals(request.getSchoolId())) {
@@ -144,14 +177,14 @@ public class StudentAttendanceService {
         
         // Essayer d'abord via class_subjects
         List<Classe> teacherClasses = classRepository.findBySchoolIdAndTeacherId(
-            request.getSchoolId(), teacherId
+            request.getSchoolId(), resolvedTeacherId
         );
         
         // Si aucune classe via class_subjects, essayer via teacher_classes (fallback)
         if (teacherClasses.isEmpty()) {
             log.info("No classes found via class_subjects, trying teacher_classes (legacy)");
             teacherClasses = classRepository.findBySchoolIdAndTeacherIdLegacy(
-                request.getSchoolId(), teacherId
+                request.getSchoolId(), resolvedTeacherId
             );
         }
         
@@ -180,7 +213,7 @@ public class StudentAttendanceService {
 
             HistoriqueProfesseur record = HistoriqueProfesseur.builder()
                 .schoolId(request.getSchoolId())
-                .teacherId(teacherId)
+                .teacherId(resolvedTeacherId)
                 .classId(request.getClassId())
                 .studentId(absentStudent.getStudentId())
                 .eventType(HistoriqueProfesseur.EventType.ABSENCE)
@@ -210,8 +243,11 @@ public class StudentAttendanceService {
         LocalDate startDate,
         LocalDate endDate
     ) {
+        // Convertir profile_id en teacher_id si nécessaire
+        UUID resolvedTeacherId = resolveTeacherId(teacherId);
+        
         // Vérifier l'accès
-        Teacher teacher = teacherRepository.findById(teacherId)
+        Teacher teacher = teacherRepository.findById(resolvedTeacherId)
             .orElseThrow(() -> new RuntimeException("Enseignant non trouvé"));
         
         if (!teacher.getSchoolId().equals(schoolId)) {
@@ -219,12 +255,12 @@ public class StudentAttendanceService {
         }
         
         // Essayer d'abord via class_subjects
-        List<Classe> teacherClasses = classRepository.findBySchoolIdAndTeacherId(schoolId, teacherId);
+        List<Classe> teacherClasses = classRepository.findBySchoolIdAndTeacherId(schoolId, resolvedTeacherId);
         
         // Si aucune classe via class_subjects, essayer via teacher_classes (fallback)
         if (teacherClasses.isEmpty()) {
             log.info("No classes found via class_subjects, trying teacher_classes (legacy)");
-            teacherClasses = classRepository.findBySchoolIdAndTeacherIdLegacy(schoolId, teacherId);
+            teacherClasses = classRepository.findBySchoolIdAndTeacherIdLegacy(schoolId, resolvedTeacherId);
         }
         
         boolean hasAccess = teacherClasses.stream()
@@ -235,7 +271,7 @@ public class StudentAttendanceService {
         }
 
         List<HistoriqueProfesseur> records = attendanceRepository.findByTeacherClassAndDateRange(
-            schoolId, teacherId, classId, startDate, endDate
+            schoolId, resolvedTeacherId, classId, startDate, endDate
         );
 
         return records.stream()
@@ -281,11 +317,14 @@ public class StudentAttendanceService {
         Boolean isJustified,
         String teacherNotes
     ) {
+        // Convertir profile_id en teacher_id si nécessaire
+        UUID resolvedTeacherId = resolveTeacherId(teacherId);
+        
         HistoriqueProfesseur record = attendanceRepository.findById(attendanceId)
             .orElseThrow(() -> new RuntimeException("Absence non trouvée"));
 
         // Vérifier que l'enseignant est le propriétaire de cet enregistrement
-        if (!record.getTeacherId().equals(teacherId)) {
+        if (!record.getTeacherId().equals(resolvedTeacherId)) {
             throw new RuntimeException("Vous n'avez pas l'autorisation de modifier cette absence");
         }
 
@@ -303,11 +342,14 @@ public class StudentAttendanceService {
      */
     @Transactional
     public void deleteAttendance(UUID attendanceId, UUID teacherId) {
+        // Convertir profile_id en teacher_id si nécessaire
+        UUID resolvedTeacherId = resolveTeacherId(teacherId);
+        
         HistoriqueProfesseur record = attendanceRepository.findById(attendanceId)
             .orElseThrow(() -> new RuntimeException("Absence non trouvée"));
 
         // Vérifier que l'enseignant est le propriétaire
-        if (!record.getTeacherId().equals(teacherId)) {
+        if (!record.getTeacherId().equals(resolvedTeacherId)) {
             throw new RuntimeException("Vous n'avez pas l'autorisation de supprimer cette absence");
         }
 
