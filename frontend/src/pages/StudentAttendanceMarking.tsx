@@ -107,7 +107,7 @@ export default function StudentAttendanceMarking() {
 
       try {
         setLoading(true);
-        const students = await api.get<Student[]>(`/api/student-attendance/students/${schoolId}/${teacherId}/${selectedClass}`);
+        const students = await api.get<Student[]>(`/student-attendance/students/${schoolId}/${teacherId}/${selectedClass}`);
         setStudents(students);
         setAbsentStudents([]); // Réinitialiser les absents
       } catch (error) {
