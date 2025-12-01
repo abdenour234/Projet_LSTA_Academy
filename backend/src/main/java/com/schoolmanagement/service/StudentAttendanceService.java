@@ -50,8 +50,22 @@ public class StudentAttendanceService {
             throw new RuntimeException("L'enseignant n'appartient pas à cette école");
         }
 
+        // Essayer d'abord via class_subjects
         List<Classe> classes = classRepository.findBySchoolIdAndTeacherId(schoolId, teacherId);
-        log.info("Found {} classes for teacher {}", classes.size(), teacherId);
+        log.info("Found {} classes via class_subjects for teacher {}", classes.size(), teacherId);
+        
+        // Si aucune classe via class_subjects, essayer via teacher_classes (fallback)
+        if (classes.isEmpty()) {
+            log.info("No classes found via class_subjects, trying teacher_classes (legacy)");
+            classes = classRepository.findBySchoolIdAndTeacherIdLegacy(schoolId, teacherId);
+            log.info("Found {} classes via teacher_classes (legacy) for teacher {}", classes.size(), teacherId);
+        }
+        
+        // Retourner une liste vide au lieu de lancer une exception si aucune classe n'est trouvée
+        if (classes.isEmpty()) {
+            log.warn("No classes found for teacher {} in school {}", teacherId, schoolId);
+            return new ArrayList<>();
+        }
         
         // Convertir en format simple Map pour le frontend
         return classes.stream()
@@ -80,7 +94,15 @@ public class StudentAttendanceService {
             throw new RuntimeException("L'enseignant n'appartient pas à cette école");
         }
 
+        // Essayer d'abord via class_subjects
         List<Classe> teacherClasses = classRepository.findBySchoolIdAndTeacherId(schoolId, teacherId);
+        
+        // Si aucune classe via class_subjects, essayer via teacher_classes (fallback)
+        if (teacherClasses.isEmpty()) {
+            log.info("No classes found via class_subjects, trying teacher_classes (legacy)");
+            teacherClasses = classRepository.findBySchoolIdAndTeacherIdLegacy(schoolId, teacherId);
+        }
+        
         boolean hasAccess = teacherClasses.stream()
             .anyMatch(c -> c.getId().equals(classId));
         
@@ -120,9 +142,19 @@ public class StudentAttendanceService {
             throw new RuntimeException("L'enseignant n'appartient pas à cette école");
         }
         
+        // Essayer d'abord via class_subjects
         List<Classe> teacherClasses = classRepository.findBySchoolIdAndTeacherId(
             request.getSchoolId(), teacherId
         );
+        
+        // Si aucune classe via class_subjects, essayer via teacher_classes (fallback)
+        if (teacherClasses.isEmpty()) {
+            log.info("No classes found via class_subjects, trying teacher_classes (legacy)");
+            teacherClasses = classRepository.findBySchoolIdAndTeacherIdLegacy(
+                request.getSchoolId(), teacherId
+            );
+        }
+        
         boolean hasAccess = teacherClasses.stream()
             .anyMatch(c -> c.getId().equals(request.getClassId()));
         
@@ -186,7 +218,15 @@ public class StudentAttendanceService {
             throw new RuntimeException("L'enseignant n'appartient pas à cette école");
         }
         
+        // Essayer d'abord via class_subjects
         List<Classe> teacherClasses = classRepository.findBySchoolIdAndTeacherId(schoolId, teacherId);
+        
+        // Si aucune classe via class_subjects, essayer via teacher_classes (fallback)
+        if (teacherClasses.isEmpty()) {
+            log.info("No classes found via class_subjects, trying teacher_classes (legacy)");
+            teacherClasses = classRepository.findBySchoolIdAndTeacherIdLegacy(schoolId, teacherId);
+        }
+        
         boolean hasAccess = teacherClasses.stream()
             .anyMatch(c -> c.getId().equals(classId));
         
