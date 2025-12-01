@@ -30,6 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, CalendarOff, Clock, Filter, BarChart3, PieChart } from "lucide-react";
 import { toast } from "sonner";
+import { api, auth } from "@/lib/api";
 import {
   BarChart,
   Bar,
@@ -142,11 +143,8 @@ export default function TeacherAttendanceTracking() {
     setLoading(true);
     try {
       // Load teachers from teacher-management API
-      const teachersResponse = await fetch(`/api/teacher-management/school/${schoolId}?activeOnly=false`);
-      if (teachersResponse.ok) {
-        const teachersData = await teachersResponse.json();
-        setTeachers(teachersData);
-      }
+      const teachersData = await api.get<Teacher[]>(`/teacher-management/school/${schoolId}?activeOnly=false`);
+      setTeachers(teachersData);
 
       // Load attendance records
       await loadAttendanceRecords();
@@ -163,17 +161,14 @@ export default function TeacherAttendanceTracking() {
 
   const loadAttendanceRecords = async () => {
     try {
-      let url = `/api/teacher-attendance/school/${schoolId}`;
+      let url = `/teacher-attendance/school/${schoolId}`;
       
       if (startDate && endDate) {
         url += `/range?startDate=${startDate}&endDate=${endDate}`;
       }
 
-      const response = await fetch(url);
-      if (response.ok) {
-        const data = await response.json();
-        setAttendanceRecords(data);
-      }
+      const data = await api.get<AttendanceRecord[]>(url);
+      setAttendanceRecords(data);
     } catch (error) {
       console.error("Error loading attendance records:", error);
     }
@@ -181,11 +176,8 @@ export default function TeacherAttendanceTracking() {
 
   const loadStatistics = async () => {
     try {
-      const response = await fetch(`/api/teacher-attendance/school/${schoolId}/stats`);
-      if (response.ok) {
-        const data = await response.json();
-        setTeacherStats(data);
-      }
+      const data = await api.get<TeacherStats[]>(`/teacher-attendance/school/${schoolId}/stats`);
+      setTeacherStats(data);
     } catch (error) {
       console.error("Error loading statistics:", error);
     }
@@ -200,34 +192,25 @@ export default function TeacherAttendanceTracking() {
     }
 
     try {
-      const response = await fetch(
-        `/api/teacher-attendance?schoolId=${schoolId}&recordedBy=${getCurrentUserId()}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        }
+      await api.post(
+        `/teacher-attendance?schoolId=${schoolId}&recordedBy=${getCurrentUserId()}`,
+        formData
       );
 
-      if (response.ok) {
-        toast.success(
-          `${formData.type === "ABSENCE" ? "Absence" : "Retard"} enregistré(e) avec succès`
-        );
-        setIsAddDialogOpen(false);
-        setFormData({
-          teacherId: "",
-          type: "ABSENCE",
-          eventDate: new Date().toISOString().split("T")[0],
-          reason: "",
-          isJustified: false,
-          durationMinutes: 0,
-          adminNotes: "",
-        });
-        await loadData();
-      } else {
-        const error = await response.text();
-        toast.error(error || "Erreur lors de l'enregistrement");
-      }
+      toast.success(
+        `${formData.type === "ABSENCE" ? "Absence" : "Retard"} enregistré(e) avec succès`
+      );
+      setIsAddDialogOpen(false);
+      setFormData({
+        teacherId: "",
+        type: "ABSENCE",
+        eventDate: new Date().toISOString().split("T")[0],
+        reason: "",
+        isJustified: false,
+        durationMinutes: 0,
+        adminNotes: "",
+      });
+      await loadData();
     } catch (error) {
       console.error("Error creating attendance:", error);
       toast.error("Erreur lors de l'enregistrement");
@@ -235,8 +218,8 @@ export default function TeacherAttendanceTracking() {
   };
 
   const getCurrentUserId = (): string => {
-    // TODO: Get from auth context
-    return "current-user-id";
+    const user = auth.getUser();
+    return user?.id || "";
   };
 
   const filteredRecords = attendanceRecords.filter((record) => {

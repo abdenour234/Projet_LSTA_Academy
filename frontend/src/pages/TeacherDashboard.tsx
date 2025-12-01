@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LogOut, BookOpen, ClipboardList, Plus, ArrowRight, BarChart3, Eye, Calendar, MessageSquare, Loader2,CheckCircle } from 'lucide-react';
+import { LogOut, BookOpen, ClipboardList, Plus, ArrowRight, BarChart3, Eye, Calendar, MessageSquare, Loader2, CheckCircle, UserCheck, BarChart2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -245,6 +245,27 @@ const TeacherDashboard = () => {
       <MessageSquare className="h-5 w-5 text-blue-500 mb-2" />
       <h3 className="font-semibold text-blue-600 text-sm">Messagerie</h3>
       <p className="text-xs text-blue-500">Mes messages</p>
+    </Card>
+  </div>
+
+  {/* Student Attendance Actions */}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
+    <Card 
+      className="p-5 cursor-pointer hover:bg-purple-50 hover:scale-105 hover:shadow-xl transition-all duration-300 border-2 border-purple-200 hover:border-purple-400 rounded-lg"
+      onClick={() => navigate(`/school/${id}/teacher/student-attendance/mark`)}
+    >
+      <UserCheck className="h-5 w-5 text-purple-500 mb-2" />
+      <h3 className="font-semibold text-purple-600 text-sm">Marquer les Absences</h3>
+      <p className="text-xs text-purple-500">Enregistrer les absences étudiants</p>
+    </Card>
+    
+    <Card 
+      className="p-5 cursor-pointer hover:bg-purple-50 hover:scale-105 hover:shadow-xl transition-all duration-300 border-2 border-purple-200 hover:border-purple-400 rounded-lg"
+      onClick={() => navigate(`/school/${id}/teacher/student-attendance/track`)}
+    >
+      <BarChart2 className="h-5 w-5 text-purple-500 mb-2" />
+      <h3 className="font-semibold text-purple-600 text-sm">Suivi des Absences</h3>
+      <p className="text-xs text-purple-500">Consulter et gérer les absences</p>
     </Card>
   </div>
 

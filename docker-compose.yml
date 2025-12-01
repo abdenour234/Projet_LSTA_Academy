@@ -93,6 +93,12 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   frontend:
     build:
@@ -115,5 +121,11 @@ networks:
 
 volumes:
   postgres_data:
+    name: school_management_postgres_data
+    driver: local
   minio_data:
+    name: school_management_minio_data
+    driver: local
   pgadmin_data:
+    name: school_management_pgadmin_data
+    driver: local

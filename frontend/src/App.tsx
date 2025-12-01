@@ -40,6 +40,8 @@ import SubjectManagement from "./pages/SubjectManagement";
 import ClassSubjectAssignment from "./pages/ClassSubjectAssignment";
 import SchoolManage from "./pages/SchoolManage";
 import TeacherAttendanceTracking from "./pages/TeacherAttendanceTracking";
+import StudentAttendanceMarking from "./pages/StudentAttendanceMarking";
+import StudentAttendanceTracking from "./pages/StudentAttendanceTracking";
 
 const queryClient = new QueryClient();
 
@@ -183,6 +185,22 @@ const App = () => (
               element={
                 <PrivateRoute requiredRole="TEACHER">
                   <TeacherActivityApproval />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/school/:id/teacher/student-attendance/mark" 
+              element={
+                <PrivateRoute requiredRole="TEACHER">
+                  <StudentAttendanceMarking />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/school/:id/teacher/student-attendance/track" 
+              element={
+                <PrivateRoute requiredRole="TEACHER">
+                  <StudentAttendanceTracking />
                 </PrivateRoute>
               } 
             />

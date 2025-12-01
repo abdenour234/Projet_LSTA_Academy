@@ -7,9 +7,8 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Production VPS
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,36 +22,33 @@ jobs:
           port: 22
           script: |
             echo "🚀 Starting deployment..."
-            
-            # Navigate to project directory
+
             cd /home/debian/LSTA_Academy/Projet_LSTA_Academy || { echo "❌ Project directory not found"; exit 1; }
-            
+
             echo "📦 Pulling latest changes from test_prod..."
             git fetch origin test_prod
             git reset --hard origin/test_prod
-            
+
             echo "🛑 Stopping current containers..."
             docker compose down
-            
-            echo "🏗️ Building new images..."
-            docker compose build --no-cache
-            
-            echo "🚀 Starting containers..."
-            docker compose up -d
-            
-            echo "🧹 Cleaning up old images..."
-            docker image prune -f
-            
-            echo "✅ Deployment completed successfully!"
-            
-            echo "📊 Container status:"
-            docker compose ps
 
-      - name: Notify deployment status
-        if: always()
-        run: |
-          if [ "${{ job.status }}" == "success" ]; then
-            echo "✅ Deployment to VPS successful!"
-          else
-            echo "❌ Deployment to VPS failed!"
-          fi
+            echo "🏗️ Building updated images (with cache)..."
+            docker compose build
+
+            echo "🚀 Starting containers..."
+            docker compose up -d --remove-orphans
+
+            echo "🧹 Cleaning unused Docker cache..."
+            docker builder prune -af
+            docker system prune -af
+
+            echo "🧹 Cleaning old logs (system logs)..."
+            journalctl --vacuum-size=200M
+
+            echo "📊 Disk usage:"
+            df -h
+
+            echo "📦 Docker usage:"
+            docker system df
+
+            echo "✅ Deployment completed successfully!"

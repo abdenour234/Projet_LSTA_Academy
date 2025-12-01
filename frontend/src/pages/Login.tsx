@@ -31,6 +31,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     console.log('[LOGIN] Response received:', { 
       email: response.user.email, 
       role: response.user.role,
+      userId: response.user.id,
       schoolId: response.user.schoolId,
       mustChangePassword: response.user.mustChangePassword
     });
@@ -64,6 +65,14 @@ const handleSubmit = async (e: React.FormEvent) => {
       return;
     }
 
+    // ✅ STEP 3.5: Store teacherId for TEACHER role (NOUVEAU)
+    if (userRole === 'TEACHER' && response.user.id) {
+      console.log('[LOGIN] Storing teacherId:', response.user.id);
+      localStorage.setItem('teacherId', response.user.id);
+      // Store also as userId for backward compatibility
+      localStorage.setItem('userId', response.user.id);
+    }
+
     // ✅ STEP 4: Double-check localStorage has data (synchronous verification)
     const storedToken = localStorage.getItem('auth_token');
     const storedUser = localStorage.getItem('current_user');
@@ -81,6 +90,12 @@ const handleSubmit = async (e: React.FormEvent) => {
     }
     
     console.log('[LOGIN] Storage verified - token and user data present');
+    
+    // Vérification supplémentaire pour TEACHER
+    if (userRole === 'TEACHER') {
+      const storedTeacherId = localStorage.getItem('teacherId');
+      console.log('[LOGIN] TeacherId verification:', storedTeacherId);
+    }
 
     // ✅ STEP 5: Show success message
     toast({
