@@ -27,4 +27,14 @@ public interface ClasseRepository extends JpaRepository<Classe, UUID> {
            "WHERE c.school_id = :schoolId AND cs.teacher_id = :teacherId", 
            nativeQuery = true)
     List<Classe> findBySchoolIdAndTeacherId(@Param("schoolId") Long schoolId, @Param("teacherId") UUID teacherId);
+    
+    /**
+     * Fallback: Récupérer les classes d'un enseignant via la table teacher_classes (legacy)
+     * Utilisé si class_subjects est vide
+     */
+    @Query(value = "SELECT DISTINCT c.* FROM classes c " +
+           "INNER JOIN teacher_classes tc ON c.id = tc.class_id " +
+           "WHERE c.school_id = :schoolId AND tc.teacher_id = :teacherId", 
+           nativeQuery = true)
+    List<Classe> findBySchoolIdAndTeacherIdLegacy(@Param("schoolId") Long schoolId, @Param("teacherId") UUID teacherId);
 }
