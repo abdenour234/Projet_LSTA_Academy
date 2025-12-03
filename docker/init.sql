@@ -3,7 +3,7 @@
 -- Version: 2.0 (RBAC Fixed + Trigger Order Fixed)
 -- Date: November 14, 2025
 -- ============================================
-
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- ============================================
 -- 1. CREATE TABLES
 -- ============================================
@@ -280,6 +280,40 @@ CREATE TABLE IF NOT EXISTS public.resources (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
+-- TABLE: historique_administration (AC-02-03 - Teacher Attendance Tracking)
+-- Historique des événements administratifs : absences et retards des enseignants
+CREATE TABLE IF NOT EXISTS public.historique_administration (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  school_id BIGINT NOT NULL REFERENCES public.schools(id) ON DELETE CASCADE,
+  teacher_id UUID NOT NULL REFERENCES public.teachers(id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL CHECK (event_type IN ('ABSENCE', 'RETARD', 'OTHER')),
+  event_date DATE NOT NULL,
+  reason TEXT,
+  is_justified BOOLEAN NOT NULL DEFAULT false,
+  duration_minutes INTEGER,
+  recorded_by UUID NOT NULL,
+  admin_notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- TABLE: historique_professeur (AC-02-03 - Student Attendance Tracking)
+-- Historique des événements gérés par les enseignants : absences des étudiants
+CREATE TABLE IF NOT EXISTS public.historique_professeur (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  school_id BIGINT NOT NULL REFERENCES public.schools(id) ON DELETE CASCADE,
+  teacher_id UUID NOT NULL REFERENCES public.teachers(id) ON DELETE CASCADE,
+  class_id UUID NOT NULL REFERENCES public.classes(id) ON DELETE CASCADE,
+  student_id UUID NOT NULL REFERENCES public.students(id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL CHECK (event_type IN ('ABSENCE', 'OTHER')),
+  event_date DATE NOT NULL,
+  reason TEXT,
+  is_justified BOOLEAN NOT NULL DEFAULT false,
+  teacher_notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
 -- ============================================
 -- 2. CREATE FUNCTIONS (BEFORE TRIGGERS!)
 -- ============================================
@@ -389,6 +423,16 @@ CREATE INDEX IF NOT EXISTS idx_classes_school_id ON public.classes(school_id);
 -- Subjects table
 CREATE INDEX IF NOT EXISTS idx_subjects_school_id ON public.subjects(school_id);
 CREATE INDEX IF NOT EXISTS idx_subjects_is_active ON public.subjects(is_active);
+
+-- AC-02-03: Attendance tracking indexes
+CREATE INDEX IF NOT EXISTS idx_historique_admin_school_teacher ON public.historique_administration(school_id, teacher_id);
+CREATE INDEX IF NOT EXISTS idx_historique_admin_event_date ON public.historique_administration(event_date);
+CREATE INDEX IF NOT EXISTS idx_historique_admin_event_type ON public.historique_administration(event_type);
+CREATE INDEX IF NOT EXISTS idx_historique_prof_school_teacher ON public.historique_professeur(school_id, teacher_id);
+CREATE INDEX IF NOT EXISTS idx_historique_prof_class ON public.historique_professeur(class_id);
+CREATE INDEX IF NOT EXISTS idx_historique_prof_student ON public.historique_professeur(student_id);
+CREATE INDEX IF NOT EXISTS idx_historique_prof_event_date ON public.historique_professeur(event_date);
+CREATE INDEX IF NOT EXISTS idx_historique_prof_event_type ON public.historique_professeur(event_type);
 
 -- Teachers table
 CREATE INDEX IF NOT EXISTS idx_teachers_profile_id ON public.teachers(profile_id);

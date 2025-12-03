@@ -39,6 +39,9 @@ import ChangePassword from "./pages/ChangePassword";
 import SubjectManagement from "./pages/SubjectManagement";
 import ClassSubjectAssignment from "./pages/ClassSubjectAssignment";
 import SchoolManage from "./pages/SchoolManage";
+import TeacherAttendanceTracking from "./pages/TeacherAttendanceTracking";
+import StudentAttendanceMarking from "./pages/StudentAttendanceMarking";
+import StudentAttendanceTracking from "./pages/StudentAttendanceTracking";
 import AdminSessionDetails from "./pages/AdminSessionDetails";
 import TeacherActivityCreator from "./pages/TeacherActivityCreator";
 
@@ -57,7 +60,6 @@ const App = () => (
             <Route path="/" element={<LandingPage />} />
             <Route path="/schools" element={<Index />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<AdminSignup />} />
             <Route path="/change-password" element={<ChangePassword />} />
             <Route path="/school/:id/manage" element={<SchoolManage />} />
             <Route path="/superadmin/login" element={<Login />} />
@@ -77,6 +79,14 @@ const App = () => (
               element={
                 <PrivateRoute requiredRole="SUPERADMIN">
                   <SuperAdminDashboard />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/signup" 
+              element={
+                <PrivateRoute requiredRole="SUPERADMIN">
+                  <AdminSignup />
                 </PrivateRoute>
               } 
             />
@@ -190,6 +200,22 @@ const App = () => (
                 </PrivateRoute>
               } 
             />
+            <Route 
+              path="/school/:id/teacher/student-attendance/mark" 
+              element={
+                <PrivateRoute requiredRole="TEACHER">
+                  <StudentAttendanceMarking />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/school/:id/teacher/student-attendance/track" 
+              element={
+                <PrivateRoute requiredRole="TEACHER">
+                  <StudentAttendanceTracking />
+                </PrivateRoute>
+              } 
+            />
             
             {/* ADMIN Routes - Protected */}
             <Route 
@@ -229,6 +255,14 @@ const App = () => (
               element={
                 <PrivateRoute requiredRole="ADMIN">
                   <TeacherManagement />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/admin/:id/teacher-attendance" 
+              element={
+                <PrivateRoute requiredRole="ADMIN">
+                  <TeacherAttendanceTracking />
                 </PrivateRoute>
               } 
             />

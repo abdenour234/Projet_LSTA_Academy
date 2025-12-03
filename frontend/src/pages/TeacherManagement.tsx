@@ -26,10 +26,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Mail, Phone, Key, Copy } from 'lucide-react';
+import { Plus, Mail, Phone, Key, Copy, Calendar, CalendarX } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { authApi, teacherManagementApi, subjectApi } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
 
 interface Teacher {
   id: string;
@@ -54,6 +55,7 @@ interface Subject {
 export default function TeacherManagement() {
   const { id: schoolId } = useParams();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -203,10 +205,19 @@ export default function TeacherManagement() {
             Créez et gérez les enseignants de votre établissement
           </p>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)} disabled={subjects.length === 0}>
-          <Plus className="w-4 h-4 mr-2" />
-          Nouvel Enseignant
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate(`/admin/${schoolId}/teacher-attendance`)}
+          >
+            <CalendarX className="w-4 h-4 mr-2" />
+            Suivi des Absences
+          </Button>
+          <Button onClick={() => setIsAddDialogOpen(true)} disabled={subjects.length === 0}>
+            <Plus className="w-4 h-4 mr-2" />
+            Nouvel Enseignant
+          </Button>
+        </div>
       </div>
 
       {subjects.length === 0 && (
@@ -226,12 +237,13 @@ export default function TeacherManagement() {
               <TableHead>Matière (Spécialité)</TableHead>
               <TableHead>Téléphone</TableHead>
               <TableHead>Statut</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {teachers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   Aucun enseignant. Cliquez sur "Nouvel Enseignant" pour commencer.
                 </TableCell>
               </TableRow>
@@ -260,6 +272,16 @@ export default function TeacherManagement() {
                     <Badge variant={teacher.isActive ? 'default' : 'secondary'}>
                       {teacher.isActive ? 'Actif' : 'Inactif'}
                     </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/admin/${schoolId}/teacher-attendance?teacherId=${teacher.id}`)}
+                      title="Gérer les absences/retards"
+                    >
+                      <Calendar className="w-4 h-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))

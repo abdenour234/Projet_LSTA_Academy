@@ -86,21 +86,11 @@ const Index = () => {
         </div>
 
         {/* Page Title */}
-        <div className="mb-8 animate-fade-in flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">Annuaire des écoles</h1>
-            <p className="text-slate-600">
-              Sélectionnez une école pour vous connecter et accéder au tableau de bord
-            </p>
-          </div>
-          <Button 
-            variant="outline"
-            onClick={() => navigate('/signup')}
-            className="border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-          >
-            <UserPlus className="mr-2 h-4 w-4" />
-            Créer un compte
-          </Button>
+        <div className="mb-8 animate-fade-in">
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Annuaire des écoles</h1>
+          <p className="text-slate-600">
+            Sélectionnez une école pour vous connecter et accéder au tableau de bord
+          </p>
         </div>
 
         {/* Filters */}

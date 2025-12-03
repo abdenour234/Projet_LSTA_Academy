@@ -48,7 +48,7 @@ cd Projet_LSTA_Academy
 
 # Access the application.\setup.ps1
 
-# Frontend: http://localhost:8081```
+# Frontend: http://localhost:80```
 
 # Backend API: http://localhost:8080
 
@@ -240,7 +240,7 @@ docker exec -it school-management-db psql -U postgres -d schoolmanagement
 
 | Service | URL | Description |
 |---------|-----|-------------|
-| Frontend | http://localhost:8081 | Interface utilisateur |
+| Frontend | http://localhost:80 | Interface utilisateur |
 | Backend API | http://localhost:8080 | API REST |
 | PostgreSQL | localhost:5432 | Base de données |
 | MinIO | http://localhost:9000 | Stockage d'objets |

@@ -31,6 +31,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     console.log('[LOGIN] Response received:', { 
       email: response.user.email, 
       role: response.user.role,
+      userId: response.user.id,
       schoolId: response.user.schoolId,
       mustChangePassword: response.user.mustChangePassword
     });
@@ -64,6 +65,14 @@ const handleSubmit = async (e: React.FormEvent) => {
       return;
     }
 
+    // ✅ STEP 3.5: Store teacherId for TEACHER role (NOUVEAU)
+    if (userRole === 'TEACHER' && response.user.id) {
+      console.log('[LOGIN] Storing teacherId:', response.user.id);
+      localStorage.setItem('teacherId', response.user.id);
+      // Store also as userId for backward compatibility
+      localStorage.setItem('userId', response.user.id);
+    }
+
     // ✅ STEP 4: Double-check localStorage has data (synchronous verification)
     const storedToken = localStorage.getItem('auth_token');
     const storedUser = localStorage.getItem('current_user');
@@ -81,6 +90,12 @@ const handleSubmit = async (e: React.FormEvent) => {
     }
     
     console.log('[LOGIN] Storage verified - token and user data present');
+    
+    // Vérification supplémentaire pour TEACHER
+    if (userRole === 'TEACHER') {
+      const storedTeacherId = localStorage.getItem('teacherId');
+      console.log('[LOGIN] TeacherId verification:', storedTeacherId);
+    }
 
     // ✅ STEP 5: Show success message
     toast({
@@ -188,45 +203,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               )}
             </Button>
           </form>
-
-          {/* Roles Info */}
-          <div className="mt-5 pt-5 border-t-2 border-blue-200">
-            <p className="text-xs text-blue-500 text-center mb-3">
-              Accès selon votre rôle:
-            </p>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center gap-2 text-slate-600">
-                <Shield className="h-3 w-3 text-slate-400" />
-                <span>SuperAdmin</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-600">
-                <UserCheck className="h-3 w-3 text-slate-400" />
-                <span>Admin École</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-600">
-                <GraduationCap className="h-3 w-3 text-slate-400" />
-                <span>Enseignant</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-600">
-                <BookOpen className="h-3 w-3 text-slate-400" />
-                <span>Étudiant</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Signup Link */}
-          <div className="mt-4 text-center">
-            <p className="text-xs text-slate-600">
-              Pas encore de compte?{' '}
-              <Button
-                variant="link"
-                className="p-0 h-auto text-xs text-blue-600 hover:text-blue-700"
-                onClick={() => navigate('/signup')}
-              >
-                Créer un compte admin
-              </Button>
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
