@@ -1,8 +1,10 @@
+
 package com.schoolmanagement.controller;
 
 import com.schoolmanagement.entity.Classe;
 import com.schoolmanagement.repository.ClasseRepository;
 import com.schoolmanagement.service.OwnershipValidationService;
+import com.schoolmanagement.service.ClasseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,13 +20,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ClasseController {
 
-    private final ClasseRepository classeRepository;
+    private final ClasseService classeService;
     private final OwnershipValidationService ownershipValidator;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
     public ResponseEntity<List<Classe>> getAllClasses() {
-        return ResponseEntity.ok(classeRepository.findAll());
+        return ResponseEntity.ok(classeService.getAllClasses());
     }
 
     @GetMapping("/{id}")
@@ -33,10 +35,9 @@ public class ClasseController {
             @PathVariable UUID id,
             Authentication authentication) {
         
-        Classe classe = classeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Class not found"));
+        Classe classe = classeService.getClasseById(id);
         
-        // Validate user can access this class's school
+        // ✅ Valider l'accès à cette école
         ownershipValidator.validateSchoolAccess(classe.getSchoolId(), authentication);
         
         return ResponseEntity.ok(classe);
@@ -48,58 +49,70 @@ public class ClasseController {
             @PathVariable Long schoolId,
             Authentication authentication) {
         
-        // Validate user can access this school
+        // ✅ Valider l'accès à cette école
         ownershipValidator.validateSchoolAccess(schoolId, authentication);
         
-        return ResponseEntity.ok(classeRepository.findBySchoolId(schoolId));
+        // ✅ Utiliser le service pour récupérer les classes
+        return ResponseEntity.ok(classeService.getClassesBySchool(schoolId));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<Classe> createClasse(
             @RequestBody Classe classe,
             Authentication authentication) {
         
-        // Validate user can create classes in this school
+        // ✅ Valider l'accès à cette école
         ownershipValidator.validateSchoolAccess(classe.getSchoolId(), authentication);
         
-        classe.setId(UUID.randomUUID());
-        Classe saved = classeRepository.save(classe);
+        // ✅ Utiliser le service pour créer la classe
+        Classe saved = classeService.createClasse(classe);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<Classe> updateClasse(
             @PathVariable UUID id,
             @RequestBody Classe classe,
             Authentication authentication) {
         
-        if (!classeRepository.existsById(id)) {
-            throw new RuntimeException("Class not found");
-        }
+        // ✅ Récupérer la classe existante pour valider
+        Classe existing = classeService.getClasseById(id);
         
-        // Validate user can update classes in this school
-        ownershipValidator.validateSchoolAccess(classe.getSchoolId(), authentication);
+        // ✅ Valider l'accès à cette école
+        ownershipValidator.validateSchoolAccess(existing.getSchoolId(), authentication);
         
-        classe.setId(id);
-        Classe updated = classeRepository.save(classe);
+        // ✅ Utiliser le service pour mettre à jour la classe
+        Classe updated = classeService.updateClasse(id, classe);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<Void> deleteClasse(
-            @PathVariable UUID id,
+            @PathVariable UUID id, 
             Authentication authentication) {
         
-        Classe classe = classeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Class not found"));
+        // ✅ Récupérer la classe existante pour valider
+        Classe classe = classeService.getClasseById(id);
         
-        // Validate user can delete classes in this school
+        // ✅ Valider l'accès à cette école
         ownershipValidator.validateSchoolAccess(classe.getSchoolId(), authentication);
         
-        classeRepository.deleteById(id);
+        // ✅ Utiliser le service qui gère la suppression en cascade
+        classeService.deleteClasse(id);
         return ResponseEntity.noContent().build();
     }
 }
+
+
+
+
+
+
+
+
+
+
+

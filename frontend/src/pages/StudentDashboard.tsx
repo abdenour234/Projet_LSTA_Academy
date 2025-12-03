@@ -73,10 +73,13 @@ const StudentDashboard = () => {
           console.log('Student Details:', studentDetails);
           setStudent(studentDetails);
           if (studentDetails?.classId) {
-            const publishedActivities = await activityApi.getPublished({
-              schoolId: currentUser.schoolId,
-              classId: studentDetails.classId,
-            });
+            // Nouvelles activités publiées + "fait maison" approuvées seulement
+          const publishedActivities = await activityApi.getPublished({
+            schoolId: currentUser.schoolId,
+            classId: studentDetails.classId,
+            nature: 'fait maison',        // Filtre côté backend
+            approvalStatus: 'APPROVED'    // Seulement les validées
+          });
             setActivities(publishedActivities);
           } else {
             toast({

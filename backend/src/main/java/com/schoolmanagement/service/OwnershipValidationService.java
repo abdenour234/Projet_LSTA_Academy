@@ -218,4 +218,25 @@ public class OwnershipValidationService {
             throw new AccessDeniedException("Failed to extract userId from authentication: " + e.getMessage());
         }
     }
+    // ...existing code...
+
+    /**
+     * ✅ AJOUT: Valider que l'utilisateur actuel est propriétaire de l'école
+     */
+    public void validateSchoolOwnership(Authentication authentication, Long schoolId) {
+        String email = authentication.getName();
+        Profile currentUser = profileRepository.findByEmail(email);
+        
+        if (currentUser == null) {
+            log.warn("User not found: {}", email);
+            throw new RuntimeException("User not found");
+        }
+        
+        if (!currentUser.getSchoolId().equals(schoolId)) {
+            log.warn("Access denied: User {} is not owner of school {}", email, schoolId);
+            throw new RuntimeException("Access denied: You don't have permission for this school");
+        }
+    }
+
+// ...existing code...
 }

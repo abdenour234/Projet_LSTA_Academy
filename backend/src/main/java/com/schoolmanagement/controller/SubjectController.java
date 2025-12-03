@@ -142,4 +142,6 @@ public class SubjectController {
         subjectService.deleteSubject(id);
         return ResponseEntity.noContent().build();
     }
+
+    
 }

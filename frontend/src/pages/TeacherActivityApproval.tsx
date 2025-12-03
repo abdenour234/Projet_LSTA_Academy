@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { teacherActivityApi, authApi } from '@/lib/api';
+import { teacherActivityApi, authApi, activityApi,teacherManagementApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
-import { CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Eye, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Activity {
@@ -14,6 +14,7 @@ interface Activity {
   description: string;
   type: string;
   level: string;
+  nature: string; // "Classe" or "fait maison"
   approvalStatus: string;
   classId: string;
   subjectId: string;
@@ -23,7 +24,7 @@ interface Activity {
 
 const TeacherActivityApproval = () => {
   const [pendingActivities, setPendingActivities] = useState<Activity[]>([]);
-  const [myActivities, setMyActivities] = useState<Activity[]>([]);
+  const [allActivities, setAllActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'pending' | 'all'>('pending');
@@ -34,14 +35,33 @@ const TeacherActivityApproval = () => {
     loadActivities();
   }, []);
 
+  // ...existing code...
   const loadActivities = async () => {
     try {
-      const [pending, all] = await Promise.all([
-        teacherActivityApi.getPendingActivities(),
-        teacherActivityApi.getMyActivities()
-      ]);
+      setLoading(true);
+      
+      // Get current user to determine schoolId
+      const currentUser = await authApi.getCurrentUser();
+      const schoolId = currentUser.schoolId;
+
+      // If teacher, get their subjectId to filter pending approvals
+      let subjectId: string | undefined = undefined;
+      if (currentUser.role === 'TEACHER') {
+        const teacherEntity = await teacherManagementApi.getByProfileId(currentUser.id);
+        subjectId = teacherEntity?.subjectId;
+      }
+
+      // Load pending "fait maison" activities for approval (filtered)
+      const pending = await teacherActivityApi.getPendingActivities(subjectId);
       setPendingActivities(pending);
-      setMyActivities(all);
+
+      // Load all published activities for school, optionally filtered by teacher assignments
+      const published = await activityApi.getPublished({ schoolId, subjectId });
+      setAllActivities(published);
+
+    
+// ...existing code...
+
     } catch (error) {
       console.error('Error loading activities:', error);
       toast({
@@ -109,6 +129,22 @@ const TeacherActivityApproval = () => {
     }
   };
 
+  const getNatureBadge = (nature: string) => {
+    if (nature === 'fait maison') {
+      return (
+        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+          <Home className="h-3 w-3 mr-1" />
+          Fait maison
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+        Classe
+      </Badge>
+    );
+  };
+
   const renderActivityCard = (activity: Activity, showActions: boolean) => (
     <Card key={activity.id} className="p-4">
       <div className="flex justify-between items-start mb-3">
@@ -119,9 +155,10 @@ const TeacherActivityApproval = () => {
         {getStatusBadge(activity.approvalStatus)}
       </div>
 
-      <div className="flex gap-2 text-sm text-muted-foreground mb-4">
+      <div className="flex gap-2 text-sm text-muted-foreground mb-4 flex-wrap">
         <Badge variant="secondary">{activity.type}</Badge>
         <Badge variant="secondary">{activity.level}</Badge>
+        {getNatureBadge(activity.nature)}
       </div>
 
       <div className="flex justify-between items-center">
@@ -174,9 +211,17 @@ const TeacherActivityApproval = () => {
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Approbation des activités</h1>
         <p className="text-muted-foreground mt-1">
-          Gérez et approuvez les activités pour vos matières
+          Gérez et approuvez les activités <strong>fait maison</strong> pour vos matières
         </p>
       </div>
+
+      {/* Info Banner */}
+      <Card className="mb-6 p-4 bg-blue-50 border-blue-200">
+        <p className="text-sm text-blue-800">
+          💡 <strong>Note:</strong> Seules les activités <strong>"fait maison"</strong> nécessitent votre approbation. 
+          Les activités <strong>"Classe"</strong> sont automatiquement approuvées.
+        </p>
+      </Card>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 border-b">
@@ -188,7 +233,7 @@ const TeacherActivityApproval = () => {
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          En attente d'approbation
+          En attente d'approbation (fait maison)
           {pendingActivities.length > 0 && (
             <Badge variant="destructive" className="ml-2">
               {pendingActivities.length}
@@ -203,7 +248,7 @@ const TeacherActivityApproval = () => {
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          Toutes mes activités
+          Toutes les activités de l'école
         </button>
       </div>
 
@@ -217,18 +262,18 @@ const TeacherActivityApproval = () => {
               <CheckCircle className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
               <h3 className="font-semibold text-lg mb-1">Aucune activité en attente</h3>
               <p className="text-muted-foreground">
-                Toutes les activités ont été traitées
+                Toutes les activités "fait maison" ont été traitées
               </p>
             </Card>
           )
         ) : (
-          myActivities.length > 0 ? (
-            myActivities.map((activity) => renderActivityCard(activity, false))
+          allActivities.length > 0 ? (
+            allActivities.map((activity) => renderActivityCard(activity, false))
           ) : (
             <Card className="p-8 text-center">
               <h3 className="font-semibold text-lg mb-1">Aucune activité</h3>
               <p className="text-muted-foreground">
-                Aucune activité pour vos matières
+                Aucune activité publiée dans l'école
               </p>
             </Card>
           )
@@ -236,15 +281,13 @@ const TeacherActivityApproval = () => {
       </div>
 
       {/* Quick create button */}
-      <div className="mt-6">
-        <Button
-          size="lg"
-          onClick={() => navigate('/activity/new')}
-          className="w-full"
-        >
-          Créer une nouvelle activité
-        </Button>
-      </div>
+     <Button
+      size="lg"
+      onClick={() => navigate('/teacher/activity/new')}
+      className="w-full"
+    >
+      Créer une activité pour ma classe
+    </Button>
     </div>
   );
 };

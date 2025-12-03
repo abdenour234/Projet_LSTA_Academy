@@ -88,16 +88,17 @@ public class SessionController {
     }
 
     @PostMapping
-    public ResponseEntity<TeachingSession> createSession(
-            @RequestBody TeachingSession session,
-            Authentication authentication) {
-        
-        // Validate user can create sessions in this school
-        ownershipValidator.validateSchoolAccess(session.getSchoolId(), authentication);
-        
-        TeachingSession saved = sessionRepository.save(session);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
-    }
+public ResponseEntity<TeachingSession> createSession(
+        @RequestBody TeachingSession session,
+        Authentication authentication) {
+
+    ownershipValidator.validateSchoolAccess(session.getSchoolId(), authentication);
+
+    // ON NE TOUCHE À RIEN D'AUTRE → Spring fait tout le boulot
+    TeachingSession saved = sessionRepository.save(session);
+    
+    return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+}
 
     @PutMapping("/{id}")
     public ResponseEntity<TeachingSession> updateSession(

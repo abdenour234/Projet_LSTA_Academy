@@ -497,6 +497,7 @@ interface Activity {
   description: string;
   createdAt: string;
   classId: string;
+  nature?: string; // NEW
 }
 
 // Activity API endpoints
@@ -516,11 +517,20 @@ export const activityApi = {
       entityType: 'activity_resource',
       entityId: activityId
     }),
-   getPublished: (params: { schoolId: string; classId?: string }) => {
-    const { schoolId, classId } = params;
-    const query = classId ? `?schoolId=${schoolId}&classId=${classId}` : `?schoolId=${schoolId}`;
-    return api.get<Activity[]>(`/activities/published${query}`);
-  },
+   getPublished: (params: { 
+  schoolId: string; 
+  classId?: string;
+  nature?: 'Classe' | 'fait maison';
+  approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
+}) => {
+  const { schoolId, classId, nature, approvalStatus } = params;
+  let query = `?schoolId=${schoolId}`;
+  if (classId) query += `&classId=${classId}`;
+  if (nature) query += `&nature=${nature}`;
+  if (approvalStatus) query += `&approvalStatus=${approvalStatus}`;
+  
+  return api.get<Activity[]>(`/activities/published${query}`);
+},
 };
 
 // Class (Classe) API endpoints
@@ -797,22 +807,40 @@ export const classSubjectApi = {
     api.delete(`/class-subjects/class/${classId}/subject/${subjectId}`),
   
   removeAllSubjects: (classId: string) => api.delete(`/class-subjects/class/${classId}/all`),
+  getByTeacherId: (teacherId: string) =>
+  api.get(`/class-subjects/teacher/${teacherId}`),
 };
 
 // Teacher Activity API endpoints (approval workflow)
+// ...existing code...
+
+// Dans ton fichier api.ts → remplace teacherActivityApi par ÇA :
+
 export const teacherActivityApi = {
-  getPendingActivities: () => api.get<any[]>('/teacher/activities/pending'),
-  
-  getPendingCount: () => api.get<{ count: number }>('/teacher/activities/pending/count'),
-  
-  getMyActivities: () => api.get<any[]>('/teacher/activities/my-activities'),
-  
-  approveActivity: (activityId: string) => 
-    api.post<any>(`/teacher/activities/${activityId}/approve`, {}),
-  
-  denyActivity: (activityId: string) => 
-    api.post<any>(`/teacher/activities/${activityId}/deny`, {}),
+  // CES ROUTES EXISTENT DÉJÀ DANS TON BACKEND → 100% SÛR
+  getPendingActivities: async (subjectId?: string) => {
+    const params = subjectId ? `?subjectId=${subjectId}` : '';
+    return api.get<any[]>(`/activities/pending-approval${params}`);
+  },
+
+  getPendingCount: async () => {
+    return api.get<{ count: number }>('/activities/pending-count');
+  },
+
+  // CELLE-LÀ EST CORRECTE (tu l’as déjà corrigée)
+  getMyActivities: async () => {
+    return api.get<any[]>('/activities/teacher/my-activities');
+  },
+
+  approveActivity: async (activityId: string) => {
+    return api.post<any>(`/activities/${activityId}/approve`, {});
+  },
+
+  denyActivity: async (activityId: string) => {
+    return api.post<any>(`/activities/${activityId}/deny`, {});
+  },
 };
+// ...existing code...
 
 // Export everything
 export default api;

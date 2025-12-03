@@ -39,6 +39,8 @@ import ChangePassword from "./pages/ChangePassword";
 import SubjectManagement from "./pages/SubjectManagement";
 import ClassSubjectAssignment from "./pages/ClassSubjectAssignment";
 import SchoolManage from "./pages/SchoolManage";
+import AdminSessionDetails from "./pages/AdminSessionDetails";
+import TeacherActivityCreator from "./pages/TeacherActivityCreator";
 
 const queryClient = new QueryClient();
 
@@ -94,6 +96,11 @@ const App = () => (
                 </PrivateRoute>
               } 
             />
+            <Route path="/teacher/activity/new" element={
+              <PrivateRoute requiredRole="TEACHER">
+                <TeacherActivityCreator />
+              </PrivateRoute>
+            } />
             <Route 
               path="/superadmin/activities/new/:schoolId" 
               element={
@@ -170,6 +177,11 @@ const App = () => (
                 </PrivateRoute>
               } 
             />
+            <Route path="/school/:id/admin/session/:sessionId" element={
+              <PrivateRoute requiredRole="ADMIN">
+                <AdminSessionDetails />
+              </PrivateRoute>
+            } />
             <Route 
               path="/school/:id/teacher/activities/approval" 
               element={

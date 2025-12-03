@@ -19,4 +19,7 @@ public interface StudentRepository extends JpaRepository<Student, UUID> {
     List<Student> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(String firstName, String lastName);
 
     Optional<Student> findByUserId(UUID userId);  // Doit retourner Optional<Student>};
+    void deleteByClassId(UUID classId);
+    Integer countByClassId(UUID classId);
+
 }

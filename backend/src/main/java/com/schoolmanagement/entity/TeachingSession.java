@@ -49,6 +49,14 @@ public class TeachingSession {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    public UUID getActivityId() {
+    return activityId;
+}
+
+public void setActivityId(UUID activityId) {
+    this.activityId = activityId;
+}
+
 
     @PrePersist
     protected void onCreate() {
@@ -64,4 +72,6 @@ public class TeachingSession {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    
 }
