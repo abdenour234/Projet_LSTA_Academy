@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout code
-      - uses: actions/checkout@v4
+        uses: actions/checkout@v4
 
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -23,26 +23,26 @@ jobs:
           script: |
             echo "🚀 Starting deployment..."
 
-            cd /home/debian/LSTA_Academy/Projet_LSTA_Academy || { echo '❌ Project folder missing'; exit 1; }
+            cd /home/debian/LSTA_Academy/Projet_LSTA_Academy || { echo "❌ Project directory not found"; exit 1; }
 
-            echo "📦 Fetching latest code..."
+            echo "📦 Pulling latest changes from test_prod..."
             git fetch origin test_prod
             git reset --hard origin/test_prod
 
             echo "🛑 Stopping current containers..."
             docker compose down
 
-            echo "🏗️ Building updated images..."
+            echo "🏗️ Building updated images (with cache)..."
             docker compose build
 
-            echo "🚀 Starting updated containers..."
+            echo "🚀 Starting containers..."
             docker compose up -d --remove-orphans
 
-            echo "🧹 Cleaning unused Docker layers/images… (SAFE prune)"
+            echo "🧹 Cleaning unused Docker cache..."
             docker image prune -f
             docker container prune -f
 
-            echo "🧹 Cleaning system logs…"
+            echo "🧹 Cleaning old logs (system logs)..."
             journalctl --vacuum-size=200M
 
             echo "📊 Disk usage:"
@@ -51,4 +51,4 @@ jobs:
             echo "📦 Docker usage:"
             docker system df
 
-            echo "✨ Deployment complete!"
+            echo "✅ Deployment completed successfully!"
