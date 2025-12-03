@@ -643,7 +643,6 @@ const TeacherDashboard = () => {
     </div>
   )}
   </Card>
-        </div>
       </main>
     </div>
   );
