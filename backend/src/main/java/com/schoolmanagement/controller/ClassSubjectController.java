@@ -177,4 +177,6 @@ public class ClassSubjectController {
         classSubjectService.removeAllSubjectsFromClass(classId);
         return ResponseEntity.noContent().build();
     }
+
+
 }

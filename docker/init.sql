@@ -147,6 +147,7 @@ CREATE TABLE IF NOT EXISTS public.activities (
   subject_id UUID REFERENCES public.subjects(id) ON DELETE SET NULL,
   type TEXT NOT NULL,
   title TEXT NOT NULL,
+  nature TEXT NOT NULL DEFAULT 'Classe' CHECK (nature IN ('Classe', 'fait maison')),
   description TEXT,
   level TEXT NOT NULL,
   layout_data TEXT,

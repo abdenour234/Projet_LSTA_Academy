@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LogOut, Plus, Trash2, BarChart3, Eye, Edit, Users, GraduationCap, Clock, MessageSquare, Mail, BookOpen, Search, Library } from 'lucide-react';
+import { LogOut, Plus, Trash2, BarChart3, Eye, Edit, Users, GraduationCap, Clock, MessageSquare, Mail, BookOpen, Search, Library, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { authApi, schoolApi, activityApi, auth, teacherApi, classApi, studentApi } from '@/lib/api';
+import { authApi, schoolApi, activityApi, auth, teacherApi, classApi, studentApi, sessionApi } from '@/lib/api';
 import { DIAGNOSTIC_GRIDS } from '@/config/diagnosticGrids';
 import { AdminStatsCards } from '@/components/admin/AdminStatsCards';
 import { normalizeRole, getRoleDashboardRoute } from '@/lib/roleUtils';
@@ -25,13 +25,19 @@ const AdminDashboard = () => {
   const [loadingTeachers, setLoadingTeachers] = useState(true);
   const [loadingClasses, setLoadingClasses] = useState(true);
   
-  // Filter states
+  // Ajout des états pour les séances
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(true);
+  
+  // États pour les filtres
   const [classSearchTerm, setClassSearchTerm] = useState('');
   const [classLevelFilter, setClassLevelFilter] = useState<string>('all');
   const [classStatusFilter, setClassStatusFilter] = useState<string>('all');
   const [teacherSearchTerm, setTeacherSearchTerm] = useState('');
   const [teacherStatusFilter, setTeacherStatusFilter] = useState<string>('all');
   const [activityTypeFilter, setActivityTypeFilter] = useState<string>('all');
+  const [sessionTeacherFilter, setSessionTeacherFilter] = useState<string>('all');
+  const [sessionClassFilter, setSessionClassFilter] = useState<string>('all');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,7 +98,6 @@ const AdminDashboard = () => {
             return;
           }
         }
-
         setUserName(user.fullName || user.email?.split('@')[0] || 'Administrateur');
 
         const school = await schoolApi.getById(id!);
@@ -105,6 +110,7 @@ const AdminDashboard = () => {
         loadActivities();
         loadTeachers();
         loadClasses();
+        loadSessions(); // Ajout du chargement des séances
       } catch (error) {
         console.error('[ADMIN_DASHBOARD] Error fetching data:', error);
         toast({
@@ -117,6 +123,40 @@ const AdminDashboard = () => {
 
     fetchData();
   }, [id, navigate, toast]);
+
+  // Fonction pour charger les séances
+  const loadSessions = async () => {
+    try {
+      setLoadingSessions(true);
+      // Essayer de récupérer les séances par ID d'école
+      let data;
+      try {
+        data = await sessionApi.getBySchoolId(id!);
+      } catch (error) {
+        // Si getBySchoolId n'existe pas, essayer de récupérer toutes les séances et filtrer par école
+        const allSessions = await sessionApi.getAll();
+        data = allSessions?.filter((s: any) => String(s.schoolId) === String(id)) || [];
+      }
+      setSessions(data || []);
+    } catch (error) {
+      console.error('Error loading sessions:', error);
+      setSessions([]);
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+  // Fonction pour afficher les détails d'une séance
+  const handleViewSession = (sessionId: string) => {
+    navigate(`/school/${id}/admin/session/${sessionId}`);
+  };
+
+  // Filtrer les séances selon les filtres sélectionnés
+  const filteredSessions = sessions.filter((session) => {
+    const matchesTeacher = sessionTeacherFilter === 'all' || session.teacherId === sessionTeacherFilter;
+    const matchesClass = sessionClassFilter === 'all' || session.classId === sessionClassFilter;
+    return matchesTeacher && matchesClass;
+  });
 
   const loadDiagnosticSessions = async () => {
     try {
@@ -173,18 +213,22 @@ const AdminDashboard = () => {
     }
   };
 
-  const loadActivities = async () => {
+    const loadActivities = async () => {
     try {
-      const data = await activityApi.getAll();
-      // Filter by school_id on frontend - convert both to strings for type-safe comparison
-      const schoolActivities = data?.filter((a: any) => String(a.schoolId) === String(id)) || [];
+      // ON CHARGE TOUTES LES ACTIVITÉS DE L'ÉCOLE (fait maison + Classe)
+      const allActivities = await activityApi.getAll(); // ou getBySchoolId si tu as cette route
+
+      const schoolActivities = allActivities.filter((a: any) => 
+        String(a.schoolId) === String(id)
+        // ON NE FILTRE PLUS PAR NATURE → on garde TOUT
+      );
+
       setActivities(schoolActivities);
     } catch (error) {
       console.error('Error loading activities:', error);
       setActivities([]);
     }
   };
-
   const handleDeleteActivity = async (activityId: string) => {
     try {
       await activityApi.delete(activityId);
@@ -934,6 +978,185 @@ const AdminDashboard = () => {
             </div>
           </div>
         )}
+     
+        {/* Nouvelle section pour les séances des enseignants */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-lg font-semibold text-blue-600">Séances des enseignants</h2>
+              <p className="text-sm text-blue-500 mt-0.5">Séances réalisées par les enseignants</p>
+            </div>
+          </div>
+
+          {/* Filtres pour les séances */}
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <select
+              value={sessionTeacherFilter}
+              onChange={(e) => setSessionTeacherFilter(e.target.value)}
+              className="px-3 py-2 text-sm border-2 border-blue-200 rounded-lg bg-white text-blue-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-400 focus:ring-offset-2 transition-all min-w-[180px]"
+            >
+              <option value="all">Tous les enseignants</option>
+              {teachers.map((teacher) => (
+                <option key={teacher.id} value={teacher.id}>
+                  {teacher.fullName || `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim()}
+                </option>
+              ))}
+            </select>
+            <select
+              value={sessionClassFilter}
+              onChange={(e) => setSessionClassFilter(e.target.value)}
+              className="px-3 py-2 text-sm border-2 border-blue-200 rounded-lg bg-white text-blue-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-400 focus:ring-offset-2 transition-all min-w-[140px]"
+            >
+              <option value="all">Toutes les classes</option>
+              {classes.map((classe) => (
+                <option key={classe.id} value={classe.id}>{classe.name}</option>
+              ))}
+            </select>
+            {(sessionTeacherFilter !== 'all' || sessionClassFilter !== 'all') && (
+              <button
+                onClick={() => {
+                  setSessionTeacherFilter('all');
+                  setSessionClassFilter('all');
+                }}
+                className="text-sm text-blue-500 hover:text-blue-600 font-medium px-3 py-2 hover:bg-blue-50 rounded-lg transition-colors"
+              >
+                Réinitialiser
+              </button>
+            )}
+          </div>
+
+          {loadingSessions ? (
+            <div className="border-2 border-blue-200 rounded-lg overflow-hidden bg-white shadow-lg">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-blue-50 border-b-2 border-blue-200">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Enseignant</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Classe</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Activité</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Date</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Progression</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...Array(5)].map((_, i) => (
+                    <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                      <td className="px-4 py-3"><div className="h-4 bg-slate-100 rounded animate-pulse w-32"></div></td>
+                      <td className="px-4 py-3"><div className="h-4 bg-slate-100 rounded animate-pulse w-24"></div></td>
+                      <td className="px-4 py-3"><div className="h-4 bg-slate-100 rounded animate-pulse w-40"></div></td>
+                      <td className="px-4 py-3"><div className="h-4 bg-slate-100 rounded animate-pulse w-24"></div></td>
+                      <td className="px-4 py-3"><div className="h-4 bg-slate-100 rounded animate-pulse w-16"></div></td>
+                      <td className="px-4 py-3 text-right"><div className="h-8 bg-slate-100 rounded animate-pulse w-20 ml-auto"></div></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : filteredSessions.length > 0 ? (
+            <div className="border-2 border-blue-200 rounded-lg overflow-hidden bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-blue-50 border-b-2 border-blue-200">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Enseignant</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Classe</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Activité</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Date</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Progression</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-blue-700 uppercase tracking-wide">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredSessions.map((session, index) => {
+                    const teacher = teachers.find(t => t.id === session.teacherId);
+                    const teacherName = teacher 
+                      ? teacher.fullName || `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim()
+                      : 'Enseignant inconnu';
+                    
+                    const sessionClass = classes.find(c => c.id === session.classId);
+                    const className = sessionClass ? sessionClass.name : 'Classe inconnue';
+                    
+                    const activity = activities.find(a => a.id === session.activityId);
+                    const activityTitle = activity ? activity.title : 'Activité inconnue';
+                    
+                    return (
+                      <tr 
+                        key={session.id} 
+                        className={`${
+                          index % 2 === 0 ? 'bg-white' : 'bg-blue-50'
+                        } hover:bg-emerald-50 transition-colors cursor-pointer`}
+                        onClick={() => handleViewSession(session.id)}
+                      >
+                        <td className="px-4 py-4">
+                          <div className="font-medium text-blue-600">{teacherName}</div>
+                          {teacher?.email && (
+                            <div className="text-xs text-blue-400 mt-0.5">{teacher.email}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
+                            {className}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="font-medium text-blue-600">{activityTitle}</div>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-blue-500">
+                          {new Date(session.sessionDate).toLocaleDateString('fr-FR', { 
+                            day: 'numeric', 
+                            month: 'short', 
+                            year: 'numeric' 
+                          })}
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center">
+                            <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                              <div 
+                                className="bg-emerald-500 h-2 rounded-full" 
+                                style={{ width: `${session.percentageAcquired || 0}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-sm font-medium text-blue-600">{session.percentageAcquired || 0}%</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-right sticky right-0 bg-inherit" onClick={(e) => e.stopPropagation()}>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleViewSession(session.id)}
+                            className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 h-8"
+                            title="Voir les détails"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : sessions.length > 0 ? (
+            <div className="border-2 border-blue-200 rounded-lg p-12 text-center bg-white">
+              <p className="text-sm text-slate-600">Aucune séance ne correspond aux filtres</p>
+              <Button 
+                variant="ghost"
+                onClick={() => {
+                  setSessionTeacherFilter('all');
+                  setSessionClassFilter('all');
+                }}
+                className="mt-3 text-sm"
+              >
+                Réinitialiser les filtres
+              </Button>
+            </div>
+          ) : (
+            <div className="border-2 border-blue-200 rounded-lg p-12 text-center bg-white">
+              <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+              <p className="text-sm font-medium text-blue-600 mb-1">Aucune séance</p>
+              <p className="text-sm text-slate-600">Les séances réalisées par les enseignants apparaîtront ici</p>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

@@ -65,4 +65,6 @@ public interface ClassSubjectRepository extends JpaRepository<ClassSubject, UUID
      * Count classes where a teacher is assigned
      */
     long countByTeacherId(UUID teacherId);
+    Optional<ClassSubject> findByClassIdAndSubjectIdAndTeacherId(UUID classId, UUID subjectId, UUID teacherId);
+
 }

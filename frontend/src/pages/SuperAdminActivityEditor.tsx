@@ -1,278 +1,304 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { authApi, activityApi, classApi, schoolApi } from '@/lib/api';
+import { authApi, activityApi, classApi, schoolApi, subjectApi, classSubjectApi } from '@/lib/api';
 import { ActivityBuilder } from '@/components/activity/ActivityBuilder';
 import LoadingState from '@/components/LoadingState';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, School, Users } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ArrowLeft, School, Users, BookOpen } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { normalizeRole } from '@/lib/roleUtils';
-
-interface School {
-  id: number;
-  name: string;
-  city: string;
-  region: string;
-}
-
-interface Class {
-  id: string;
-  name: string;
-  level?: string;
-  academicYear?: string;
-}
 
 const SuperAdminActivityEditor = () => {
   const { schoolId: urlSchoolId, activityId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
   const [loading, setLoading] = useState(true);
-  const [schools, setSchools] = useState<School[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
+  const [schools, setSchools] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>('');
   const [selectedClassId, setSelectedClassId] = useState<string>('');
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
   const [activityData, setActivityData] = useState<any>(null);
+  const [nature, setNature] = useState<string>('Classe');
 
   useEffect(() => {
-    loadData();
-  }, [activityId, urlSchoolId]);
+    loadInitialData();
 
-  const loadData = async () => {
+  }, []);
+
+  const loadInitialData = async () => {
     try {
-      // Verify superadmin role
       const user = await authApi.getCurrentUser();
-      const userRole = normalizeRole(user?.role);
-      
-      if (!user || userRole !== 'SUPERADMIN') {
-        toast({
-          title: 'Accès refusé',
-          description: 'Seuls les superadmins peuvent accéder à cette page',
-          variant: 'destructive',
-        });
+      if (!user || normalizeRole(user.role) !== 'SUPERADMIN') {
+        toast({ title: 'Accès refusé', variant: 'destructive' });
         navigate('/superadmin/dashboard');
         return;
       }
 
-      // Load schools list
-      const schoolResponse = await schoolApi.getAll(); // Use schoolApi.getAll instead of /superadmin/stats
-      setSchools(schoolResponse || []);
+      const schoolsData = await schoolApi.getAll();
+      setSchools(schoolsData || []);
 
-      // Set school ID from URL or first school
-      if (urlSchoolId) {
-        setSelectedSchoolId(urlSchoolId);
-      } else if (schoolResponse.length > 0) {
-        setSelectedSchoolId(schoolResponse[0].id.toString());
+      const defaultSchoolId = urlSchoolId || (schoolsData[0]?.id?.toString()) || '';
+      setSelectedSchoolId(defaultSchoolId);
+
+      if (defaultSchoolId) {
+        await loadClasses(defaultSchoolId);
       }
 
-      // Load classes for selected school
-      if (urlSchoolId || schoolResponse.length > 0) {
-        const schoolIdToFetch = urlSchoolId || schoolResponse[0].id.toString();
-        const classResponse = await classApi.getBySchoolId(schoolIdToFetch);
-        setClasses(classResponse || []);
-      }
-
-      // Load activity data if editing
       if (activityId) {
-        const activity = await activityApi.getById(activityId);
-        if (activity) {
-          let layoutData;
-          try {
-            layoutData = typeof activity.layoutData === 'string' 
-              ? JSON.parse(activity.layoutData) 
-              : activity.layoutData;
-          } catch (e) {
-            console.error('Error parsing layoutData:', e);
-            layoutData = { elements: [] };
-          }
-          
-          setActivityData({
-            title: activity.title,
-            description: activity.description || '',
-            type: activity.type,
-            level: activity.level,
-            elements: layoutData?.elements || [],
-            classId: activity.classId, // Include classId
-          });
-          // Set school ID and class ID from activity
-          if (activity.schoolId) {
-            setSelectedSchoolId(activity.schoolId);
-          }
-          if (activity.classId) {
-            setSelectedClassId(activity.classId);
-          }
-        }
+        await loadActivity(activityId);
       }
-    } catch (error: any) {
-      console.error('Error loading data:', error);
-      toast({
-        title: 'Erreur',
-        description: error.message || 'Impossible de charger les données',
-        variant: 'destructive',
-      });
+    } catch (err: any) {
+      toast({ title: 'Erreur', description: err.message || 'Chargement échoué', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSchoolChange = async (schoolId: string) => {
-    setSelectedSchoolId(schoolId);
-    setSelectedClassId(''); // Reset class selection
+  const loadClasses = async (schoolId: string) => {
     try {
-      const classResponse = await classApi.getBySchoolId(schoolId);
-      setClasses(classResponse || []);
-    } catch (error: any) {
-      console.error('Error loading classes:', error);
-      toast({
-        title: 'Erreur',
-        description: error.message || 'Impossible de charger les classes',
-        variant: 'destructive',
-      });
+      const data = await classApi.getBySchoolId(schoolId);
+      setClasses(data || []);
+      setSelectedClassId(''); // reset
+      setSubjects([]);
+      setSelectedSubjectId('');
+    } catch (err) {
+      toast({ title: 'Erreur', description: 'Impossible de charger les classes', variant: 'destructive' });
     }
   };
 
-  const handleClassChange = (classId: string) => {
-    setSelectedClassId(classId);
+ const loadSubjectsForClass = async (classId: string) => {
+  if (!classId) {
+    setSubjects([]);
+    setSelectedSubjectId('');
+    return;
+  }
+
+  try {
+    console.log("Chargement des matières pour la classe :", classId);
+
+    // ON UTILISE TA ROUTE QUI EXISTE DÉJÀ
+    const response = await classSubjectApi.getSubjectsForClass(classId);
+    const classSubjects = response.data || response;
+
+    if (!classSubjects || classSubjects.length === 0) {
+      toast({
+        title: 'Aucune matière assignée',
+        description: 'Cette classe n\'a pas encore de matières. Tu peux en assigner dans "Gestion des classes".',
+        variant: 'default'
+      });
+      setSubjects([]);
+      setSelectedSubjectId('');
+      return;
+    }
+
+    // On récupère les vraies matières via leurs IDs
+    const subjectIds = classSubjects.map((cs: any) => cs.subjectId);
+    const subjectPromises = subjectIds.map((id: string) => subjectApi.getById(id));
+    const subjects = await Promise.all(subjectPromises);
+
+    setSubjects(subjects);
+    setSelectedSubjectId(''); // on laisse le choix
+
+    toast({
+      title: `${subjects.length} matière(s) chargée(s)`,
+      description: subjects.map((s: any) => s.name).join(', '),
+      variant: 'default'
+    });
+
+  } catch (err: any) {
+    console.error("Erreur chargement matières de la classe :", err);
+    toast({
+      title: 'Erreur',
+      description: 'Impossible de charger les matières assignées à cette classe',
+      variant: 'destructive'
+    });
+    setSubjects([]);
+    setSelectedSubjectId('');
+  }
+};
+
+  const loadActivity = async (id: string) => {
+    try {
+      const activity = await activityApi.getById(id);
+      const layoutData = activity.layoutData ? JSON.parse(activity.layoutData as string) : { elements: [] };
+
+      setNature(activity.nature || 'Classe');
+      setActivityData({
+        title: activity.title,
+        description: activity.description || '',
+        type: activity.type,
+        level: activity.level,
+        elements: layoutData.elements || [],
+      });
+
+      if (activity.schoolId) {
+        setSelectedSchoolId(activity.schoolId.toString());
+        await loadClasses(activity.schoolId.toString());
+      }
+      if (activity.classId) {
+        setSelectedClassId(activity.classId);
+        await loadSubjectsForClass(activity.classId);
+      }
+      if (activity.subjectId) {
+        setSelectedSubjectId(activity.subjectId);
+      }
+    } catch (err) {
+      toast({ title: 'Erreur', description: 'Activité introuvable', variant: 'destructive' });
+    }
   };
 
-  const handleSave = () => {
-    toast({
-      title: 'Succès',
-      description: 'Activité enregistrée avec succès',
-    });
-    navigate('/superadmin/dashboard');
+  const handleSchoolChange = async (schoolId: string) => {
+    setSelectedSchoolId(schoolId);
+    setSelectedClassId('');
+    setSubjects([]);
+    setSelectedSubjectId('');
+    await loadClasses(schoolId);
   };
+
+  const handleClassChange = async (classId: string) => {
+    setSelectedClassId(classId);
+    setSelectedSubjectId('');
+    await loadSubjectsForClass(classId);
+  };
+
+  const selectedClass = classes.find(c => c.id === selectedClassId);
+  const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
 
   if (loading) return <LoadingState />;
 
-  const selectedSchool = schools.find(s => s.id.toString() === selectedSchoolId);
-  const selectedClass = classes.find(c => c.id === selectedClassId);
-
   return (
     <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/superadmin/dashboard')}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour au Dashboard
+      <div className="max-w-7xl mx-auto space-y-8">
+
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" onClick={() => navigate('/superadmin/dashboard')}>
+            <ArrowLeft className="h-4 w-4 mr-2" /> Retour
           </Button>
-          
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">
-              {activityId ? 'Modifier l\'activité' : 'Nouvelle activité'}
-            </h1>
-          </div>
+          <h1 className="text-3xl font-bold">
+            {activityId ? 'Modifier l\'activité' : 'Créer une activité'}
+          </h1>
         </div>
 
-        {/* School Selection Card */}
-        <Card className="p-6 mb-6">
+        {/* École - caché si imposé */}
+        <Card className="p-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-lg bg-primary/10">
-              <School className="h-6 w-6 text-primary" />
-            </div>
+            <School className="h-8 w-8 text-primary" />
             <div className="flex-1">
-              <h3 className="font-semibold text-lg mb-2">Sélectionner l'école</h3>
-              <Select
-                value={selectedSchoolId}
-                onValueChange={handleSchoolChange}
-                disabled={!!activityId} // Disable if editing
-              >
+              <h3 className="font-semibold text-lg mb-3">École</h3>
+              <Select value={selectedSchoolId} onValueChange={handleSchoolChange}>
                 <SelectTrigger className="w-full max-w-md">
                   <SelectValue placeholder="Choisir une école" />
                 </SelectTrigger>
                 <SelectContent>
-                  {schools.map((school) => (
-                    <SelectItem key={school.id} value={school.id.toString()}>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{school.name}</span>
-                        <span className="text-sm text-muted-foreground">
-                          • {school.city}, {school.region}
-                        </span>
-                      </div>
+                  {schools.map(s => (
+                    <SelectItem key={s.id} value={s.id.toString()}>
+                      {s.name} • {s.city}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {selectedSchool && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  Cette activité sera créée pour l'école <strong>{selectedSchool.name}</strong>
-                </p>
-              )}
             </div>
           </div>
         </Card>
 
-        {/* Class Selection Card */}
+        {/* Classe + Matière */}
         {selectedSchoolId && (
-          <Card className="p-6 mb-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-primary/10">
-                <Users className="h-6 w-6 text-primary" />
+            <Card className="p-6">
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="flex items-center gap-4">
+                <Users className="h-8 w-8 text-primary" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg mb-3">Classe cible</h3>
+                  <Select value={selectedClassId} onValueChange={handleClassChange}>
+                    <SelectTrigger className="w-full max-w-md">
+                      <SelectValue placeholder="Choisir une classe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classes.map(c => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name} {c.level && `• ${c.level}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedClass && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Niveau détecté : <Badge variant="secondary">{selectedClass.level || 'Primaire'}</Badge>
+                    </p>
+                  )}
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg mb-2">Sélectionner la classe</h3>
-                <Select
-                  value={selectedClassId}
-                  onValueChange={handleClassChange}
-                  disabled={!!activityId} // Disable if editing
-                >
-                  <SelectTrigger className="w-full max-w-md">
-                    <SelectValue placeholder="Choisir une classe" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {classes.map((classItem) => (
-                      <SelectItem key={classItem.id} value={classItem.id}>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{classItem.name}</span>
-                          {classItem.level && (
-                            <span className="text-sm text-muted-foreground">
-                              • {classItem.level}
-                            </span>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedClass && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Cette activité sera assignée à la classe <strong>{selectedClass.name}</strong>
-                  </p>
-                )}
+
+              <div className="flex items-center gap-4">
+                <BookOpen className="h-8 w-8 text-emerald-600" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg mb-3">Matière</h3>
+                  {subjects.length > 0 ? (
+                    <Select value={selectedSubjectId} onValueChange={setSelectedSubjectId}>
+                      <SelectTrigger className="w-full max-w-md">
+                        <SelectValue placeholder="Choisir une matière" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {subjects.map(s => (
+                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Aucune matière disponible pour cette classe</p>
+                  )}
+                  {selectedSubject && (
+                    <Badge className="mt-2" variant="outline">{selectedSubject.name}</Badge>
+                  )}
+                </div>
               </div>
             </div>
+
+            <div className="mt-6 pt-6 border-t">
+              <h4 className="font-medium mb-3">Nature de l'activité</h4>
+              <Select value={nature} onValueChange={setNature}>
+                <SelectTrigger className="w-full max-w-md">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Classe">En classe</SelectItem>
+                  <SelectItem value="fait maison">À la maison</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </Card>
+          
         )}
 
         {/* Activity Builder */}
-        {selectedSchoolId && (
+        {selectedSchoolId && selectedClassId && selectedSubjectId && (
           <ActivityBuilder
             activityId={activityId}
-            initialData={activityData}
+            initialData={{
+              ...activityData,
+              level: selectedClass?.level || 'Primaire',
+            }}
             schoolId={selectedSchoolId}
-            classId={selectedClassId}
-            onSave={handleSave}
+            classId={selectedClassId}           // imposé
+            subjectId={selectedSubjectId}       // imposé
+            nature={nature}
+            onSave={() => {
+              toast({ title: 'Succès', description: 'Activité sauvegardée !' });
+              navigate('/superadmin/dashboard');
+            }}
           />
         )}
 
-        {!selectedSchoolId && (
-          <Card className="p-12 text-center">
-            <School className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Aucune école sélectionnée</h3>
-            <p className="text-muted-foreground">
-              Veuillez sélectionner une école pour créer une activité
-            </p>
+        {!selectedClassId && selectedSchoolId && (
+          <Card className="p-16 text-center">
+            <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <p className="text-lg text-muted-foreground">Veuillez sélectionner une classe pour continuer</p>
           </Card>
         )}
       </div>

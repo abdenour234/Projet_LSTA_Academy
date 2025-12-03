@@ -42,6 +42,8 @@ import SchoolManage from "./pages/SchoolManage";
 import TeacherAttendanceTracking from "./pages/TeacherAttendanceTracking";
 import StudentAttendanceMarking from "./pages/StudentAttendanceMarking";
 import StudentAttendanceTracking from "./pages/StudentAttendanceTracking";
+import AdminSessionDetails from "./pages/AdminSessionDetails";
+import TeacherActivityCreator from "./pages/TeacherActivityCreator";
 
 const queryClient = new QueryClient();
 
@@ -104,6 +106,11 @@ const App = () => (
                 </PrivateRoute>
               } 
             />
+            <Route path="/teacher/activity/new" element={
+              <PrivateRoute requiredRole="TEACHER">
+                <TeacherActivityCreator />
+              </PrivateRoute>
+            } />
             <Route 
               path="/superadmin/activities/new/:schoolId" 
               element={
@@ -180,6 +187,11 @@ const App = () => (
                 </PrivateRoute>
               } 
             />
+            <Route path="/school/:id/admin/session/:sessionId" element={
+              <PrivateRoute requiredRole="ADMIN">
+                <AdminSessionDetails />
+              </PrivateRoute>
+            } />
             <Route 
               path="/school/:id/teacher/activities/approval" 
               element={

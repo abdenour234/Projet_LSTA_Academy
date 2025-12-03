@@ -36,6 +36,9 @@ public class Activity {
 
     @Column(nullable = false)
     private String type;
+    // NEW: nature (must be "Classe" ou "fait maison")
+    @Column(name = "nature", nullable = false)
+    private String nature;
 
     @Column(nullable = false)
     private String title;
@@ -74,6 +77,9 @@ public class Activity {
         }
         if (approvalStatus == null) {
             approvalStatus = "PENDING";
+        }
+        if (nature == null) {
+            nature = "Classe";
         }
     }
 

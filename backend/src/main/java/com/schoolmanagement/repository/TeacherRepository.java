@@ -3,7 +3,8 @@ package com.schoolmanagement.repository;
 import com.schoolmanagement.entity.Teacher;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,4 +56,7 @@ public interface TeacherRepository extends JpaRepository<Teacher, UUID> {
      * Count active teachers for a school
      */
     long countBySchoolIdAndIsActiveTrue(Long schoolId);
+
+    @Query("SELECT t FROM Teacher t WHERE t.id = :id OR t.profileId = :id")
+    Optional<Teacher> findByIdOrProfileId(@Param("id") UUID id);
 }

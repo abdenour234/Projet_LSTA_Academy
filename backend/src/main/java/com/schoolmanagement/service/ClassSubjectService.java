@@ -1,6 +1,7 @@
 package com.schoolmanagement.service;
 
 import com.schoolmanagement.dto.ClassSubjectDTO;
+import com.schoolmanagement.entity.Teacher;
 import com.schoolmanagement.entity.ClassSubject;
 import com.schoolmanagement.repository.ClasseRepository;
 import com.schoolmanagement.repository.ClassSubjectRepository;
@@ -121,7 +122,13 @@ public class ClassSubjectService {
      */
     @Transactional(readOnly = true)
     public List<ClassSubject> getClassesForTeacher(UUID teacherId) {
-        return classSubjectRepository.findByTeacherId(teacherId);
+        // NOUVELLE LOGIQUE : on accepte soit l'id, soit le profile_id
+        Teacher teacher = teacherRepository
+            .findById(teacherId)
+            .orElseGet(() -> teacherRepository.findByProfileId(teacherId)
+                .orElseThrow(() -> new RuntimeException("Professeur non trouvé : " + teacherId)));
+
+        return classSubjectRepository.findByTeacherId(teacher.getId());
     }
 
     /**

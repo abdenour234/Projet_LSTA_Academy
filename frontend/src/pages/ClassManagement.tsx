@@ -100,7 +100,15 @@ export default function ClassManagement() {
     massar: "",
   });
   const [generatedCredentials, setGeneratedCredentials] = useState<Credential | null>(null);
-
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
+    isOpen: boolean;
+    classId: string | null;
+    className: string;
+  }>({
+    isOpen: false,
+    classId: null,
+    className: '',
+  });
   const handleLogout = async () => {
     await authApi.logout();
     navigate(`/school/${schoolId}/login`);
@@ -348,7 +356,9 @@ export default function ClassManagement() {
     }
   };
 
-  const handleAddStudent = async () => {
+  // ...existing code...
+
+const handleAddStudent = async () => {
     if (!newStudent.firstName || !newStudent.lastName || !newStudent.dateOfBirth || !newStudent.gender) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
@@ -365,7 +375,6 @@ export default function ClassManagement() {
     const fullName = `${newStudent.firstName} ${newStudent.lastName}`;
 
     try {
-      // ✅ Use registerByAdmin to prevent auto-login
       await authApi.registerByAdmin({
         email,
         password,
@@ -382,14 +391,16 @@ export default function ClassManagement() {
       setGeneratedCredentials({ fullName, email, password });
       toast.success("Étudiant ajouté avec succès !");
 
-      setNewStudent({ firstName: "", lastName: "", dateOfBirth: "", gender: "", parentContact: "" , massar: "" });
-      setIsStudentDialogOpen(false);
+      // ✅ CORRECTION: Recharger les données depuis le backend pour synchroniser l'effectif
       await loadClasses();
+
+      setNewStudent({ firstName: "", lastName: "", dateOfBirth: "", gender: "", parentContact: "", massar: "" });
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de l'ajout");
     }
   };
 
+// ...existing code...
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("Copié dans le presse-papier !");
@@ -449,16 +460,35 @@ export default function ClassManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Supprimer cette classe ?")) return;
+ // ...existing code...
+
+  const handleDelete = (classItem: Class) => {
+    setDeleteConfirmDialog({
+      isOpen: true,
+      classId: classItem.id,
+      className: classItem.name,
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmDialog.classId) return;
+    
     try {
-      await classApi.delete(id);
-      toast.success("Classe supprimée");
-      loadClasses();
+      // ✅ BACKEND HANDLE CASCADE: deleteByClassId() supprimera les étudiants automatiquement
+      await classApi.delete(deleteConfirmDialog.classId);
+      
+      toast.success("Classe et ses étudiants supprimés avec succès");
+      setDeleteConfirmDialog({ isOpen: false, classId: null, className: '' });
+      
+      // ✅ Rafraîchir la liste des classes
+      await loadClasses();
     } catch (error: any) {
-      toast.error(error.message || "Erreur");
+      console.error('Delete error:', error);
+      toast.error(error.message || "Erreur lors de la suppression");
     }
   };
+
+
 
   const resetForm = () => {
     setFormData({
@@ -673,10 +703,10 @@ export default function ClassManagement() {
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button 
+                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        onClick={() => handleDelete(classItem.id)}
+                        onClick={() => handleDelete(classItem)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
                         title="Supprimer"
                       >
@@ -786,18 +816,64 @@ export default function ClassManagement() {
               </Card>
             )}
 
-            <div className="flex gap-2">
-              <Button onClick={handleAddStudent} className="flex-1">
-                Ajouter l'étudiant
+                        <div className="flex gap-2">
+              <Button 
+                onClick={handleAddStudent} 
+                className="flex-1"
+                disabled={generatedCredentials !== null}
+              >
+                {generatedCredentials ? "Étudiant ajouté ✓" : "Ajouter l'étudiant"}
               </Button>
               <Button 
                 variant="outline" 
                 onClick={() => { 
                   setIsStudentDialogOpen(false); 
                   setGeneratedCredentials(null); 
+                  setNewStudent({ firstName: "", lastName: "", dateOfBirth: "", gender: "", parentContact: "" , massar: "" });
                 }}
               >
+                {generatedCredentials ? "Fermer" : "Annuler"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={deleteConfirmDialog.isOpen} onOpenChange={(open) => {
+        if (!open) {
+          setDeleteConfirmDialog({ isOpen: false, classId: null, className: '' });
+        }
+      }}>
+        <DialogContent className="max-w-md border-2 border-red-200">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Supprimer la classe ?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-red-50 border-l-4 border-red-500 p-4">
+              <p className="text-sm font-semibold text-red-800">⚠️ Attention</p>
+              <p className="text-sm text-red-700 mt-2">
+                Êtes-vous sûr de vouloir supprimer la classe <strong>{deleteConfirmDialog.className}</strong> ?
+              </p>
+              <p className="text-sm text-red-700 mt-2">
+                <strong>Vous risquez de supprimer également les {classes.find(c => c.id === deleteConfirmDialog.classId)?.studentCount || 0} étudiants</strong> inscrits dans cette classe.
+              </p>
+              <p className="text-sm text-red-600 mt-2">
+                Cette action est <strong>irréversible</strong>.
+              </p>
+              </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => setDeleteConfirmDialog({ isOpen: false, classId: null, className: '' })}
+                className="flex-1"
+              >
                 Annuler
+              </Button>
+              <Button 
+                onClick={confirmDelete}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Supprimer définitivement
               </Button>
             </div>
           </div>
