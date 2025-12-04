@@ -9,8 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      # Store database in LOCAL FOLDER (never gets deleted)
-      - ./postgres-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
       - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     shm_size: 256mb
     healthcheck:
