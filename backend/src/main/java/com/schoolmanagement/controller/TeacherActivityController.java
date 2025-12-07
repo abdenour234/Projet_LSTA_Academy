@@ -21,13 +21,16 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Controller for teacher-specific activity operations including approval workflow
+ */
 @RestController
 @RequestMapping("/api/teacher/activities")
 @CrossOrigin(origins = "*")
 public class TeacherActivityController {
-    
+
     private static final Logger log = LoggerFactory.getLogger(TeacherActivityController.class);
-    
+
     private final ActivityRepository activityRepository;
     private final TeacherRepository teacherRepository;
     private final ClassSubjectRepository classSubjectRepository;
@@ -45,208 +48,232 @@ public class TeacherActivityController {
     }
 
     /**
-     * Get teacher's assigned class IDs as Longs
-     * Converts UUID from ClassSubject to Long for Activity comparison
+     * Helper method to get valid (classId, subjectId) pairs for a teacher
      */
-    private Set<Long> getTeacherClassIdsAsLong(UUID teacherId) {
+    private Set<String> getTeacherClassSubjectPairs(UUID teacherId) {
         List<ClassSubject> assignments = classSubjectRepository.findByTeacherId(teacherId);
+        
         return assignments.stream()
-                .map(cs -> {
-                    UUID classUuid = cs.getClassId();
-                    // Convert UUID to Long by taking the least significant bits
-                    // This is a workaround - ideally you should use consistent types
-                    return classUuid.getLeastSignificantBits() & Long.MAX_VALUE;
-                })
+                .map(cs -> cs.getClassId() + "-" + cs.getSubjectId())
                 .collect(Collectors.toSet());
     }
 
     /**
-     * Get teacher's assigned class IDs as UUIDs
+     * Helper method to check if activity matches teacher's assignments
      */
-    private Set<UUID> getTeacherClassIds(UUID teacherId) {
-        List<ClassSubject> assignments = classSubjectRepository.findByTeacherId(teacherId);
-        return assignments.stream()
-                .map(ClassSubject::getClassId)
-                .collect(Collectors.toSet());
-    }
-
-    /**
-     * Check if activity's class is assigned to teacher
-     * Handles both Long and UUID comparison
-     */
-    private boolean isActivityClassAssignedToTeacher(Activity activity, Set<UUID> teacherClassIds) {
-        if (activity.getClassId() == null) {
+    private boolean isActivityForTeacher(Activity activity, Set<String> validPairs) {
+        if (activity.getClassId() == null || activity.getSubjectId() == null) {
             return false;
         }
         
-        // Activity.classId is Long, we need to check against UUID classIds
-        // We'll convert teacher's UUID class IDs to Long for comparison
-        Long activityClassId = activity.getClassId();
-        
-        for (UUID teacherClassUuid : teacherClassIds) {
-            // Simple comparison: convert UUID's least significant bits to Long
-            Long teacherClassAsLong = teacherClassUuid.getLeastSignificantBits() & Long.MAX_VALUE;
-            if (activityClassId.equals(teacherClassAsLong)) {
-                return true;
-            }
-        }
-        
-        return false;
+        String activityPair = activity.getClassId() + "-" + activity.getSubjectId();
+        return validPairs.contains(activityPair);
     }
 
+    /**
+     * Get pending activities for the current teacher's subjects/classes
+     * Teacher sees activities where:
+     * - Activity's (classId, subjectId) matches teacher's ClassSubject assignments
+     * - Activity status is PENDING
+     * - Activity nature is "fait maison"
+     */
     @GetMapping("/pending")
     @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<List<Activity>> getPendingActivities(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        
+
         UserContext user = ownershipValidator.extractUserContext(authHeader);
+
+        // Find teacher by profile ID
         Teacher teacher = teacherRepository.findByProfileId(user.userId)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
+
+        log.info("=== TEACHER PENDING ACTIVITIES DEBUG ===");
+        log.info("Teacher ID: {}", teacher.getId());
+        log.info("Teacher Subject ID: {}", teacher.getSubjectId());
+        log.info("Teacher School ID: {}", user.schoolId);
+
+        // Get valid (classId, subjectId) pairs for this teacher
+        Set<String> validPairs = getTeacherClassSubjectPairs(teacher.getId());
         
-        Set<UUID> teacherClassIds = getTeacherClassIds(teacher.getId());
-        
-        log.info("=== TEACHER PENDING ACTIVITIES ===");
-        log.info("Teacher: {}, Subject: {}, Classes: {}", teacher.getId(), teacher.getSubjectId(), teacherClassIds);
-        
+        log.info("Valid class-subject pairs for teacher: {}", validPairs);
+
+        // Get all pending activities for the school
         List<Activity> pendingActivities = activityRepository
                 .findBySchoolIdAndApprovalStatus(Long.parseLong(user.schoolId), "PENDING");
-        
-        List<Activity> filtered = pendingActivities.stream()
-                .filter(activity -> 
-                    activity.getSubjectId() != null && 
-                    activity.getSubjectId().equals(teacher.getSubjectId()) &&
-                    isActivityClassAssignedToTeacher(activity, teacherClassIds)
-                )
+
+        log.info("Total pending activities in school: {}", pendingActivities.size());
+
+        // Filter by teacher's class-subject assignments AND nature "fait maison"
+        List<Activity> teacherPendingActivities = pendingActivities.stream()
+                .filter(activity -> {
+                    boolean isHomemade = "fait maison".equalsIgnoreCase(activity.getNature());
+                    boolean matchesAssignment = isActivityForTeacher(activity, validPairs);
+                    
+                    log.info("  Activity ID: {}, Title: {}, ClassId: {}, SubjectId: {}, Nature: {}, IsHomemade: {}, Matches: {}",
+                            activity.getId(), activity.getTitle(), 
+                            activity.getClassId(), activity.getSubjectId(),
+                            activity.getNature(), isHomemade, matchesAssignment);
+                    
+                    return isHomemade && matchesAssignment;
+                })
                 .collect(Collectors.toList());
-        
-        log.info("Filtered: {} / {}", filtered.size(), pendingActivities.size());
-        return ResponseEntity.ok(filtered);
+
+        log.info("Filtered activities for teacher: {}", teacherPendingActivities.size());
+        log.info("=========================================");
+
+        return ResponseEntity.ok(teacherPendingActivities);
     }
 
+    /**
+     * Get count of pending activities for notification badge
+     */
     @GetMapping("/pending/count")
     @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<Map<String, Integer>> getPendingCount(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        
+
         UserContext user = ownershipValidator.extractUserContext(authHeader);
+
+        // Find teacher by profile ID
         Teacher teacher = teacherRepository.findByProfileId(user.userId)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
-        
-        Set<UUID> teacherClassIds = getTeacherClassIds(teacher.getId());
-        
+
+        // Get valid (classId, subjectId) pairs for this teacher
+        Set<String> validPairs = getTeacherClassSubjectPairs(teacher.getId());
+
+        // Get all pending activities for the school
         List<Activity> pendingActivities = activityRepository
                 .findBySchoolIdAndApprovalStatus(Long.parseLong(user.schoolId), "PENDING");
-        
+
+        // Count activities matching teacher's class-subject assignments AND "fait maison"
         long count = pendingActivities.stream()
-                .filter(activity -> 
-                    activity.getSubjectId() != null && 
-                    activity.getSubjectId().equals(teacher.getSubjectId()) &&
-                    isActivityClassAssignedToTeacher(activity, teacherClassIds)
-                )
+                .filter(activity -> "fait maison".equalsIgnoreCase(activity.getNature()))
+                .filter(activity -> isActivityForTeacher(activity, validPairs))
                 .count();
-        
+
         return ResponseEntity.ok(Map.of("count", (int) count));
     }
 
+    /**
+     * Get all activities for the teacher's classes and subjects
+     * Includes approved, pending, and denied activities
+     * Filters by teacher's ClassSubject assignments (class + subject)
+     */
     @GetMapping("/my-activities")
     @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<List<Activity>> getMyActivities(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        
+
         UserContext user = ownershipValidator.extractUserContext(authHeader);
+
+        // Find teacher by profile ID
         Teacher teacher = teacherRepository.findByProfileId(user.userId)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
-        
-        Set<UUID> teacherClassIds = getTeacherClassIds(teacher.getId());
-        
-        log.info("=== TEACHER MY ACTIVITIES ===");
-        log.info("Teacher: {}, Subject: {}, Classes: {}", teacher.getId(), teacher.getSubjectId(), teacherClassIds);
-        
+
+        // Get valid (classId, subjectId) pairs for this teacher
+        Set<String> validPairs = getTeacherClassSubjectPairs(teacher.getId());
+
+        // Get all activities for the school
         List<Activity> allActivities = activityRepository.findBySchoolId(Long.parseLong(user.schoolId));
-        
-        List<Activity> filtered = allActivities.stream()
-                .filter(activity -> 
-                    activity.getSubjectId() != null && 
-                    activity.getSubjectId().equals(teacher.getSubjectId()) &&
-                    isActivityClassAssignedToTeacher(activity, teacherClassIds)
-                )
+
+        // Filter by teacher's class-subject assignments
+        List<Activity> teacherActivities = allActivities.stream()
+                .filter(activity -> isActivityForTeacher(activity, validPairs))
                 .collect(Collectors.toList());
-        
-        log.info("Filtered: {} / {}", filtered.size(), allActivities.size());
-        return ResponseEntity.ok(filtered);
+
+        return ResponseEntity.ok(teacherActivities);
     }
 
+    /**
+     * Approve an activity
+     * Sets status to APPROVED and records the approving teacher
+     */
     @PostMapping("/{activityId}/approve")
     @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<?> approveActivity(
             @PathVariable UUID activityId,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        
+
         UserContext user = ownershipValidator.extractUserContext(authHeader);
+
+        // Find teacher
         Teacher teacher = teacherRepository.findByProfileId(user.userId)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
-        
-        Set<UUID> teacherClassIds = getTeacherClassIds(teacher.getId());
+
+        // Find activity
         Activity activity = activityRepository.findById(activityId)
                 .orElseThrow(() -> new RuntimeException("Activity not found"));
-        
+
+        // Verify activity belongs to teacher's school
         if (!activity.getSchoolId().equals(Long.parseLong(user.schoolId))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Cannot approve activity from another school"));
         }
-        
-        if (activity.getSubjectId() == null || !activity.getSubjectId().equals(teacher.getSubjectId())) {
+
+        // Verify activity's (class, subject) matches teacher's assignments
+        Set<String> validPairs = getTeacherClassSubjectPairs(teacher.getId());
+        if (!isActivityForTeacher(activity, validPairs)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "You can only approve activities for your specialty"));
+                    .body(Map.of("error", "You can only approve activities for classes and subjects you teach"));
         }
-        
-        if (!isActivityClassAssignedToTeacher(activity, teacherClassIds)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "You can only approve activities for your assigned classes"));
-        }
-        
+
+        // Update approval status
         activity.setApprovalStatus("APPROVED");
         activity.setApprovedBy(user.userId);
         activity.setIsPublished(true);
-        
+
         Activity saved = activityRepository.save(activity);
-        return ResponseEntity.ok(Map.of("message", "Activity approved successfully", "activity", saved));
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Activity approved successfully",
+                "activity", saved
+        ));
     }
 
+    /**
+     * Deny an activity
+     * Sets status to DENIED and records the denying teacher
+     */
     @PostMapping("/{activityId}/deny")
     @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<?> denyActivity(
             @PathVariable UUID activityId,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        
+
         UserContext user = ownershipValidator.extractUserContext(authHeader);
+
+        // Find teacher
         Teacher teacher = teacherRepository.findByProfileId(user.userId)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
-        
-        Set<UUID> teacherClassIds = getTeacherClassIds(teacher.getId());
+
+        // Find activity
         Activity activity = activityRepository.findById(activityId)
                 .orElseThrow(() -> new RuntimeException("Activity not found"));
-        
+
+        // Verify activity belongs to teacher's school
         if (!activity.getSchoolId().equals(Long.parseLong(user.schoolId))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Cannot deny activity from another school"));
         }
-        
-        if (activity.getSubjectId() == null || !activity.getSubjectId().equals(teacher.getSubjectId())) {
+
+        // Verify activity's (class, subject) matches teacher's assignments
+        Set<String> validPairs = getTeacherClassSubjectPairs(teacher.getId());
+        if (!isActivityForTeacher(activity, validPairs)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "You can only deny activities for your specialty"));
+                    .body(Map.of("error", "You can only deny activities for classes and subjects you teach"));
         }
-        
-        if (!isActivityClassAssignedToTeacher(activity, teacherClassIds)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "You can only deny activities for your assigned classes"));
-        }
-        
+
+        // Update approval status
         activity.setApprovalStatus("DENIED");
         activity.setApprovedBy(user.userId);
         activity.setIsPublished(false);
-        
+
         Activity saved = activityRepository.save(activity);
-        return ResponseEntity.ok(Map.of("message", "Activity denied", "activity", saved));
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Activity denied",
+                "activity", saved
+        ));
     }
 }
