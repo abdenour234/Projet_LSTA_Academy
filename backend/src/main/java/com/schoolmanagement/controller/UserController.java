@@ -1,8 +1,9 @@
 package com.schoolmanagement.controller;
 
 import com.schoolmanagement.entity.Profile;
-import com.schoolmanagement.entity.Profile.Role;
+import com.schoolmanagement.entity.UserRole;
 import com.schoolmanagement.repository.ProfileRepository;
+import com.schoolmanagement.repository.UserRoleRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,9 @@ public class UserController {
     @Autowired
     private ProfileRepository profileRepository;
 
+    @Autowired
+    private UserRoleRepository userRoleRepository;
+
     /**
      * DTO for user response - minimal info for privacy
      */
@@ -35,13 +39,16 @@ public class UserController {
         public String role;
         public Long schoolId;
 
-        public UserDTO(Profile profile) {
+        public UserDTO(Profile profile, UserRole userRole) {
             this.id = profile.getId();
-            this.firstName = profile.getFirstName();
-            this.lastName = profile.getLastName();
+            // Parse fullName into firstName and lastName
+            String fullName = profile.getFullName() != null ? profile.getFullName() : "";
+            String[] nameParts = fullName.trim().split("\\s+", 2);
+            this.firstName = nameParts.length > 0 ? nameParts[0] : "";
+            this.lastName = nameParts.length > 1 ? nameParts[1] : "";
             this.email = profile.getEmail();
-            this.role = profile.getRole().name();
-            this.schoolId = profile.getSchool() != null ? profile.getSchool().getId() : null;
+            this.role = userRole != null ? userRole.getRole().name() : "UNKNOWN";
+            this.schoolId = profile.getSchoolId();
         }
     }
 
@@ -65,13 +72,22 @@ public class UserController {
         }
 
         // Verify user belongs to same school (security check)
-        if (profile.getSchool() == null || !profile.getSchool().getId().equals(schoolId)) {
+        if (!profile.getSchoolId().equals(schoolId)) {
             log.warn("User {} not in school {}", email, schoolId);
             return ResponseEntity.status(403).body(Map.of("error", "Utilisateur dans une autre école"));
         }
 
-        log.info("User found: {} ({})", profile.getEmail(), profile.getRole());
-        return ResponseEntity.ok(new UserDTO(profile));
+        // Get user role
+        List<UserRole> roles = userRoleRepository.findByUserId(profile.getId());
+        UserRole userRole = roles.isEmpty() ? null : roles.get(0);
+
+        if (userRole == null) {
+            log.warn("User {} has no role assigned", email);
+            return ResponseEntity.status(403).body(Map.of("error", "Utilisateur sans rôle"));
+        }
+
+        log.info("User found: {} ({})", profile.getEmail(), userRole.getRole());
+        return ResponseEntity.ok(new UserDTO(profile, userRole));
     }
 
     /**
@@ -84,19 +100,29 @@ public class UserController {
         
         log.info("GET /users/school/{} - Listing users for messaging", schoolId);
 
-        // Find all profiles in this school with TEACHER or ADMIN role
-        List<Profile> profiles = profileRepository.findAll().stream()
-                .filter(p -> p.getSchool() != null && p.getSchool().getId().equals(schoolId))
-                .filter(p -> p.getRole() == Role.TEACHER || p.getRole() == Role.ADMIN)
-                .sorted(Comparator.comparing(Profile::getLastName, Comparator.nullsLast(String::compareToIgnoreCase))
-                        .thenComparing(Profile::getFirstName, Comparator.nullsLast(String::compareToIgnoreCase)))
+        // Find all UserRoles with TEACHER or ADMIN in this school
+        List<UserRole> teacherRoles = userRoleRepository.findByRole(UserRole.Role.TEACHER);
+        List<UserRole> adminRoles = userRoleRepository.findByRole(UserRole.Role.ADMIN);
+        
+        List<UUID> userIds = new ArrayList<>();
+        teacherRoles.forEach(r -> userIds.add(r.getUserId()));
+        adminRoles.forEach(r -> userIds.add(r.getUserId()));
+
+        // Get profiles for these users
+        Map<UUID, UserRole> roleMap = new HashMap<>();
+        teacherRoles.forEach(r -> roleMap.put(r.getUserId(), r));
+        adminRoles.forEach(r -> roleMap.put(r.getUserId(), r));
+
+        List<UserDTO> dtos = profileRepository.findAll().stream()
+                .filter(p -> userIds.contains(p.getId()))
+                .filter(p -> p.getSchoolId().equals(schoolId))
+                .sorted(Comparator.comparing(
+                        p -> p.getFullName() != null ? p.getFullName() : "", 
+                        Comparator.nullsLast(String::compareToIgnoreCase)))
+                .map(p -> new UserDTO(p, roleMap.get(p.getId())))
                 .collect(Collectors.toList());
 
-        log.info("Found {} users in school {}", profiles.size(), schoolId);
-
-        List<UserDTO> dtos = profiles.stream()
-                .map(UserDTO::new)
-                .collect(Collectors.toList());
+        log.info("Found {} users in school {}", dtos.size(), schoolId);
 
         return ResponseEntity.ok(dtos);
     }
@@ -116,30 +142,35 @@ public class UserController {
 
         String lowerQuery = query.toLowerCase().trim();
 
-        List<Profile> profiles = profileRepository.findAll().stream()
-                .filter(p -> p.getSchool() != null && p.getSchool().getId().equals(schoolId))
-                .filter(p -> p.getRole() == Role.TEACHER || p.getRole() == Role.ADMIN)
+        // Get TEACHER and ADMIN roles
+        List<UserRole> teacherRoles = userRoleRepository.findByRole(UserRole.Role.TEACHER);
+        List<UserRole> adminRoles = userRoleRepository.findByRole(UserRole.Role.ADMIN);
+        
+        List<UUID> userIds = new ArrayList<>();
+        teacherRoles.forEach(r -> userIds.add(r.getUserId()));
+        adminRoles.forEach(r -> userIds.add(r.getUserId()));
+
+        Map<UUID, UserRole> roleMap = new HashMap<>();
+        teacherRoles.forEach(r -> roleMap.put(r.getUserId(), r));
+        adminRoles.forEach(r -> roleMap.put(r.getUserId(), r));
+
+        List<UserDTO> dtos = profileRepository.findAll().stream()
+                .filter(p -> userIds.contains(p.getId()))
+                .filter(p -> p.getSchoolId().equals(schoolId))
                 .filter(p -> {
                     String email = p.getEmail() != null ? p.getEmail().toLowerCase() : "";
-                    String firstName = p.getFirstName() != null ? p.getFirstName().toLowerCase() : "";
-                    String lastName = p.getLastName() != null ? p.getLastName().toLowerCase() : "";
-                    String fullName = (firstName + " " + lastName).trim();
+                    String fullName = p.getFullName() != null ? p.getFullName().toLowerCase() : "";
                     
-                    return email.contains(lowerQuery) ||
-                           firstName.contains(lowerQuery) ||
-                           lastName.contains(lowerQuery) ||
-                           fullName.contains(lowerQuery);
+                    return email.contains(lowerQuery) || fullName.contains(lowerQuery);
                 })
-                .sorted(Comparator.comparing(Profile::getLastName, Comparator.nullsLast(String::compareToIgnoreCase))
-                        .thenComparing(Profile::getFirstName, Comparator.nullsLast(String::compareToIgnoreCase)))
+                .sorted(Comparator.comparing(
+                        p -> p.getFullName() != null ? p.getFullName() : "", 
+                        Comparator.nullsLast(String::compareToIgnoreCase)))
                 .limit(limit)
+                .map(p -> new UserDTO(p, roleMap.get(p.getId())))
                 .collect(Collectors.toList());
 
-        log.info("Search returned {} results", profiles.size());
-
-        List<UserDTO> dtos = profiles.stream()
-                .map(UserDTO::new)
-                .collect(Collectors.toList());
+        log.info("Search returned {} results", dtos.size());
 
         return ResponseEntity.ok(dtos);
     }
