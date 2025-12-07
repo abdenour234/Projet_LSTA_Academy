@@ -6,8 +6,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-schoolmanagement}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5432:5432"
+    # SECURITY: Do NOT expose the database port to the internet!
+    # The backend connects via the internal docker network.
+    # ports:
+    #   - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -61,6 +63,12 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION}
       APP_BASE_URL: ${APP_BASE_URL}
+      JAVA_TOOL_OPTIONS: "-Xms512m -Xmx768m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+
     ports:
       - "8080:8080"
     depends_on:
