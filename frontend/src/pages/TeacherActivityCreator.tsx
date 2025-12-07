@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authApi, teacherManagementApi, classSubjectApi, classApi, subjectApi } from '@/lib/api';
+import { authApi, classSubjectApi, classApi, subjectApi } from '@/lib/api';
 import { ActivityBuilder } from '@/components/activity/ActivityBuilder';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,12 +9,18 @@ import { ArrowLeft, Users, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
 
+interface Assignment {
+  class: any;
+  classId: string;
+  subjectId: string;
+}
+
 const TeacherActivityCreator = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
-  const [assignments, setAssignments] = useState<any[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [subjectName, setSubjectName] = useState<string>('');
 
@@ -27,35 +33,36 @@ const TeacherActivityCreator = () => {
           return;
         }
 
-        // 1. Récupérer le teacherId (celui de la table teachers)
-        const teacher = await teacherManagementApi.getByProfileId(user.id);
-        if (!teacher?.id) {
-          toast({ title: 'Erreur', description: 'Professeur non trouvé', variant: 'destructive' });
+        // ✅ CORRECTION: Utiliser directement l'ID du profil (user.id)
+        // Le backend ClassSubjectController utilise @PreAuthorize et accepte le teacherId
+        // qui correspond au profileId pour les enseignants
+        const teacherId = user.id; // ou user.teacherId si disponible
+
+        // Récupérer les assignations du prof
+        // L'endpoint /api/class-subjects/teacher/{teacherId} existe déjà
+        const assignmentsData = await classSubjectApi.getClassesForTeacher(teacherId);
+
+        if (!assignmentsData || assignmentsData.length === 0) {
+          toast({ 
+            title: 'Aucune classe', 
+            description: 'Vous n\'êtes assigné à aucune classe.', 
+            variant: 'destructive' 
+          });
           navigate('/teacher/dashboard');
           return;
         }
 
-        // 2. Récupérer les assignations du prof
-        const response = await classSubjectApi.getByTeacherId(teacher.id);
-        const data = response.data || response;
-
-        if (!data || data.length === 0) {
-          toast({ title: 'Aucune classe', description: 'Vous n\'êtes assigné à aucune classe.', variant: 'destructive' });
-          navigate('/teacher/dashboard');
-          return;
-        }
-
-        // 3. Charger les noms des classes + matière
-        const subjectId = data[0].subjectId;
+        // Récupérer le nom de la matière (toutes les assignations ont la même matière)
+        const subjectId = assignmentsData[0].subjectId;
         const subject = await subjectApi.getById(subjectId);
         setSubjectName(subject.name);
 
-        // ✅ FIX: Store the class object properly
+        // Charger les détails des classes
         const formatted = await Promise.all(
-          data.map(async (item: any) => {
+          assignmentsData.map(async (item: any) => {
             const cls = await classApi.getById(item.classId);
             return {
-              class: cls,           // ✅ Store full class object
+              class: cls,
               classId: item.classId,
               subjectId: item.subjectId,
             };
@@ -66,8 +73,12 @@ const TeacherActivityCreator = () => {
         setSelectedClassId(formatted[0].classId);
 
       } catch (err) {
-        console.error(err);
-        toast({ title: 'Erreur', description: 'Impossible de charger vos classes', variant: 'destructive' });
+        console.error('Error loading teacher assignments:', err);
+        toast({ 
+          title: 'Erreur', 
+          description: 'Impossible de charger vos classes', 
+          variant: 'destructive' 
+        });
         navigate('/teacher/dashboard');
       } finally {
         setLoading(false);
@@ -137,7 +148,10 @@ const TeacherActivityCreator = () => {
             approvalStatus="APPROVED"
             initialData={{ level: selected.class.level || 'Primaire' }}
             onSave={() => {
-              toast({ title: 'Activité créée !', description: `Pour la classe ${selected.class.name}` });
+              toast({ 
+                title: 'Activité créée !', 
+                description: `Pour la classe ${selected.class.name}. En attente d'approbation.` 
+              });
               navigate(-1);
             }}
           />

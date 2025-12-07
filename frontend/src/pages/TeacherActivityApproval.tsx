@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { teacherActivityApi, authApi, activityApi,teacherManagementApi } from '@/lib/api';
+import { teacherActivityApi, authApi, activityApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +35,6 @@ const TeacherActivityApproval = () => {
     loadActivities();
   }, []);
 
-  // ...existing code...
   const loadActivities = async () => {
     try {
       setLoading(true);
@@ -44,23 +43,24 @@ const TeacherActivityApproval = () => {
       const currentUser = await authApi.getCurrentUser();
       const schoolId = currentUser.schoolId;
 
-      // If teacher, get their subjectId to filter pending approvals
-      let subjectId: string | undefined = undefined;
-      if (currentUser.role === 'TEACHER') {
-        const teacherEntity = await teacherManagementApi.getByProfileId(currentUser.id);
-        subjectId = teacherEntity?.subjectId;
-      }
-
-      // Load pending "fait maison" activities for approval (filtered)
-      const pending = await teacherActivityApi.getPendingActivities(subjectId);
+      // ✅ CORRECTION: Utiliser l'API dédiée aux enseignants
+      // Le backend TeacherActivityController gère automatiquement:
+      // - La vérification que l'utilisateur est un enseignant
+      // - Le filtrage par matière de l'enseignant
+      // - Le filtrage par école
+      const pending = await teacherActivityApi.getPendingActivities();
       setPendingActivities(pending);
 
-      // Load all published activities for school, optionally filtered by teacher assignments
-      const published = await activityApi.getPublished({ schoolId, subjectId });
-      setAllActivities(published);
-
-    
-// ...existing code...
+      // Load all activities using the teacher's API
+      // Cela retourne toutes les activités de la matière de l'enseignant
+      const myActivities = await teacherActivityApi.getMyActivities();
+      
+      // Optionally, if you still want all published activities for the school:
+      // const published = await activityApi.getPublished({ schoolId });
+      // setAllActivities(published);
+      
+      // Ou utiliser uniquement les activités du prof:
+      setAllActivities(myActivities);
 
     } catch (error) {
       console.error('Error loading activities:', error);
@@ -248,7 +248,7 @@ const TeacherActivityApproval = () => {
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          Toutes les activités de l'école
+          Toutes mes activités
         </button>
       </div>
 
@@ -273,7 +273,7 @@ const TeacherActivityApproval = () => {
             <Card className="p-8 text-center">
               <h3 className="font-semibold text-lg mb-1">Aucune activité</h3>
               <p className="text-muted-foreground">
-                Aucune activité publiée dans l'école
+                Aucune activité pour votre matière
               </p>
             </Card>
           )
@@ -281,13 +281,13 @@ const TeacherActivityApproval = () => {
       </div>
 
       {/* Quick create button */}
-     <Button
-      size="lg"
-      onClick={() => navigate('/teacher/activity/new')}
-      className="w-full"
-    >
-      Créer une activité pour ma classe
-    </Button>
+      <Button
+        size="lg"
+        onClick={() => navigate('/teacher/activity/new')}
+        className="w-full mt-6"
+      >
+        Créer une activité pour ma classe
+      </Button>
     </div>
   );
 };
