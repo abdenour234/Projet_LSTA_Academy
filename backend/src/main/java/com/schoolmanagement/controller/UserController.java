@@ -1,6 +1,7 @@
 package com.schoolmanagement.controller;
 
 import com.schoolmanagement.entity.Profile;
+import com.schoolmanagement.entity.Profile.Role;
 import com.schoolmanagement.repository.ProfileRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,9 +87,9 @@ public class UserController {
         // Find all profiles in this school with TEACHER or ADMIN role
         List<Profile> profiles = profileRepository.findAll().stream()
                 .filter(p -> p.getSchool() != null && p.getSchool().getId().equals(schoolId))
-                .filter(p -> p.getRole().name().equals("TEACHER") || p.getRole().name().equals("ADMIN"))
-                .sorted(Comparator.comparing(Profile::getLastName)
-                        .thenComparing(Profile::getFirstName))
+                .filter(p -> p.getRole() == Role.TEACHER || p.getRole() == Role.ADMIN)
+                .sorted(Comparator.comparing(Profile::getLastName, Comparator.nullsLast(String::compareToIgnoreCase))
+                        .thenComparing(Profile::getFirstName, Comparator.nullsLast(String::compareToIgnoreCase)))
                 .collect(Collectors.toList());
 
         log.info("Found {} users in school {}", profiles.size(), schoolId);
@@ -117,15 +118,20 @@ public class UserController {
 
         List<Profile> profiles = profileRepository.findAll().stream()
                 .filter(p -> p.getSchool() != null && p.getSchool().getId().equals(schoolId))
-                .filter(p -> p.getRole().name().equals("TEACHER") || p.getRole().name().equals("ADMIN"))
-                .filter(p -> 
-                    p.getEmail().toLowerCase().contains(lowerQuery) ||
-                    p.getFirstName().toLowerCase().contains(lowerQuery) ||
-                    p.getLastName().toLowerCase().contains(lowerQuery) ||
-                    (p.getFirstName() + " " + p.getLastName()).toLowerCase().contains(lowerQuery)
-                )
-                .sorted(Comparator.comparing(Profile::getLastName)
-                        .thenComparing(Profile::getFirstName))
+                .filter(p -> p.getRole() == Role.TEACHER || p.getRole() == Role.ADMIN)
+                .filter(p -> {
+                    String email = p.getEmail() != null ? p.getEmail().toLowerCase() : "";
+                    String firstName = p.getFirstName() != null ? p.getFirstName().toLowerCase() : "";
+                    String lastName = p.getLastName() != null ? p.getLastName().toLowerCase() : "";
+                    String fullName = (firstName + " " + lastName).trim();
+                    
+                    return email.contains(lowerQuery) ||
+                           firstName.contains(lowerQuery) ||
+                           lastName.contains(lowerQuery) ||
+                           fullName.contains(lowerQuery);
+                })
+                .sorted(Comparator.comparing(Profile::getLastName, Comparator.nullsLast(String::compareToIgnoreCase))
+                        .thenComparing(Profile::getFirstName, Comparator.nullsLast(String::compareToIgnoreCase)))
                 .limit(limit)
                 .collect(Collectors.toList());
 
