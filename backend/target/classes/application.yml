@@ -47,6 +47,21 @@ minio:
   secret-key: ${MINIO_SECRET_KEY:minioadmin}
   bucket-name: ${MINIO_BUCKET_NAME:school-management}
 
+# Messaging Configuration
+messaging:
+  attachments:
+    max-file-size: ${MESSAGING_MAX_FILE_SIZE:20971520}  # 20 MB in bytes
+    allowed-types: ${MESSAGING_ALLOWED_TYPES:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/gif,video/mp4,text/plain}
+    presigned-url-expiry: ${MESSAGING_PRESIGNED_EXPIRY:3600}  # 1 hour in seconds
+    antivirus-enabled: ${MESSAGING_ANTIVIRUS_ENABLED:false}  # Set to true when antivirus is configured
+    storage-bucket: ${MESSAGING_STORAGE_BUCKET:messaging-files}
+  pagination:
+    default-page-size: ${MESSAGING_PAGE_SIZE:50}
+    max-page-size: ${MESSAGING_MAX_PAGE_SIZE:100}
+  gdpr:
+    soft-delete-retention-days: ${MESSAGING_RETENTION_DAYS:90}  # Days before permanent deletion
+    auto-purge-enabled: ${MESSAGING_AUTO_PURGE:true}
+
 # Application Configuration
 app:
   base-url: ${APP_BASE_URL:https://pedagoria.com}  # Public URL for file download links

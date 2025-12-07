@@ -219,15 +219,54 @@ CREATE TABLE IF NOT EXISTS public.conversations (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- TABLE: messages
+-- TABLE: conversations (Messagerie interne entre profs et admins)
+CREATE TABLE IF NOT EXISTS public.conversations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  school_id BIGINT NOT NULL REFERENCES public.schools(id) ON DELETE CASCADE,
+  participant1_id UUID NOT NULL,
+  participant2_id UUID NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  last_message_at TIMESTAMP WITH TIME ZONE,
+  deleted_at TIMESTAMP WITH TIME ZONE,
+  CONSTRAINT unique_conversation UNIQUE (participant1_id, participant2_id)
+);
+
+-- TABLE: messages (Enrichie pour messagerie avec pièces jointes)
 CREATE TABLE IF NOT EXISTS public.messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  conversation_id UUID NOT NULL REFERENCES public.conversations(id) ON DELETE CASCADE,
+  school_id BIGINT NOT NULL REFERENCES public.schools(id) ON DELETE CASCADE,
+  conversation_id UUID REFERENCES public.conversations(id) ON DELETE CASCADE,
   sender_id UUID NOT NULL,
+  recipient_id UUID NOT NULL,
+  subject TEXT NOT NULL,
   content TEXT NOT NULL,
-  attachments JSONB DEFAULT '[]'::jsonb,
-  read_by UUID[] DEFAULT '{}',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+  is_read BOOLEAN DEFAULT FALSE,
+  read_at TIMESTAMP WITH TIME ZONE,
+  read_by UUID,
+  has_attachments BOOLEAN DEFAULT FALSE,
+  attachment_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+-- TABLE: message_attachments (Pièces jointes stockées dans MinIO)
+CREATE TABLE IF NOT EXISTS public.message_attachments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  message_id UUID NOT NULL REFERENCES public.messages(id) ON DELETE CASCADE,
+  filename TEXT NOT NULL,
+  mime_type TEXT NOT NULL,
+  file_size BIGINT NOT NULL,
+  storage_path TEXT NOT NULL,
+  file_hash TEXT,
+  uploaded_by UUID NOT NULL,
+  school_id BIGINT NOT NULL REFERENCES public.schools(id) ON DELETE CASCADE,
+  uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  scan_status TEXT DEFAULT 'PENDING' CHECK (scan_status IN ('PENDING', 'CLEAN', 'INFECTED', 'ERROR')),
+  scan_details TEXT,
+  deleted_at TIMESTAMP WITH TIME ZONE,
+  purge_scheduled_at TIMESTAMP WITH TIME ZONE
 );
 
 -- TABLE: diagnostic_sessions
@@ -500,6 +539,25 @@ CREATE INDEX IF NOT EXISTS idx_conversations_participant_ids ON public.conversat
 CREATE INDEX IF NOT EXISTS idx_students_first_name_lower ON public.students(LOWER(first_name));
 CREATE INDEX IF NOT EXISTS idx_students_last_name_lower ON public.students(LOWER(last_name));
 
+-- Index pour conversations
+CREATE INDEX IF NOT EXISTS idx_conv_participant1 ON public.conversations(participant1_id);
+CREATE INDEX IF NOT EXISTS idx_conv_participant2 ON public.conversations(participant2_id);
+CREATE INDEX IF NOT EXISTS idx_conv_school ON public.conversations(school_id);
+CREATE INDEX IF NOT EXISTS idx_conv_last_message ON public.conversations(last_message_at DESC);
+
+-- Index pour messages enrichis
+CREATE INDEX IF NOT EXISTS idx_msg_conversation ON public.messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_msg_sender ON public.messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_msg_recipient ON public.messages(recipient_id);
+CREATE INDEX IF NOT EXISTS idx_msg_created ON public.messages(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_msg_school ON public.messages(school_id);
+
+-- Index pour pièces jointes
+CREATE INDEX IF NOT EXISTS idx_attachment_message ON public.message_attachments(message_id);
+CREATE INDEX IF NOT EXISTS idx_attachment_uploader ON public.message_attachments(uploaded_by);
+CREATE INDEX IF NOT EXISTS idx_attachment_scan_status ON public.message_attachments(scan_status);
+CREATE INDEX IF NOT EXISTS idx_attachment_school ON public.message_attachments(school_id);
+
 -- ============================================
 -- 5. SEED DATA
 -- ============================================
@@ -535,15 +593,74 @@ VALUES ('00000000-0000-0000-0000-000000000001'::UUID, 'SUPERADMIN')
 ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
 -- ============================================
+-- 6. TRIGGERS POUR MESSAGERIE
+-- ============================================
+
+-- Fonction pour mettre à jour last_message_at dans conversation
+CREATE OR REPLACE FUNCTION update_conversation_last_message()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE public.conversations 
+    SET last_message_at = NEW.created_at, updated_at = now()
+    WHERE id = NEW.conversation_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger pour mettre à jour last_message_at
+DROP TRIGGER IF EXISTS trigger_update_conversation_last_message ON public.messages;
+CREATE TRIGGER trigger_update_conversation_last_message
+AFTER INSERT ON public.messages
+FOR EACH ROW
+WHEN (NEW.conversation_id IS NOT NULL)
+EXECUTE FUNCTION update_conversation_last_message();
+
+-- ============================================
+-- 7. VUES POUR REPORTING MESSAGERIE
+-- ============================================
+
+-- Vue des conversations actives avec statistiques
+CREATE OR REPLACE VIEW active_conversations_stats AS
+SELECT 
+    c.id AS conversation_id,
+    c.school_id,
+    c.participant1_id,
+    c.participant2_id,
+    c.created_at,
+    c.last_message_at,
+    COUNT(m.id) AS total_messages,
+    COUNT(CASE WHEN m.is_read = false THEN 1 END) AS unread_messages,
+    MAX(m.created_at) AS latest_message_at
+FROM public.conversations c
+LEFT JOIN public.messages m ON m.conversation_id = c.id AND m.deleted_at IS NULL
+WHERE c.deleted_at IS NULL
+GROUP BY c.id, c.school_id, c.participant1_id, c.participant2_id, c.created_at, c.last_message_at;
+
+-- Vue des statistiques de fichiers par école
+CREATE OR REPLACE VIEW attachment_stats_by_school AS
+SELECT 
+    school_id,
+    COUNT(*) AS total_attachments,
+    SUM(file_size) AS total_storage_bytes,
+    ROUND(SUM(file_size)::NUMERIC / 1024 / 1024, 2) AS total_storage_mb,
+    COUNT(CASE WHEN scan_status = 'CLEAN' THEN 1 END) AS clean_files,
+    COUNT(CASE WHEN scan_status = 'PENDING' THEN 1 END) AS pending_scan,
+    COUNT(CASE WHEN scan_status = 'INFECTED' THEN 1 END) AS infected_files
+FROM public.message_attachments
+WHERE deleted_at IS NULL
+GROUP BY school_id;
+
+-- ============================================
 -- INITIALIZATION COMPLETE
 -- ============================================
 
 DO $$
 BEGIN
   RAISE NOTICE '✅ Database initialization complete!';
-  RAISE NOTICE '📊 Schema version: 2.1 (Trigger Order Fixed)';
+  RAISE NOTICE '📊 Schema version: 2.2 (Internal Messaging System)';
   RAISE NOTICE '🔐 SUPERADMIN: admin@admin.com / admin123';
   RAISE NOTICE '🏫 Demo schools: 6 schools loaded';
   RAISE NOTICE '👥 Roles: SUPERADMIN, ADMIN, TEACHER, STUDENT';
-  RAISE NOTICE '📈 Total indexes: 48';
+  RAISE NOTICE '💬 Messagerie: Conversations, Messages, Attachments';
+  RAISE NOTICE '📈 Total indexes: 60+';
 END $$;

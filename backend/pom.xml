@@ -103,6 +103,19 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
         
+        <!-- WebSocket Support for Real-time Messaging -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        
+        <!-- Apache Tika for MIME Type Detection -->
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>2.9.1</version>
+        </dependency>
+        
         <!-- Spring Boot Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
