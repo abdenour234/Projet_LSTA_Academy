@@ -29,6 +29,7 @@ import ClassManagement from "./pages/ClassManagement";
 import TeacherManagement from "./pages/TeacherManagement";
 import TeacherSessions from "./pages/TeacherSessions";
 import MessagingPage from "./pages/MessagingPage";
+import MessagingDashboard from "./pages/MessagingDashboard";
 import ActivityTracking from "./pages/ActivityTracking";
 import NotFound from "./pages/NotFound";
 import StudentManagement from "./pages/StudentManagement";
@@ -289,6 +290,14 @@ const App = () => (
               element={
                 <PrivateRoute>
                   <MessagingPage />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/messaging" 
+              element={
+                <PrivateRoute requiredRole={["TEACHER", "ADMIN"]}>
+                  <MessagingDashboard />
                 </PrivateRoute>
               } 
             />

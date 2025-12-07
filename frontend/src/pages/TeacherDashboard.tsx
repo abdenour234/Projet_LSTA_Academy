@@ -272,7 +272,7 @@ if (userRole === 'TEACHER') {
           </Card>
 
           <Card className="p-5 cursor-pointer hover:bg-emerald-50 hover:scale-105 transition-all border-2 border-blue-200 hover:border-emerald-400 rounded-lg"
-            onClick={() => navigate(`/school/${id}/messages`)}>
+            onClick={() => navigate('/messaging')}>
             <MessageSquare className="h-5 w-5 text-blue-500 mb-2" />
             <h3 className="font-semibold text-blue-600 text-sm">Messagerie</h3>
             <p className="text-xs text-blue-500">Mes messages</p>

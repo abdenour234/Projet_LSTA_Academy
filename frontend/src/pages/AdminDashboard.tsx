@@ -348,6 +348,14 @@ const AdminDashboard = () => {
                 Enseignants
               </Button>
               <Button 
+                onClick={() => navigate('/messaging')}
+                variant="ghost"
+                className="text-sm h-9 font-medium"
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Messagerie
+              </Button>
+              <Button 
                 onClick={() => navigate(`/school/${id}/admin/classes`)}
                 className="text-sm font-medium h-9"
               >
