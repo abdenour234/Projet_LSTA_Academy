@@ -334,12 +334,12 @@ public class EnhancedMessageService {
 
         // Get sender name
         profileRepository.findByUserId(message.getSenderId()).ifPresent(profile -> 
-            dto.setSenderName(profile.getFirstName() + " " + profile.getLastName())
+            dto.setSenderName(profile.getFullName())
         );
 
         // Get recipient name
         profileRepository.findByUserId(message.getRecipientId()).ifPresent(profile -> 
-            dto.setRecipientName(profile.getFirstName() + " " + profile.getLastName())
+            dto.setRecipientName(profile.getFullName())
         );
 
         // Map attachments

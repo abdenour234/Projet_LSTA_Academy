@@ -211,7 +211,7 @@ public class ConversationService {
         // Get participant name and role
         Profile profile = profileRepository.findByUserId(otherParticipantId).orElse(null);
         if (profile != null) {
-            dto.setParticipantName(profile.getFirstName() + " " + profile.getLastName());
+            dto.setParticipantName(profile.getFullName());
         }
         
         // Get participant role
