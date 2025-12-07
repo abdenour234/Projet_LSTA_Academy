@@ -140,9 +140,13 @@ async function request<T>(
   const { skipAuth = false, ...fetchOptions } = options;
   
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
     ...fetchOptions.headers,
   };
+
+  // Only set Content-Type for non-FormData requests
+  if (!(fetchOptions.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   // Add authorization header if token exists and not skipped
   if (!skipAuth) {
@@ -154,11 +158,15 @@ async function request<T>(
 
   const url = `${API_BASE_URL}${endpoint}`;
   
+  console.log('[API] Request:', { method: fetchOptions.method, url, hasBody: !!fetchOptions.body });
+  
   try {
     const response = await fetch(url, {
       ...fetchOptions,
       headers,
     });
+
+    console.log('[API] Response:', { status: response.status, ok: response.ok, url });
 
     // Handle 401 Unauthorized - token expired or invalid
     if (response.status === 401 && !skipAuth) {
@@ -187,6 +195,8 @@ async function request<T>(
         errorMessage = data.error;
       }
       
+      console.error('[API] Error response:', { status: response.status, message: errorMessage, data });
+      
       throw new ApiError(
         response.status,
         errorMessage,
@@ -199,6 +209,7 @@ async function request<T>(
     if (error instanceof ApiError) {
       throw error;
     }
+    console.error('[API] Network error:', error);
     throw new ApiError(0, error instanceof Error ? error.message : 'Network error');
   }
 }
@@ -208,12 +219,26 @@ export const api = {
   get: <T>(endpoint: string, options?: RequestOptions) => 
     request<T>(endpoint, { ...options, method: 'GET' }),
 
-  post: <T>(endpoint: string, data?: any, options?: RequestOptions) =>
-    request<T>(endpoint, {
+  post: <T>(endpoint: string, data?: any, options?: RequestOptions) => {
+    // Handle FormData separately
+    if (data instanceof FormData) {
+      return request<T>(endpoint, {
+        ...options,
+        method: 'POST',
+        body: data,
+        headers: {
+          // Don't set Content-Type for FormData - browser will set it with boundary
+          ...(options?.headers || {}),
+        },
+      });
+    }
+    
+    return request<T>(endpoint, {
       ...options,
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
-    }),
+    });
+  },
 
   put: <T>(endpoint: string, data?: any, options?: RequestOptions) =>
     request<T>(endpoint, {

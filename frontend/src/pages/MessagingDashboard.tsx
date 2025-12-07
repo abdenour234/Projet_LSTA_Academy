@@ -31,6 +31,11 @@ export default function MessagingDashboard() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Get schoolId safely
+  const schoolId = user?.schoolId || user?.school_id || 1;
+
+  console.log('[MESSAGING] User context:', { userId: user?.id, schoolId, role: user?.role });
+
   // WebSocket for real-time notifications
   const { isConnected } = useMessagingWebSocket({
     userId: user?.id || '',
@@ -47,12 +52,19 @@ export default function MessagingDashboard() {
 
   // Load conversations list
   const loadConversations = async () => {
+    if (!user?.id) {
+      console.warn('[MESSAGING] No user ID, skipping conversation load');
+      return;
+    }
+    
     try {
       setLoading(true);
+      console.log('[MESSAGING] Loading conversations for user:', user.id);
       const response = await messagingService.getConversations(0, 50);
-      setConversations(response.content);
+      console.log('[MESSAGING] Conversations loaded:', response);
+      setConversations(response.content || []);
     } catch (error) {
-      console.error('Failed to load conversations:', error);
+      console.error('[MESSAGING] Failed to load conversations:', error);
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les conversations',
@@ -77,15 +89,17 @@ export default function MessagingDashboard() {
   const loadMessages = async (conversationId: string) => {
     try {
       setLoading(true);
+      console.log('[MESSAGING] Loading messages:', { conversationId, schoolId });
       const response = await messagingService.getConversationMessages(
         conversationId,
-        user?.schoolId || 1,
+        schoolId,
         0,
         100
       );
-      setMessages(response.content.reverse()); // Show oldest first
+      console.log('[MESSAGING] Messages loaded:', response);
+      setMessages(response.content?.reverse() || []); // Show oldest first
     } catch (error) {
-      console.error('Failed to load messages:', error);
+      console.error('[MESSAGING] Failed to load messages:', error);
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les messages',
@@ -102,7 +116,7 @@ export default function MessagingDashboard() {
     loadMessages(conversation.id);
     
     // Mark all messages as read
-    messagingService.markAllMessagesAsRead(conversation.id, user?.schoolId || 1);
+    messagingService.markAllMessagesAsRead(conversation.id, schoolId);
   };
 
   // Handle new message via WebSocket
@@ -144,6 +158,12 @@ export default function MessagingDashboard() {
     try {
       setLoading(true);
       
+      console.log('[MESSAGING] Sending message:', { 
+        conversationId: selectedConversation.id, 
+        schoolId,
+        hasAttachments: attachments.length > 0 
+      });
+      
       await messagingService.sendMessage(
         {
           conversationId: selectedConversation.id,
@@ -151,7 +171,7 @@ export default function MessagingDashboard() {
           content: messageContent,
           attachments: attachments.length > 0 ? attachments : undefined,
         },
-        user?.schoolId || 1
+        schoolId
       );
 
       // Clear form
@@ -168,7 +188,7 @@ export default function MessagingDashboard() {
         description: 'Votre message a été envoyé avec succès',
       });
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error('[MESSAGING] Failed to send message:', error);
       toast({
         title: 'Erreur',
         description: "Impossible d'envoyer le message",

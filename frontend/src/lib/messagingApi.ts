@@ -86,10 +86,10 @@ class MessagingService {
    */
   async createOrGetConversation(participantId: string, schoolId: number): Promise<Conversation> {
     const response = await api.post<Conversation>(
-      `/api/messaging/conversations?schoolId=${schoolId}`,
+      `/messaging/conversations`,
       { participantId, schoolId }
     );
-    return response.data;
+    return response;
   }
 
   /**
@@ -97,7 +97,7 @@ class MessagingService {
    */
   async getConversations(page: number = 0, size: number = 20): Promise<PagedResponse<Conversation>> {
     const response = await api.get<PagedResponse<Conversation>>(
-      `/api/messaging/conversations?page=${page}&size=${size}`
+      `/messaging/conversations?page=${page}&size=${size}`
     );
     return response.data;
   }
@@ -106,15 +106,15 @@ class MessagingService {
    * Get specific conversation by ID
    */
   async getConversation(conversationId: string): Promise<Conversation> {
-    const response = await api.get<Conversation>(`/api/messaging/conversations/${conversationId}`);
-    return response.data;
+    const response = await api.get<Conversation>(`/messaging/conversations/${conversationId}`);
+    return response;
   }
 
   /**
    * Delete a conversation
    */
   async deleteConversation(conversationId: string, schoolId: number): Promise<void> {
-    await api.delete(`/api/messaging/conversations/${conversationId}?schoolId=${schoolId}`);
+    await api.delete(`/messaging/conversations/${conversationId}?schoolId=${schoolId}`);
   }
 
   // ========== MESSAGES ==========
@@ -135,7 +135,7 @@ class MessagingService {
     }
 
     const response = await api.post<Message>(
-      `/api/messaging/enhanced?schoolId=${schoolId}`,
+      `/messaging/enhanced?schoolId=${schoolId}`,
       formData,
       {
         headers: {
@@ -143,7 +143,7 @@ class MessagingService {
         },
       }
     );
-    return response.data;
+    return response;
   }
 
   /**
@@ -156,9 +156,9 @@ class MessagingService {
     size: number = 50
   ): Promise<PagedResponse<Message>> {
     const response = await api.get<PagedResponse<Message>>(
-      `/api/messaging/enhanced/conversation/${conversationId}?schoolId=${schoolId}&page=${page}&size=${size}`
+      `/messaging/enhanced/conversation/${conversationId}?schoolId=${schoolId}&page=${page}&size=${size}`
     );
-    return response.data;
+    return response;
   }
 
   /**
@@ -185,31 +185,31 @@ class MessagingService {
    */
   async markMessageAsRead(messageId: string, schoolId: number): Promise<Message> {
     const response = await api.put<Message>(
-      `/api/messaging/enhanced/${messageId}/read?schoolId=${schoolId}`
+      `/messaging/enhanced/${messageId}/read?schoolId=${schoolId}`
     );
-    return response.data;
+    return response;
   }
 
   /**
    * Mark all messages in conversation as read
    */
   async markAllMessagesAsRead(conversationId: string, schoolId: number): Promise<void> {
-    await api.put(`/api/messaging/enhanced/conversation/${conversationId}/read-all?schoolId=${schoolId}`);
+    await api.put(`/messaging/enhanced/conversation/${conversationId}/read-all?schoolId=${schoolId}`);
   }
 
   /**
    * Get unread message count
    */
   async getUnreadCount(): Promise<number> {
-    const response = await api.get<{ unreadCount: number }>('/api/messaging/enhanced/unread-count');
-    return response.data.unreadCount;
+    const response = await api.get<{ unreadCount: number }>('/messaging/enhanced/unread-count');
+    return response.unreadCount || 0;
   }
 
   /**
    * Delete a message
    */
   async deleteMessage(messageId: string, schoolId: number): Promise<void> {
-    await api.delete(`/api/messaging/enhanced/${messageId}?schoolId=${schoolId}`);
+    await api.delete(`/messaging/enhanced/${messageId}?schoolId=${schoolId}`);
   }
 
   // ========== FILE ATTACHMENTS ==========
@@ -222,7 +222,7 @@ class MessagingService {
     formData.append('file', file);
 
     const response = await api.post<Attachment>(
-      `/api/messaging/attachments/upload?messageId=${messageId}&schoolId=${schoolId}`,
+      `/messaging/attachments/upload?messageId=${messageId}&schoolId=${schoolId}`,
       formData,
       {
         headers: {
@@ -230,7 +230,7 @@ class MessagingService {
         },
       }
     );
-    return response.data;
+    return response;
   }
 
   /**
@@ -238,13 +238,9 @@ class MessagingService {
    */
   async generateUploadUrl(filename: string, messageId: string, schoolId: number): Promise<PresignedUrl> {
     const response = await api.post<PresignedUrl>(
-      `/api/messaging/attachments/presigned-upload-url`,
-      null,
-      {
-        params: { filename, messageId, schoolId },
-      }
+      `/messaging/attachments/presigned-upload-url?filename=${filename}&messageId=${messageId}&schoolId=${schoolId}`
     );
-    return response.data;
+    return response;
   }
 
   /**
@@ -252,16 +248,16 @@ class MessagingService {
    */
   async generateDownloadUrl(attachmentId: string, schoolId: number): Promise<PresignedUrl> {
     const response = await api.get<PresignedUrl>(
-      `/api/messaging/attachments/${attachmentId}/download-url?schoolId=${schoolId}`
+      `/messaging/attachments/${attachmentId}/download-url?schoolId=${schoolId}`
     );
-    return response.data;
+    return response;
   }
 
   /**
    * Delete an attachment
    */
   async deleteAttachment(attachmentId: string, schoolId: number): Promise<void> {
-    await api.delete(`/api/messaging/attachments/${attachmentId}?schoolId=${schoolId}`);
+    await api.delete(`/messaging/attachments/${attachmentId}?schoolId=${schoolId}`);
   }
 
   /**
