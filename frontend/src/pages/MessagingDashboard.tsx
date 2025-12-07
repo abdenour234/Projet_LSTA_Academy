@@ -7,6 +7,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import messagingService, { Conversation, Message } from '@/lib/messagingApi';
 import useMessagingWebSocket from '@/hooks/useMessagingWebSocket';
+import NewConversationDialog from '@/components/messaging/NewConversationDialog';
 import { MessageSquare, Users, Send, Paperclip, Search, X, CheckCheck, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -270,7 +271,7 @@ export default function MessagingDashboard() {
       <div className="flex-1 flex overflow-hidden">
         {/* Conversations List */}
         <div className="w-96 bg-white border-r flex flex-col">
-          <div className="p-4 border-b">
+          <div className="p-4 border-b space-y-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
@@ -280,6 +281,13 @@ export default function MessagingDashboard() {
                 className="pl-10"
               />
             </div>
+            
+            {/* New Conversation Button */}
+            <NewConversationDialog
+              schoolId={schoolId}
+              currentUserId={user?.id || ''}
+              onConversationCreated={loadConversations}
+            />
           </div>
 
           <ScrollArea className="flex-1">

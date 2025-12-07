@@ -151,7 +151,7 @@ export default function MessagingPage() {
     try {
       // Trouver le destinataire par email
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/users/by-email?email=${encodeURIComponent(recipientEmail)}&schoolId=${schoolId}`,
+        `${import.meta.env.VITE_API_URL}/users/by-email?email=${encodeURIComponent(recipientEmail)}&schoolId=${schoolId}`,
         {
           headers: {
             'Authorization': `Bearer ${auth.getToken()}`,
