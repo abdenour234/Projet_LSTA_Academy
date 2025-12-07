@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LogOut, BookOpen, ClipboardList, Plus, BarChart3, Eye, Calendar, MessageSquare, Loader2, CheckCircle } from 'lucide-react';
+import { LogOut, BookOpen, ClipboardList, Plus, BarChart3, Eye, Calendar, MessageSquare, Loader2, CheckCircle, UserCheck, ClipboardCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -244,7 +244,7 @@ if (userRole === 'TEACHER') {
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-5">
           <Card className="p-5 cursor-pointer hover:bg-emerald-50 hover:scale-105 transition-all border-2 border-blue-200 hover:border-emerald-400 rounded-lg relative"
             onClick={() => navigate(`/school/${id}/teacher/activities/approval`)}>
             <CheckCircle className="h-5 w-5 text-blue-500 mb-2" />
@@ -276,6 +276,20 @@ if (userRole === 'TEACHER') {
             <MessageSquare className="h-5 w-5 text-blue-500 mb-2" />
             <h3 className="font-semibold text-blue-600 text-sm">Messagerie</h3>
             <p className="text-xs text-blue-500">Mes messages</p>
+          </Card>
+
+          <Card className="p-5 cursor-pointer hover:bg-emerald-50 hover:scale-105 transition-all border-2 border-blue-200 hover:border-emerald-400 rounded-lg"
+            onClick={() => navigate(`/school/${id}/teacher/student-attendance/mark`)}>
+            <UserCheck className="h-5 w-5 text-blue-500 mb-2" />
+            <h3 className="font-semibold text-blue-600 text-sm">Marquer Absences</h3>
+            <p className="text-xs text-blue-500">Absences étudiants</p>
+          </Card>
+
+          <Card className="p-5 cursor-pointer hover:bg-emerald-50 hover:scale-105 transition-all border-2 border-blue-200 hover:border-emerald-400 rounded-lg"
+            onClick={() => navigate(`/school/${id}/teacher/student-attendance/track`)}>
+            <ClipboardCheck className="h-5 w-5 text-blue-500 mb-2" />
+            <h3 className="font-semibold text-blue-600 text-sm">Suivi Absences</h3>
+            <p className="text-xs text-blue-500">Consulter absences</p>
           </Card>
         </div>
 
