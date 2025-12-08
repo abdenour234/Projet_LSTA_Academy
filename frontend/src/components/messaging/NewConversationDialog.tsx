@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Search, Plus, Check } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { auth } from '@/lib/api';
+import messagingService from '@/lib/messagingApi';
 
 interface User {
   id: string;
@@ -122,32 +123,16 @@ export default function NewConversationDialog({
       setCreating(true);
       console.log('[NEW_CONVERSATION] Creating conversation with:', selectedUser);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/messaging/conversations`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${auth.getToken()}`,
-          },
-          body: JSON.stringify({
-            participantId: selectedUser.id,
-            subject: subject.trim() || null,
-            schoolId: schoolId,
-          }),
-        }
+      const conversation = await messagingService.createOrGetConversation(
+        selectedUser.id,
+        schoolId
       );
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la création de la conversation');
-      }
-
-      const conversation = await response.json();
-      console.log('[NEW_CONVERSATION] Conversation created:', conversation);
+      
+      console.log('[NEW_CONVERSATION] Conversation created/retrieved:', conversation);
 
       toast({
         title: 'Succès',
-        description: `Conversation créée avec ${selectedUser.firstName} ${selectedUser.lastName}`,
+        description: `Conversation ouverte avec ${selectedUser.firstName} ${selectedUser.lastName}`,
       });
 
       // Reset form
@@ -156,13 +141,13 @@ export default function NewConversationDialog({
       setSearchTerm('');
       setOpen(false);
 
-      // Notify parent
+      // Notify parent to refresh conversations
       onConversationCreated();
     } catch (error) {
       console.error('[NEW_CONVERSATION] Error creating conversation:', error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de créer la conversation',
+        description: error instanceof Error ? error.message : 'Impossible de créer la conversation',
         variant: 'destructive',
       });
     } finally {
