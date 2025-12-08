@@ -48,6 +48,9 @@ public class SecurityConfig {
                 // Public endpoints - Authentication
                 .requestMatchers("/api/auth/login", "/api/auth/signup-admin", "/api/auth/register").permitAll()
                 
+                // WebSocket endpoints - allow SockJS handshake and info requests
+                .requestMatchers("/ws/**", "/api/ws/**").permitAll()
+                
                 // Public endpoints - School discovery (GET only)
                 .requestMatchers(request -> 
                     "GET".equals(request.getMethod()) && 

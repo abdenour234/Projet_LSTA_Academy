@@ -122,6 +122,7 @@ export default function NewConversationDialog({
     try {
       setCreating(true);
       console.log('[NEW_CONVERSATION] Creating conversation with:', selectedUser);
+      console.log('[NEW_CONVERSATION] Using schoolId:', schoolId, 'from user.schoolId:', selectedUser.schoolId);
 
       const conversation = await messagingService.createOrGetConversation(
         selectedUser.id,
@@ -145,9 +146,15 @@ export default function NewConversationDialog({
       onConversationCreated();
     } catch (error) {
       console.error('[NEW_CONVERSATION] Error creating conversation:', error);
+      
+      // Show backend error message if available
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Impossible de créer la conversation';
+      
       toast({
         title: 'Erreur',
-        description: error instanceof Error ? error.message : 'Impossible de créer la conversation',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

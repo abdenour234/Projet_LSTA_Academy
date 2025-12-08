@@ -99,6 +99,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Validate token with backend
       const currentUser = await authApi.getCurrentUser();
       console.log('[AUTH] User fetched from API:', currentUser);
+      console.log('[AUTH] User schoolId type:', typeof currentUser.schoolId, 'value:', currentUser.schoolId);
       
       // ✅ CRITICAL: Normalize role to ensure consistency
       const userRole = normalizeRole(currentUser.role);
