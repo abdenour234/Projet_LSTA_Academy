@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LogOut, BookOpen, ClipboardList, Plus, BarChart3, Eye, Calendar, MessageSquare, Loader2, CheckCircle, UserCheck, ClipboardCheck } from 'lucide-react';
+import { LogOut, BookOpen, ClipboardList, Plus, BarChart3, Eye, Calendar, Loader2, CheckCircle, UserCheck, ClipboardCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -269,13 +269,6 @@ if (userRole === 'TEACHER') {
             <ClipboardList className="h-5 w-5 text-blue-500 mb-2" />
             <h3 className="font-semibold text-blue-600 text-sm">Diagnostic</h3>
             <p className="text-xs text-blue-500">Nouveau diagnostic</p>
-          </Card>
-
-          <Card className="p-5 cursor-pointer hover:bg-emerald-50 hover:scale-105 transition-all border-2 border-blue-200 hover:border-emerald-400 rounded-lg"
-            onClick={() => navigate('/messaging')}>
-            <MessageSquare className="h-5 w-5 text-blue-500 mb-2" />
-            <h3 className="font-semibold text-blue-600 text-sm">Messagerie</h3>
-            <p className="text-xs text-blue-500">Mes messages</p>
           </Card>
 
           <Card className="p-5 cursor-pointer hover:bg-emerald-50 hover:scale-105 transition-all border-2 border-blue-200 hover:border-emerald-400 rounded-lg"

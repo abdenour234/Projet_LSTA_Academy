@@ -28,7 +28,6 @@ import ActivityView from "./pages/ActivityView";
 import ClassManagement from "./pages/ClassManagement";
 import TeacherManagement from "./pages/TeacherManagement";
 import TeacherSessions from "./pages/TeacherSessions";
-import MessagingPage from "./pages/MessagingPage";
 import MessagingDashboard from "./pages/MessagingDashboard";
 import ActivityTracking from "./pages/ActivityTracking";
 import NotFound from "./pages/NotFound";
@@ -45,6 +44,7 @@ import StudentAttendanceMarking from "./pages/StudentAttendanceMarking";
 import StudentAttendanceTracking from "./pages/StudentAttendanceTracking";
 import AdminSessionDetails from "./pages/AdminSessionDetails";
 import TeacherActivityCreator from "./pages/TeacherActivityCreator";
+import FloatingMessenger from "./components/FloatingMessenger";
 
 const queryClient = new QueryClient();
 
@@ -329,6 +329,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <FloatingMessenger />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

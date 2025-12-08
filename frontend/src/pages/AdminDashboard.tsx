@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LogOut, Plus, Trash2, BarChart3, Eye, Edit, Users, GraduationCap, Clock, MessageSquare, Mail, BookOpen, Search, Library, Calendar } from 'lucide-react';
+import { LogOut, Plus, Trash2, BarChart3, Eye, Edit, Users, GraduationCap, Clock, Mail, BookOpen, Search, Library, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -348,14 +348,6 @@ const AdminDashboard = () => {
                 Enseignants
               </Button>
               <Button 
-                onClick={() => navigate('/messaging')}
-                variant="ghost"
-                className="text-sm h-9 font-medium"
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Messagerie
-              </Button>
-              <Button 
                 onClick={() => navigate(`/school/${id}/admin/classes`)}
                 className="text-sm font-medium h-9"
               >
@@ -386,16 +378,7 @@ const AdminDashboard = () => {
         {/* Quick Actions Section */}
         <div>
           <h2 className="text-lg font-semibold text-blue-600 mb-4">Actions Rapides</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card 
-              className="p-5 cursor-pointer hover:bg-emerald-50 hover:scale-105 transition-all border-2 border-blue-200 hover:border-emerald-400 rounded-lg"
-              onClick={() => navigate('/messaging')}
-            >
-              <MessageSquare className="h-5 w-5 text-blue-500 mb-2" />
-              <h3 className="font-semibold text-blue-600 text-sm">Messagerie</h3>
-              <p className="text-xs text-blue-500">Communication interne</p>
-            </Card>
-            
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <Card 
               className="p-5 cursor-pointer hover:bg-emerald-50 hover:scale-105 transition-all border-2 border-blue-200 hover:border-emerald-400 rounded-lg"
               onClick={() => navigate(`/school/${id}/admin/classes`)}

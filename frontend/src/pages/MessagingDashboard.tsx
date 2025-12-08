@@ -20,7 +20,11 @@ import { toast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-export default function MessagingDashboard() {
+interface MessagingDashboardProps {
+  embedded?: boolean;
+}
+
+export default function MessagingDashboard({ embedded = false }: MessagingDashboardProps) {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -232,17 +236,19 @@ export default function MessagingDashboard() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <MessageSquare className="w-8 h-8 text-primary" />
-            <div>
-              <h1 className="text-2xl font-bold">Messagerie Interne</h1>
-              <p className="text-sm text-gray-500">
-                Communication sécurisée entre professeurs et administrateurs
-              </p>
+    <div className={`flex flex-col bg-gray-50 ${embedded ? 'h-full' : 'h-screen'}`}>
+      {/* Header - Hide in embedded mode */}
+      {!embedded && (
+        <div className="bg-white border-b px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <MessageSquare className="w-8 h-8 text-primary" />
+              <div>
+                <h1 className="text-2xl font-bold">Messagerie Interne</h1>
+                <p className="text-sm text-gray-500">
+                  Communication sécurisée entre professeurs et administrateurs
+                </p>
+              </div>
             </div>
           </div>
           
@@ -267,6 +273,7 @@ export default function MessagingDashboard() {
           </div>
         </div>
       </div>
+      )}
 
       <div className="flex-1 flex overflow-hidden">
         {/* Conversations List */}
