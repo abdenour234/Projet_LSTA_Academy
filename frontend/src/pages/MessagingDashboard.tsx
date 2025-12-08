@@ -250,29 +250,28 @@ export default function MessagingDashboard({ embedded = false }: MessagingDashbo
                 </p>
               </div>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {isConnected ? (
-              <Badge variant="outline" className="border-green-500 text-green-700">
-                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                Connecté
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="border-gray-500 text-gray-700">
-                <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
-                Déconnecté
-              </Badge>
-            )}
             
-            {unreadCount > 0 && (
-              <Badge variant="default" className="px-3">
-                {unreadCount} non lu{unreadCount > 1 ? 's' : ''}
-              </Badge>
-            )}
+            <div className="flex items-center gap-4">
+              {isConnected ? (
+                <Badge variant="outline" className="border-green-500 text-green-700">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                  Connecté
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="border-gray-500 text-gray-700">
+                  <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
+                  Déconnecté
+                </Badge>
+              )}
+              
+              {unreadCount > 0 && (
+                <Badge variant="default" className="px-3">
+                  {unreadCount} non lu{unreadCount > 1 ? 's' : ''}
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
-      </div>
       )}
 
       <div className="flex-1 flex overflow-hidden">
