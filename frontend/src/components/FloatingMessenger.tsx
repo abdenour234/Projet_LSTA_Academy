@@ -17,13 +17,13 @@ export default function FloatingMessenger() {
   const [isMaximized, setIsMaximized] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Only show for TEACHER and ADMIN
-  if (!user || (user.role !== 'TEACHER' && user.role !== 'ADMIN')) {
-    return null;
-  }
-
   // Load unread count
   useEffect(() => {
+    // Only fetch if user is TEACHER or ADMIN
+    if (!user || (user.role !== 'TEACHER' && user.role !== 'ADMIN')) {
+      return;
+    }
+
     const loadUnreadCount = async () => {
       try {
         const count = await messagingService.getUnreadCount();
@@ -38,7 +38,12 @@ export default function FloatingMessenger() {
     // Refresh every 30 seconds
     const interval = setInterval(loadUnreadCount, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
+
+  // Only show for TEACHER and ADMIN
+  if (!user || (user.role !== 'TEACHER' && user.role !== 'ADMIN')) {
+    return null;
+  }
 
   return (
     <>

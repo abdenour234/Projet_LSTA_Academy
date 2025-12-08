@@ -37,13 +37,13 @@ export default function MessagingDashboard({ embedded = false }: MessagingDashbo
   const [searchTerm, setSearchTerm] = useState('');
 
   // Get schoolId safely
-  const schoolId = user?.schoolId || user?.school_id || 1;
+  const schoolId = user?.schoolId ? parseInt(user.schoolId) : 1;
 
   console.log('[MESSAGING] User context:', { userId: user?.id, schoolId, role: user?.role });
 
   // WebSocket for real-time notifications
   const { isConnected } = useMessagingWebSocket({
-    userId: user?.id || '',
+    userId: user?.id ? String(user.id) : '',
     onNewMessage: handleNewMessage,
     onReadReceipt: handleReadReceipt,
     autoConnect: true,
@@ -291,7 +291,7 @@ export default function MessagingDashboard({ embedded = false }: MessagingDashbo
             {/* New Conversation Button */}
             <NewConversationDialog
               schoolId={schoolId}
-              currentUserId={user?.id || ''}
+              currentUserId={user?.id ? String(user.id) : ''}
               onConversationCreated={loadConversations}
             />
           </div>
