@@ -288,8 +288,8 @@ const App = () => (
             <Route 
               path="/school/:id/messages" 
               element={
-                <PrivateRoute>
-                  <MessagingPage />
+                <PrivateRoute requiredRole={["TEACHER", "ADMIN"]}>
+                  <MessagingDashboard />
                 </PrivateRoute>
               } 
             />
