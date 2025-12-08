@@ -7,6 +7,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import messagingService, { Conversation, Message } from '@/lib/messagingApi';
 import useMessagingWebSocket from '@/hooks/useMessagingWebSocket';
+import useDebounce from '@/hooks/useDebounce';
 import NewConversationDialog from '@/components/messaging/NewConversationDialog';
 import { MessageSquare, Users, Send, Paperclip, Search, X, CheckCheck, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,6 +36,9 @@ export default function MessagingDashboard({ embedded = false }: MessagingDashbo
   const [loading, setLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Debounce search term to avoid filtering on every keystroke
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   // Get schoolId safely - validate it exists
   const schoolId = user?.schoolId ? parseInt(user.schoolId) : undefined;
@@ -115,7 +119,7 @@ export default function MessagingDashboard({ embedded = false }: MessagingDashbo
         100
       );
       console.log('[MESSAGING] Messages loaded:', response);
-      setMessages(response.content?.reverse() || []); // Show oldest first
+      setMessages(response.content || []); // Keep backend order (DESC - newest first)
     } catch (error) {
       console.error('[MESSAGING] Failed to load messages:', error);
       toast({
@@ -133,19 +137,28 @@ export default function MessagingDashboard({ embedded = false }: MessagingDashbo
     setSelectedConversation(conversation);
     loadMessages(conversation.id);
     
+    // Decrement unread count by conversation's unread
+    if (conversation.unreadCount && conversation.unreadCount > 0) {
+      setUnreadCount(prev => Math.max(0, prev - conversation.unreadCount!));
+    }
+    
     // Mark all messages as read
     messagingService.markAllMessagesAsRead(conversation.id, schoolId);
   };
 
   // Handle new message via WebSocket
   function handleNewMessage(message: any) {
-    // Refresh conversations list to update preview and unread count
+    // Increment unread count locally (avoid API call)
+    setUnreadCount(prev => prev + 1);
+
+    // Refresh conversations list to update preview
     loadConversations();
-    loadUnreadCount();
 
     // If message is for current conversation, add it
     if (selectedConversation && message.conversationId === selectedConversation.id) {
       loadMessages(selectedConversation.id);
+      // Decrement since we're viewing it
+      setUnreadCount(prev => Math.max(0, prev - 1));
     }
 
     // Show toast notification
@@ -317,7 +330,7 @@ export default function MessagingDashboard({ embedded = false }: MessagingDashbo
           <ScrollArea className="flex-1">
             {conversations
               .filter((conv) =>
-                conv.participantName?.toLowerCase().includes(searchTerm.toLowerCase())
+                conv.participantName?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
               )
               .map((conversation) => (
                 <div

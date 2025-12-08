@@ -4,6 +4,7 @@
  */
 
 import api from './api';
+import { validateUUID, assertValidUUID } from './uuidValidation';
 
 export interface Conversation {
   id: string;
@@ -106,6 +107,7 @@ class MessagingService {
    * Get specific conversation by ID
    */
   async getConversation(conversationId: string): Promise<Conversation> {
+    assertValidUUID(conversationId, 'conversationId');
     const response = await api.get<Conversation>(`/messaging/conversations/${conversationId}`);
     return response;
   }
@@ -155,6 +157,7 @@ class MessagingService {
     page: number = 0,
     size: number = 50
   ): Promise<PagedResponse<Message>> {
+    assertValidUUID(conversationId, 'conversationId');
     const response = await api.get<PagedResponse<Message>>(
       `/messaging/enhanced/conversation/${conversationId}?schoolId=${schoolId}&page=${page}&size=${size}`
     );

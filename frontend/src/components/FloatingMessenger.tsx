@@ -17,7 +17,7 @@ export default function FloatingMessenger() {
   const [isMaximized, setIsMaximized] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Load unread count
+  // Load unread count on mount only
   useEffect(() => {
     // Only fetch if user is TEACHER or ADMIN
     if (!user || (user.role !== 'TEACHER' && user.role !== 'ADMIN')) {
@@ -35,9 +35,7 @@ export default function FloatingMessenger() {
 
     loadUnreadCount();
     
-    // Refresh every 30 seconds
-    const interval = setInterval(loadUnreadCount, 30000);
-    return () => clearInterval(interval);
+    // Note: WebSocket will update count in real-time, no need for polling
   }, [user]);
 
   // Only show for TEACHER and ADMIN
