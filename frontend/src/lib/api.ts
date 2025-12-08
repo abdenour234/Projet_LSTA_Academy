@@ -594,6 +594,8 @@ export const sessionApi = {
   
   getByTeacherId: (teacherId: string) => api.get<any[]>(`/sessions/teacher/${teacherId}`),
   
+  getBySchoolId: (schoolId: string) => api.get<any[]>(`/sessions/school/${schoolId}`),
+  
   getById: (id: string) => api.get<any>(`/sessions/${id}`),
   
   create: (session: any) => api.post<any>('/sessions', session),

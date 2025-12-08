@@ -374,7 +374,7 @@ export default function MessagingDashboard({ embedded = false }: MessagingDashbo
             <ScrollArea className="flex-1 p-6">
               <div className="space-y-4">
                 {messages.map((message) => {
-                  const isMine = message.senderId === user?.id;
+                  const isMine = message.senderId === String(user?.id);
                   
                   return (
                     <div
