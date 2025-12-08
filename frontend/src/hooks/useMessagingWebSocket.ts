@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Client, StompSubscription } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import { auth } from '@/lib/api';
 
 export interface WebSocketMessage {
   id: string;
@@ -50,8 +51,8 @@ export function useMessagingWebSocket({
     }
 
     try {
-      // Get auth token from localStorage
-      const token = localStorage.getItem('token');
+      // Get auth token from centralized auth module
+      const token = auth.getToken();
       if (!token) {
         setError('No authentication token found');
         return;
@@ -171,7 +172,8 @@ export function useMessagingWebSocket({
     return () => {
       disconnect();
     };
-  }, [autoConnect, userId, connect, disconnect]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoConnect, userId]); // Only re-run when autoConnect or userId changes
 
   return {
     isConnected,

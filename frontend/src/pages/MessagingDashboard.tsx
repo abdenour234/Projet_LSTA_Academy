@@ -36,13 +36,26 @@ export default function MessagingDashboard({ embedded = false }: MessagingDashbo
   const [unreadCount, setUnreadCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Get schoolId safely
-  const schoolId = user?.schoolId ? parseInt(user.schoolId) : 1;
+  // Get schoolId safely - validate it exists
+  const schoolId = user?.schoolId ? parseInt(user.schoolId) : undefined;
+
+  // Guard: Cannot use messaging without schoolId
+  if (!schoolId) {
+    return (
+      <div className="flex items-center justify-center h-full bg-gray-50">
+        <div className="text-center p-8">
+          <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+          <p className="text-gray-700 font-semibold mb-2">École non définie</p>
+          <p className="text-gray-500 text-sm">Impossible d'accéder à la messagerie sans école assignée.</p>
+        </div>
+      </div>
+    );
+  }
 
   console.log('[MESSAGING] User context:', { userId: user?.id, schoolId, role: user?.role });
 
   // WebSocket for real-time notifications
-  const { isConnected } = useMessagingWebSocket({
+  const { isConnected, error: wsError } = useMessagingWebSocket({
     userId: user?.id ? String(user.id) : '',
     onNewMessage: handleNewMessage,
     onReadReceipt: handleReadReceipt,
@@ -256,6 +269,11 @@ export default function MessagingDashboard({ embedded = false }: MessagingDashbo
                 <Badge variant="outline" className="border-green-500 text-green-700">
                   <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
                   Connecté
+                </Badge>
+              ) : wsError ? (
+                <Badge variant="outline" className="border-red-500 text-red-700">
+                  <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                  Erreur: {wsError}
                 </Badge>
               ) : (
                 <Badge variant="outline" className="border-gray-500 text-gray-700">

@@ -177,7 +177,7 @@ class MessagingService {
         params: { query, schoolId, page, size },
       }
     );
-    return response.data;
+    return response;
   }
 
   /**
