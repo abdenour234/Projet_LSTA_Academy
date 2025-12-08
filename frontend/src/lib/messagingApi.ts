@@ -99,7 +99,7 @@ class MessagingService {
     const response = await api.get<PagedResponse<Conversation>>(
       `/messaging/conversations?page=${page}&size=${size}`
     );
-    return response.data;
+    return response;
   }
 
   /**

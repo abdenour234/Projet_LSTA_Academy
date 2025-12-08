@@ -131,7 +131,7 @@ export default function NewConversationDialog({
             Authorization: `Bearer ${auth.getToken()}`,
           },
           body: JSON.stringify({
-            participant2Id: selectedUser.id,
+            participantId: selectedUser.id,
             subject: subject.trim() || null,
             schoolId: schoolId,
           }),
