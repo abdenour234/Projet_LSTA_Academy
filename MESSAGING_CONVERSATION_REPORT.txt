@@ -1,0 +1,405 @@
+Rapport détaillé — Fonctionnalité “Conversations / Messagerie” (Frontend + Backend)
+Workspace: Projet_LSTA_Academy — focus sur la messagerie interne (professeurs/admins)
+
+1) Vue d’ensemble (où est le code, qui fait quoi)
+
+Frontend (React)
+- Écran principal: frontend/src/pages/MessagingDashboard.tsx
+  Affiche la liste des conversations + le thread (messages) + le composer (envoi + pièces jointes).
+- API client: frontend/src/lib/messagingApi.ts
+  Centralise les appels REST /api/messaging/....
+- Client WebSocket (STOMP + SockJS): frontend/src/hooks/useMessagingWebSocket.ts
+  Connexion + subscriptions:
+  - /topic/messages/{userId} (nouveaux messages)
+  - /topic/read-receipts/{userId} (accusés de lecture)
+- Création d’une conversation: frontend/src/components/messaging/NewConversationDialog.tsx
+  Charge les utilisateurs de l’école et ouvre (ou récupère) une conversation.
+
+Backend (Spring Boot)
+- REST conversations: backend/src/main/java/com/schoolmanagement/controller/ConversationController.java
+  Base: /api/messaging/conversations
+- REST messages (enhanced): backend/src/main/java/com/schoolmanagement/controller/EnhancedMessageController.java
+  Base: /api/messaging/enhanced
+- REST pièces jointes: backend/src/main/java/com/schoolmanagement/controller/AttachmentController.java
+  Base: /api/messaging/attachments
+- Service conversation: backend/src/main/java/com/schoolmanagement/service/ConversationService.java
+- Service message: backend/src/main/java/com/schoolmanagement/service/EnhancedMessageService.java
+- Stockage fichiers (MinIO): backend/src/main/java/com/schoolmanagement/service/FileStorageService.java
+- WebSocket broker: backend/src/main/java/com/schoolmanagement/config/WebSocketConfig.java
+  Endpoint STOMP: /ws (SockJS + natif)
+- Sécurité: backend/src/main/java/com/schoolmanagement/config/SecurityConfig.java
+  REST protégé via JWT + rôles.
+
+2) Modèles de données (contrats)
+
+2.1 Conversation (REST)
+- Type côté front: Conversation dans frontend/src/lib/messagingApi.ts
+- Type côté back: ConversationDTO dans backend/src/main/java/com/schoolmanagement/dto/ConversationDTO.java
+
+Champs clés:
+- id (UUID string)
+- participantId (autre utilisateur)
+- schoolId
+- participantName, participantRole
+- lastMessagePreview, lastMessageTime
+- unreadCount
+- createdAt, updatedAt
+
+2.2 Message (REST)
+- Type côté front: Message dans frontend/src/lib/messagingApi.ts
+- Type côté back: MessageDTO dans backend/src/main/java/com/schoolmanagement/dto/MessageDTO.java
+
+Champs clés:
+- id, conversationId
+- senderId, senderName
+- recipientId, recipientName
+- subject, content
+- isRead, readAt, readBy
+- hasAttachments, attachmentCount, attachments[]
+- createdAt, updatedAt
+- schoolId
+
+2.3 Attachment (REST)
+- Type côté front: Attachment dans frontend/src/lib/messagingApi.ts
+- Type côté back: AttachmentDTO dans backend/src/main/java/com/schoolmanagement/dto/AttachmentDTO.java
+
+Champs clés:
+- id, messageId
+- filename, mimeType, fileSize, fileSizeFormatted
+- uploadedBy, uploadedByName, uploadedAt
+- scanStatus, scanDetails
+- downloadUrl (URL pré-signée)
+- isSafe
+
+2.4 WebSocket events (STOMP)
+Défini dans frontend/src/hooks/useMessagingWebSocket.ts et émis par EnhancedMessageService.
+
+Event “nouveau message” (simple payload envoyé au destinataire):
+- Destination: /topic/messages/{recipientId}
+- Payload (map) depuis EnhancedMessageService.mapToSimpleDTO():
+
+Exemple payload:
+{
+  "id": "UUID",
+  "conversationId": "UUID",
+  "senderId": "UUID",
+  "subject": "string",
+  "preview": "string (content tronqué à 100 chars)",
+  "hasAttachments": true,
+  "createdAt": "ISO_LOCAL_DATE_TIME"
+}
+
+Event “read receipt” (envoyé à l’expéditeur):
+- Destination: /topic/read-receipts/{senderId}
+- Payload (map) depuis EnhancedMessageService.sendReadReceiptNotification():
+
+Exemple payload:
+{
+  "messageId": "UUID",
+  "readBy": "UUID",
+  "readAt": "ISO_LOCAL_DATE_TIME"
+}
+
+3) Auth / sécurité (ce qui est attendu dans les requêtes)
+
+3.1 REST
+- Toutes les routes /api/messaging/** exigent un JWT Bearer.
+- Le frontend ajoute Authorization: Bearer <token> via frontend/src/lib/api.ts.
+- Les contrôleurs de messagerie re-extraitent aussi l’utilisateur depuis le header (via JwtUtil):
+  - ConversationController.extractUserId()
+  - EnhancedMessageController.extractUserId()
+  - AttachmentController.extractUserId()
+
+3.2 Rôles
+- Endpoints limités à TEACHER et ADMIN via @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')").
+- ConversationService.validateUserRole() vérifie en DB que l’utilisateur a TEACHER/ADMIN.
+
+3.3 WebSocket
+- Endpoint STOMP /ws dans WebSocketConfig.
+- Le frontend envoie connectHeaders.Authorization = Bearer <token> dans useMessagingWebSocket.
+- Note: pas d’interceptor STOMP (Handshake/Channel) trouvé pour valider le token côté WS, et /ws/** est permitAll dans SecurityConfig.
+
+4) Flow “pas à pas” — actions utilisateur → code → input/output
+
+Étape 0 — Pré-requis (session)
+But: avoir un token JWT stocké.
+- Stockage côté front: frontend/src/lib/api.ts (clé auth_token dans localStorage).
+- Toutes les requêtes REST de messagerie dépendent de ce token.
+
+4.1 Ouvrir la page Messagerie
+
+4.1.1 Initialisation UI
+Fichier: frontend/src/pages/MessagingDashboard.tsx
+- Récupère user via useAuth()
+- Calcule schoolId:
+  const schoolId = user?.schoolId ? parseInt(user.schoolId) : undefined;
+
+Sortie attendue:
+- Si schoolId absent → écran “École non définie”.
+
+4.1.2 Charger la liste des conversations
+Appel:
+  const response = await messagingService.getConversations(0, 50);
+
+Frontend: frontend/src/lib/messagingApi.ts
+- GET /messaging/conversations?page=0&size=50
+- URL finale (dev): GET http://localhost:8080/api/messaging/conversations?page=0&size=50
+
+Backend: ConversationController.getUserConversations()
+
+Input attendu:
+- Header: Authorization: Bearer <jwt>
+- Query: page, size
+
+Output attendu (exemple): PagedResponse<ConversationDTO>
+{
+  "content": [
+    {
+      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "participantId": "11111111-1111-1111-1111-111111111111",
+      "schoolId": 12,
+      "participantName": "Ahmed Ben Ali",
+      "participantRole": "TEACHER",
+      "lastMessagePreview": "Bonjour, ...",
+      "lastMessageTime": "2025-12-14T10:11:12",
+      "unreadCount": 2,
+      "createdAt": "2025-12-01T09:00:00",
+      "updatedAt": "2025-12-14T10:11:12"
+    }
+  ],
+  "page": 0,
+  "size": 50,
+  "totalElements": 1,
+  "totalPages": 1,
+  "hasNext": false,
+  "hasPrevious": false
+}
+
+4.2 Connexion temps-réel (WebSocket)
+Fichier: frontend/src/hooks/useMessagingWebSocket.ts
+
+4.2.1 Connexion STOMP
+- webSocketFactory: new SockJS(`${VITE_API_URL}/ws`)
+- connectHeaders: Authorization: Bearer <token>
+- subscribe:
+  - /topic/messages/{userId}
+  - /topic/read-receipts/{userId}
+
+Backend: WebSocketConfig endpoint /ws, broker /topic.
+
+Input attendu:
+- URL SockJS: .../ws
+- Connect headers: Authorization: Bearer <jwt>
+
+Output attendu:
+- client isConnected = true après onConnect
+- événements push serveur ensuite
+
+Attention (cohérence config):
+- frontend/.env: VITE_API_URL=http://localhost:8080/api
+- hook WS: `${VITE_API_URL}/ws` → http://localhost:8080/api/ws
+- backend: endpoint /ws (pas /api/ws)
+→ risque fort que le WS ne se connecte pas sans rewrite côté proxy/config.
+
+4.3 Créer / ouvrir une conversation
+
+UI: frontend/src/components/messaging/NewConversationDialog.tsx
+
+4.3.1 Charger les utilisateurs (destinataires)
+Requête:
+  GET `${VITE_API_URL}/users/school/${schoolId}`
+Ex dev:
+  GET http://localhost:8080/api/users/school/{schoolId}
+
+Backend: UserController.getUsersBySchool()
+
+Input attendu:
+- Bearer token
+- schoolId path param
+
+Output attendu (UserDTO[]):
+[
+  {
+    "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "firstName": "Sara",
+    "lastName": "Khelifi",
+    "email": "sara@school.tld",
+    "role": "ADMIN",
+    "schoolId": 12
+  }
+]
+
+4.3.2 Créer ou récupérer la conversation
+Requête:
+  POST /api/messaging/conversations
+  Body: { participantId, schoolId }
+
+Frontend: messagingService.createOrGetConversation(participantId, schoolId)
+Backend: ConversationController.createOrGetConversation() → ConversationService.createOrGetConversation()
+
+Input attendu (JSON):
+{
+  "participantId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "schoolId": 12
+}
+
+Output attendu:
+- HTTP 201 Created
+- Body ConversationDTO
+
+Exemple:
+{
+  "id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+  "participantId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "schoolId": 12,
+  "participantName": "Sara Khelifi",
+  "participantRole": "ADMIN",
+  "lastMessagePreview": null,
+  "lastMessageTime": null,
+  "unreadCount": 0,
+  "createdAt": "2025-12-14T10:00:00",
+  "updatedAt": "2025-12-14T10:00:00"
+}
+
+4.4 Ouvrir une conversation (charger le thread)
+Fichier: frontend/src/pages/MessagingDashboard.tsx
+Clic conversation → handleSelectConversation(conversation):
+1) loadMessages(conversation.id)
+2) ajuste unreadCount local
+3) markAllMessagesAsRead(conversation.id, schoolId)
+
+4.4.1 Charger les messages du thread
+Requête:
+  GET /api/messaging/enhanced/conversation/{conversationId}?schoolId=12&page=0&size=100
+
+Backend: EnhancedMessageController.getConversationMessages() → EnhancedMessageService.getConversationMessages()
+
+Input attendu:
+- Bearer token
+- conversationId path
+- schoolId/page/size query
+
+Output attendu: PagedResponse<MessageDTO>
+- Tri DESC (newest first)
+
+4.4.2 Marquer “tout lu”
+Requête:
+  PUT /api/messaging/enhanced/conversation/{conversationId}/read-all?schoolId=12
+Output attendu:
+- HTTP 204 No Content
+
+Note: read-all ne déclenche pas sendReadReceiptNotification() (qui est seulement dans markMessageAsRead())
+
+4.5 Envoyer un message
+UI: bouton Envoyer → handleSendMessage()
+
+4.5.1 Validation UI
+- Il faut selectedConversation ET (messageContent non vide OU attachments non vides)
+
+4.5.2 Requête REST (multipart)
+POST /api/messaging/enhanced?schoolId=12
+Content-Type: multipart/form-data
+Authorization: Bearer <jwt>
+
+FormData:
+- conversationId
+- subject
+- content
+- attachments (0..n)
+
+Backend: EnhancedMessageController.sendMessage() → EnhancedMessageService.sendMessage()
+
+Logique backend (résumé)
+1) validateConversationAccess(conversationId, senderId)
+2) déduit recipientId = autre participant
+3) save message
+4) upload attachments (MinIO) + records
+5) updateLastMessageTime(conversationId)
+6) audit log
+7) push WS /topic/messages/{recipientId} avec preview
+
+Output attendu:
+- HTTP 201 Created
+- Body MessageDTO
+
+4.6 Réception d’un nouveau message (temps réel)
+Backend push:
+- /topic/messages/{recipientId}
+Frontend subscription → MessagingDashboard.handleNewMessage():
+1) unreadCount++
+2) refresh conversations
+3) si conversation ouverte: reload messages + unreadCount--
+4) toast notification
+
+4.7 Accusés de lecture (read receipts)
+
+4.7.1 Génération
+- uniquement via PUT /api/messaging/enhanced/{messageId}/read?schoolId=12
+- backend: markMessageAsRead() vérifie recipient puis push /topic/read-receipts/{senderId}
+
+4.7.2 Consommation
+- frontend subscribe /topic/read-receipts/{userId}
+- UI met à jour message.isRead/readAt/readBy
+
+Note: UI actuelle utilise read-all, donc receipts rarement visibles.
+
+4.8 Pièces jointes (upload + download)
+
+4.8.1 Upload via envoi message
+- attachments inclus dans POST /api/messaging/enhanced
+
+Validation backend (FileStorageService)
+- taille max (défaut 20MB)
+- extensions dangereuses bloquées
+- MIME whitelist (messaging.attachments.allowed-types) doit être configuré
+
+4.8.2 URL de download (pré-signée)
+- incluse dans MessageDTO.attachments[].downloadUrl si isSafe=true
+- ou via GET /api/messaging/attachments/{attachmentId}/download-url?schoolId=12
+
+UI actuelle affiche les attachments mais n’implémente pas un clic “download”.
+
+4.9 Suppressions (soft delete)
+
+4.9.1 Conversation
+DELETE /api/messaging/conversations/{conversationId}?schoolId=12
+→ deletedAt = now
+
+4.9.2 Message
+DELETE /api/messaging/enhanced/{messageId}?schoolId=12
+→ deletedAt = now
+Règle: seul l’expéditeur peut supprimer.
+
+5) Gestion des erreurs & cas limites
+
+5.1 401
+frontend/src/lib/api.ts:
+- toast session expirée
+- purge token/user
+- redirect /school/{schoolId}/login ou /login
+
+5.2 403 (RBAC / accès conversation)
+- PreAuthorize + validateUserRole + validateConversationAccess
+
+5.3 400 (validation DTO)
+SendMessageDTO:
+- conversationId obligatoire
+- subject non blank, max 255
+- content non blank, max 10000
+
+5.4 WebSocket reconnexion
+- reconnectDelay 5000
+- heartbeat 4000
+
+5.5 Incohérences observées
+1) URL WebSocket potentiellement incorrecte (VITE_API_URL inclut /api)
+2) searchMessages() frontend ajoute /api en dur (risque /api/api/...)
+3) read receipts non émis pour read-all
+
+6) Résumé séquence
+1) UI ouvre messagerie → GET conversations + GET unread-count
+2) UI connecte WS → subscribe messages + read-receipts
+3) Créer conversation → GET users/school → POST conversations
+4) Ouvrir conversation → GET messages → PUT read-all
+5) Envoyer message → POST enhanced multipart → backend push WS
+6) Recevoir message → WS event → refresh conversations (+ thread si ouvert)
