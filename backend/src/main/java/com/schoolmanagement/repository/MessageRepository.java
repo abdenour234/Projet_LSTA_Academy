@@ -94,10 +94,18 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
      * Mark all messages as read in a conversation for a specific recipient
      */
     @Query("UPDATE Message m SET m.isRead = true, m.readAt = :readTime, m.readBy = :userId " +
-           "WHERE m.conversationId = :conversationId AND m.recipientId = :userId AND m.isRead = false")
+           "WHERE m.conversationId = :conversationId AND m.recipientId = :userId AND m.isRead = false AND m.deletedAt IS NULL")
     int markAllAsReadInConversation(@Param("conversationId") UUID conversationId, 
                                     @Param("userId") UUID userId, 
                                     @Param("readTime") LocalDateTime readTime);
+
+    /**
+     * Find unread messages in a conversation for a recipient (used for read receipts)
+     */
+    @Query("SELECT m FROM Message m WHERE m.conversationId = :conversationId " +
+           "AND m.recipientId = :userId AND m.isRead = false AND m.deletedAt IS NULL")
+    List<Message> findUnreadByConversationAndRecipient(@Param("conversationId") UUID conversationId,
+                                                      @Param("userId") UUID userId);
 
     /**
      * Find messages scheduled for purge (GDPR compliance)

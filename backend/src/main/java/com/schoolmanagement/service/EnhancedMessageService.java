@@ -188,10 +188,21 @@ public class EnhancedMessageService {
     public void markAllMessagesAsRead(UUID conversationId, UUID currentUserId, Long schoolId) {
         conversationService.validateConversationAccess(conversationId, currentUserId);
 
+        List<Message> unreadMessages = messageRepository.findUnreadByConversationAndRecipient(
+            conversationId,
+            currentUserId
+        );
+
+        if (unreadMessages.isEmpty()) {
+            return;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
         int updatedCount = messageRepository.markAllAsReadInConversation(
             conversationId, 
             currentUserId, 
-            LocalDateTime.now()
+            now
         );
 
         log.info("Marked {} messages as read in conversation {} for user {}", 
@@ -204,6 +215,14 @@ public class EnhancedMessageService {
             "MESSAGES_MARKED_READ",
             String.format("Marked %d messages as read in conversation %s", updatedCount, conversationId)
         );
+
+        // Notify senders via WebSocket read receipts
+        for (Message message : unreadMessages) {
+            message.setIsRead(true);
+            message.setReadAt(now);
+            message.setReadBy(currentUserId);
+            sendReadReceiptNotification(message);
+        }
     }
 
     /**
