@@ -6,8 +6,11 @@ WORKDIR /app
 ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
 
+# Copy only package files first to cache node_modules
 COPY package*.json ./
 RUN npm ci
+
+# Copy source code (changes here won't invalidate node_modules cache)
 COPY . .
 RUN npm run build
 
