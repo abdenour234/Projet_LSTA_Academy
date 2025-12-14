@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
@@ -81,6 +82,7 @@ public class FileStorageService {
     /**
      * Initialize MinIO bucket if it doesn't exist
      */
+    @PostConstruct
     public void initializeBucket() {
         try {
             boolean found = minioClient.bucketExists(BucketExistsArgs.builder()
@@ -178,8 +180,8 @@ public class FileStorageService {
             return saved;
 
         } catch (Exception e) {
-            log.error("Failed to upload file: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to upload file", e);
+            log.error("Failed to upload file: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
+            throw new RuntimeException("Failed to upload file: " + e.getMessage(), e);
         }
     }
 
