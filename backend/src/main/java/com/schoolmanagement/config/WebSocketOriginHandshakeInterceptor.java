@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
-import java.net.URI;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,16 +31,15 @@ public class WebSocketOriginHandshakeInterceptor implements HandshakeInterceptor
             return true;
         }
 
-        URI origin = request.getHeaders().getOrigin();
-        if (origin == null) {
+        String origin = request.getHeaders().getOrigin();
+        if (origin == null || origin.isBlank()) {
             log.warn("WebSocket handshake blocked: missing Origin header");
             return false;
         }
 
-        String originStr = origin.toString();
-        boolean ok = allow.contains(originStr);
+        boolean ok = allow.contains(origin);
         if (!ok) {
-            log.warn("WebSocket handshake blocked: origin {} not allowed", originStr);
+            log.warn("WebSocket handshake blocked: origin {} not allowed", origin);
         }
         return ok;
     }

@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -52,13 +53,7 @@ public class SecurityConfig {
                 .requestMatchers("/ws/**", "/api/ws/**").permitAll()
                 
                 // Public endpoints - School discovery (GET only)
-                .requestMatchers(request -> 
-                    "GET".equals(request.getMethod()) && 
-                    (request.getServletPath().equals("/api/schools") ||
-                     request.getServletPath().matches("/api/schools/\\d+") ||
-                     request.getServletPath().startsWith("/api/schools/by-city/") ||
-                     request.getServletPath().startsWith("/api/schools/by-region/"))
-                ).permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/schools/**").permitAll()
                 
                 // SuperAdmin-only endpoints
                 .requestMatchers("/api/superadmin/**").hasRole("SUPERADMIN")

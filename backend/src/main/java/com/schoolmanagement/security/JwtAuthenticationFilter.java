@@ -55,18 +55,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     
                     // Extract all claims from token
                     String role = jwtUtil.extractRole(jwt);
+                    String normalizedRole = role == null ? null : role.toUpperCase();
                     String userId = jwtUtil.extractUserId(jwt);
                     String schoolId = jwtUtil.extractSchoolId(jwt);
                     
                     // Create authority with ROLE_ prefix (Spring Security convention)
-                    // Role is already uppercase from database
-                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
+                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + (normalizedRole == null ? "" : normalizedRole));
                     
                     // Create custom authentication details with userId
                     UserAuthenticationDetails userDetails = new UserAuthenticationDetails(
                             java.util.UUID.fromString(userId),
                             userEmail,
-                            role,
+                            normalizedRole,
                             schoolId
                     );
                     
@@ -84,7 +84,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                     
                     log.debug("JWT Authentication successful for user: {} (ID: {}) with role: {}", 
-                            userEmail, userId, role);
+                            userEmail, userId, normalizedRole);
                 } else {
                     log.warn("Invalid JWT token for user: {}", userEmail);
                 }

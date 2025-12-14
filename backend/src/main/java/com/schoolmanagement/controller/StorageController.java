@@ -48,14 +48,20 @@ public class StorageController {
         "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        "text/plain", "text/csv"
+        "text/plain", "text/csv",
+        "application/zip",
+        "video/mp4",
+        "audio/mpeg"
     );
     
     private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList(
         ".jpg", ".jpeg", ".png", ".gif", ".webp",
         ".pdf",
         ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
-        ".txt", ".csv"
+        ".txt", ".csv",
+        ".zip",
+        ".mp4",
+        ".mp3"
     );
 
     @PostMapping("/upload")
@@ -91,10 +97,15 @@ public class StorageController {
                 log.warn("❌ File upload rejected: extension {} not allowed", extension);
                 return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(error);
             }
-            
-            // Validate content type
+
+            // Resolve content type (detect if missing/blank) then validate
             String contentType = file.getContentType();
-            if (contentType != null && !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+            if (contentType == null || contentType.isBlank()) {
+                contentType = detectContentType(extension);
+            }
+
+            String normalizedContentType = contentType == null ? "" : contentType.toLowerCase();
+            if (!ALLOWED_CONTENT_TYPES.contains(normalizedContentType)) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Content type not allowed");
                 log.warn("❌ File upload rejected: content type {} not allowed", contentType);
@@ -104,10 +115,7 @@ public class StorageController {
             // Generate unique filename
             String filename = UUID.randomUUID().toString() + extension;
             
-            // Set final content type
-            if (contentType == null || contentType.isEmpty()) {
-                contentType = detectContentType(extension);
-            }
+            // contentType already resolved/validated above
 
             // Upload to MinIO
             minioClient.putObject(

@@ -345,10 +345,11 @@ public class FileStorageService {
         }
 
         String filename = file.getOriginalFilename();
-        validateFilename(filename);
+        String extension = validateFilename(filename);
+        validateFileSignature(file, extension);
     }
 
-    private void validateFilename(String filename) {
+    private String validateFilename(String filename) {
         if (filename == null || filename.trim().isEmpty()) {
             throw new IllegalArgumentException("Filename is required");
         }
@@ -363,7 +364,7 @@ public class FileStorageService {
             throw new IllegalArgumentException("File type not allowed: ." + extension);
         }
 
-        validateFileSignature(file, extension);
+        return extension;
     }
 
     private void validateMimeType(String mimeType) {
