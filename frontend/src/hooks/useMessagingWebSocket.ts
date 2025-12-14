@@ -59,8 +59,14 @@ export function useMessagingWebSocket({
       }
 
       // Create STOMP client with SockJS
+      const apiBaseUrl = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').trim();
+      const envWsBaseUrl = ((import.meta.env.VITE_WS_URL as string | undefined) ?? '').trim();
+      const wsBaseUrl = envWsBaseUrl || apiBaseUrl.replace(/\/api\/?$/, '') || 'http://localhost:8080';
+
+      const wsUrl = `${wsBaseUrl.replace(/\/$/, '')}/ws`;
+
       const client = new Client({
-        webSocketFactory: () => new SockJS(`${import.meta.env.VITE_API_URL}/ws`),
+        webSocketFactory: () => new SockJS(wsUrl),
         
         connectHeaders: {
           Authorization: `Bearer ${token}`,
