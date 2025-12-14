@@ -139,11 +139,7 @@ class MessagingService {
     const response = await api.post<Message>(
       `/messaging/enhanced?schoolId=${schoolId}`,
       formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      {}
     );
     return response;
   }
@@ -227,11 +223,7 @@ class MessagingService {
     const response = await api.post<Attachment>(
       `/messaging/attachments/upload?messageId=${messageId}&schoolId=${schoolId}`,
       formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      {}
     );
     return response;
   }
