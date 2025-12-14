@@ -27,7 +27,7 @@ public class SendMessageDTO {
     @Size(max = 255, message = "Subject must not exceed 255 characters")
     private String subject;
     
-    @NotBlank(message = "Content is required")
+    @NotNull(message = "Content cannot be null")
     @Size(max = 10000, message = "Content must not exceed 10000 characters")
     private String content;
     
