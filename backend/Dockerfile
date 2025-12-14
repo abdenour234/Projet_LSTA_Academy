@@ -15,7 +15,7 @@ RUN mkdir -p /root/.m2 \
 		'    <mirror>' \
 		'      <id>central-repo1</id>' \
 		'      <name>Maven Central</name>' \
-		'      <url>https://repo.maven.apache.org/maven2</url>' \
+		'      <url>https://repo1.maven.org/maven2</url>' \
 		'      <mirrorOf>central</mirrorOf>' \
 		'    </mirror>' \
 		'  </mirrors>' \
@@ -23,9 +23,11 @@ RUN mkdir -p /root/.m2 \
 		> /root/.m2/settings.xml
 
 COPY pom.xml .
-RUN mvn -s /root/.m2/settings.xml dependency:go-offline -B
+RUN --mount=type=cache,target=/root/.m2 \
+	mvn -s /root/.m2/settings.xml -DskipTests dependency:go-offline dependency:resolve-plugins -B
 COPY src ./src
-RUN mvn -s /root/.m2/settings.xml clean package -DskipTests
+RUN --mount=type=cache,target=/root/.m2 \
+	mvn -s /root/.m2/settings.xml -DskipTests clean package -B
 
 # Runtime stage
 FROM eclipse-temurin:17-jre-alpine
