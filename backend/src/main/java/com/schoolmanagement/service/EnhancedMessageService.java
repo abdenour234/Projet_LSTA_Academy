@@ -10,6 +10,7 @@ import com.schoolmanagement.entity.Profile;
 import com.schoolmanagement.repository.MessageAttachmentRepository;
 import com.schoolmanagement.repository.MessageRepository;
 import com.schoolmanagement.repository.ProfileRepository;
+import com.schoolmanagement.security.MessagingRateLimiter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -47,13 +49,19 @@ public class EnhancedMessageService {
     private final FileStorageService fileStorageService;
     private final UserActivityLogService activityLogService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final MessagingRateLimiter rateLimiter;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+    private static final Pattern XSS_PATTERN = Pattern.compile("<\\s*script|javascript:|onerror\\s*=|onclick\\s*=|onload\\s*=", Pattern.CASE_INSENSITIVE);
+    private static final int MAX_SUBJECT_LENGTH = 255;
+    private static final int MAX_CONTENT_LENGTH = 10_000;
 
     /**
      * Send a message with optional attachments
      */
     public MessageDTO sendMessage(SendMessageDTO dto, UUID senderId, Long schoolId) {
+        rateLimiter.checkSendMessage(senderId.toString());
+
         // Validate conversation access
         conversationService.validateConversationAccess(dto.getConversationId(), senderId);
 
@@ -67,8 +75,10 @@ public class EnhancedMessageService {
             .getParticipantId();
         message.setRecipientId(recipientId);
         
-        message.setSubject(dto.getSubject());
-        message.setContent(dto.getContent());
+        String subject = sanitizeMessageField(dto.getSubject(), true);
+        String content = sanitizeMessageField(dto.getContent(), false);
+        message.setSubject(subject);
+        message.setContent(content);
         message.setSchoolId(schoolId);
         message.setIsRead(false);
 
@@ -118,6 +128,28 @@ public class EnhancedMessageService {
 
         // Convert to DTO and return
         return mapToDTO(message, uploadedAttachments, senderId, schoolId);
+    }
+
+    private String sanitizeMessageField(String value, boolean isSubject) {
+        if (value == null) {
+            throw new IllegalArgumentException(isSubject ? "Subject is required" : "Message content is required");
+        }
+
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) {
+            throw new IllegalArgumentException(isSubject ? "Subject cannot be empty" : "Message content cannot be empty");
+        }
+
+        int maxLen = isSubject ? MAX_SUBJECT_LENGTH : MAX_CONTENT_LENGTH;
+        if (trimmed.length() > maxLen) {
+            throw new IllegalArgumentException(isSubject ? "Subject too long" : "Message too long");
+        }
+
+        if (XSS_PATTERN.matcher(trimmed).find()) {
+            throw new IllegalArgumentException("Message contains forbidden content");
+        }
+
+        return trimmed;
     }
 
     /**
