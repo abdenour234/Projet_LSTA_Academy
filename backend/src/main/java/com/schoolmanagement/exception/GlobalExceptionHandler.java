@@ -28,13 +28,30 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MultipartException.class)
     public ResponseEntity<Map<String, Object>> handleMultipartException(MultipartException ex) {
-        log.warn("Multipart request parsing failed: {}", ex.getMessage());
+        // Log full stack to capture root cause (e.g., "no multipart boundary", truncated body)
+        log.warn("Multipart request parsing failed", ex);
+
+        String rawMessage = ex.getMessage() != null ? ex.getMessage() : "Multipart parsing failed";
+        String normalized = rawMessage.toLowerCase();
+
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        String clientMessage = rawMessage;
+
+        // Some containers wrap size violations as MultipartException
+        if (normalized.contains("maximum") && normalized.contains("size")) {
+            status = HttpStatus.PAYLOAD_TOO_LARGE;
+            clientMessage = "Uploaded file exceeds the maximum allowed size";
+        }
+
+        if (normalized.contains("boundary")) {
+            clientMessage = "Invalid multipart request (missing boundary). Do not set Content-Type manually when sending FormData.";
+        }
 
         Map<String, Object> error = new HashMap<>();
         error.put("error", "Invalid multipart request");
-        error.put("message", ex.getMessage());
+        error.put("message", clientMessage);
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return ResponseEntity.status(status).body(error);
     }
 
     /**
@@ -79,7 +96,9 @@ public class GlobalExceptionHandler {
         String fullMessage = (message + " " + rootCauseMessage).toLowerCase();
         
         // Check for common constraint violations
-        if (fullMessage.contains("unique") || fullMessage.contains("duplicate")) {
+        if (fullMessage.contains("activity_type") && fullMessage.contains("not-null")) {
+            error.put("error", "Erreur de journalisation: champ activity_type requis. Veuillez contacter le support.");
+        } else if (fullMessage.contains("unique") || fullMessage.contains("duplicate")) {
             if (fullMessage.contains("email")) {
                 error.put("error", "Un compte avec cet email existe déjà");
             } else if (fullMessage.contains("massar") || fullMessage.contains("idx_students_massar")) {

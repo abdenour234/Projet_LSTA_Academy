@@ -32,6 +32,7 @@ public class UserActivityLogService {
             UserActivityLog log = new UserActivityLog();
             log.setUserId(userId);
             log.setSchoolId(schoolId);
+            log.setActivityType(actionType);
             log.setActionType(actionType);
             log.setDetails(details);
             log.setActivityDate(LocalDate.now());

@@ -28,6 +28,9 @@ public class UserActivityLog {
     @Column(name = "activity_date", nullable = false)
     private LocalDate activityDate;
 
+    @Column(name = "activity_type", nullable = false)
+    private String activityType;
+
     @Column(name = "action_type")
     private String actionType;
 
