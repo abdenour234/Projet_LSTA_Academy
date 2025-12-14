@@ -633,7 +633,7 @@ export default function MessagingDashboard({ embedded = false }: MessagingDashbo
                       <div
                         className={`flex ${isMine ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
                       >
-                        <div className={`max-w-[75%] md:max-w-[65%] ${isMine ? 'order-2' : 'order-1'}`}>
+                        <div className={`max-w-[calc(100%-2rem)] sm:max-w-[75%] md:max-w-[65%] ${isMine ? 'order-2' : 'order-1'}`}>
                           <div
                             className={`rounded-2xl p-4 shadow-sm ${
                               isMine 
