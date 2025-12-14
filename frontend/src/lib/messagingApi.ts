@@ -175,7 +175,7 @@ class MessagingService {
     size: number = 50
   ): Promise<PagedResponse<Message>> {
     const response = await api.get<PagedResponse<Message>>(
-      `/api/messaging/enhanced/conversation/${conversationId}/search`,
+      `/messaging/enhanced/conversation/${conversationId}/search`,
       {
         params: { query, schoolId, page, size },
       }
