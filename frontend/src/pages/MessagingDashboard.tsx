@@ -43,6 +43,23 @@ export default function MessagingDashboard({ embedded = false }: MessagingDashbo
   // Get schoolId safely - validate it exists
   const schoolId = user?.schoolId ? parseInt(user.schoolId) : undefined;
 
+  const handleDownloadAttachment = useCallback(
+    async (attachmentId: string) => {
+      try {
+        const presigned = await messagingService.generateDownloadUrl(attachmentId, schoolId!);
+        window.open(presigned.url, '_blank', 'noopener,noreferrer');
+      } catch (error) {
+        console.error('[MESSAGING] Failed to download attachment:', error);
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de télécharger la pièce jointe',
+          variant: 'destructive',
+        });
+      }
+    },
+    [schoolId]
+  );
+
   // Guard: Cannot use messaging without schoolId
   if (!schoolId) {
     return (
@@ -429,7 +446,14 @@ export default function MessagingDashboard({ embedded = false }: MessagingDashbo
                                   className="flex items-center gap-2 text-sm"
                                 >
                                   <Paperclip className="w-4 h-4" />
-                                  <span className="flex-1 truncate">{att.filename}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDownloadAttachment(att.id)}
+                                    className="flex-1 truncate text-left hover:underline"
+                                    title="Télécharger"
+                                  >
+                                    {att.filename}
+                                  </button>
                                   <span className="text-xs">({att.fileSizeFormatted})</span>
                                 </div>
                               ))}
