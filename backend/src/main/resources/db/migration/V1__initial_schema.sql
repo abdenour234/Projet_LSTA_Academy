@@ -209,16 +209,6 @@ CREATE TABLE IF NOT EXISTS public.user_activity_logs (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- TABLE: conversations
-CREATE TABLE IF NOT EXISTS public.conversations (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_id BIGINT NOT NULL,
-  participant_ids UUID[] NOT NULL,
-  subject TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
 -- TABLE: conversations (Messagerie interne entre profs et admins)
 CREATE TABLE IF NOT EXISTS public.conversations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -532,8 +522,7 @@ CREATE INDEX IF NOT EXISTS idx_resources_school_type ON public.resources(school_
 CREATE INDEX IF NOT EXISTS idx_students_school_class ON public.students(school_id, class_id);
 
 -- Specialized GIN indexes
-CREATE INDEX IF NOT EXISTS idx_messages_read_by ON public.messages USING GIN(read_by);
-CREATE INDEX IF NOT EXISTS idx_conversations_participant_ids ON public.conversations USING GIN(participant_ids);
+CREATE INDEX IF NOT EXISTS idx_messages_read_by ON public.messages(read_by);
 
 -- Text search indexes
 CREATE INDEX IF NOT EXISTS idx_students_first_name_lower ON public.students(LOWER(first_name));

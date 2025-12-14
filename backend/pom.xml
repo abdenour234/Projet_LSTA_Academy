@@ -69,14 +69,6 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
         </dependency>
-
-        <!-- Flyway PostgreSQL Driver -->
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-database-postgresql</artifactId>
-            <version>9.22.3</version>
-            <scope>runtime</scope>
-        </dependency>
         
         <!-- Lombok -->
         <dependency>
