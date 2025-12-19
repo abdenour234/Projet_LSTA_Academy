@@ -252,22 +252,17 @@ public class FileStorageService {
             throw new AccessDeniedException("File is not safe to download");
         }
 
-        // Generate presigned URL for GET
-        String url = minioClient.getPresignedObjectUrl(
-            GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
-                .bucket(messagingBucket)
-                .object(attachment.getStoragePath())
-                .expiry(presignedUrlExpiry, TimeUnit.SECONDS)
-                .build()
-        );
+        // Generate backend proxy URL instead of direct MinIO URL
+        // This avoids CORS issues and exposes internal Docker URLs
+        String url = String.format("/api/messaging/enhanced/attachments/%s/download?schoolId=%d", 
+            attachmentId, schoolId);
 
         PresignedUrlDTO dto = new PresignedUrlDTO();
         dto.setUrl(url);
         dto.setExpiresIn(presignedUrlExpiry);
         dto.setMethod("GET");
 
-        log.info("Generated presigned download URL for attachment: {}", attachmentId);
+        log.info("Generated proxy download URL for attachment: {}", attachmentId);
 
         // Log download activity
         activityLogService.logFileDownload(requestingUserId, schoolId, attachmentId, attachment.getFilename());

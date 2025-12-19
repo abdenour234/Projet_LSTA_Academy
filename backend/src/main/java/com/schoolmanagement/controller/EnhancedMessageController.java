@@ -3,18 +3,26 @@ package com.schoolmanagement.controller;
 import com.schoolmanagement.dto.MessageDTO;
 import com.schoolmanagement.dto.PagedResponse;
 import com.schoolmanagement.dto.SendMessageDTO;
+import com.schoolmanagement.entity.MessageAttachment;
+import com.schoolmanagement.repository.MessageAttachmentRepository;
 import com.schoolmanagement.service.EnhancedMessageService;
 import com.schoolmanagement.util.JwtUtil;
+import io.minio.GetObjectArgs;
+import io.minio.MinioClient;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.InputStream;
 import java.util.Map;
 import java.util.UUID;
 
@@ -30,6 +38,11 @@ public class EnhancedMessageController {
 
     private final EnhancedMessageService messageService;
     private final JwtUtil jwtUtil;
+    private final MinioClient minioClient;
+    private final MessageAttachmentRepository attachmentRepository;
+
+    @Value("${minio.messaging.bucket-name:messaging-files}")
+    private String messagingBucket;
 
     /**
      * Send a new message with optional attachments
@@ -146,6 +159,56 @@ public class EnhancedMessageController {
         Long unreadCount = messageService.getUnreadMessageCount(currentUserId);
         
         return ResponseEntity.ok(Map.of("unreadCount", unreadCount));
+    }
+
+    /**
+     * Download message attachment
+     * Proxies the file from MinIO to avoid CORS and internal URL issues
+     */
+    @GetMapping("/attachments/{attachmentId}/download")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<InputStreamResource> downloadAttachment(
+        @PathVariable UUID attachmentId,
+        @RequestParam Long schoolId,
+        HttpServletRequest httpRequest
+    ) {
+        try {
+            UUID currentUserId = extractUserId(httpRequest);
+            
+            // Get attachment metadata
+            MessageAttachment attachment = attachmentRepository.findById(attachmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Attachment not found"));
+
+            // Validate file is safe to download
+            if (!attachment.isSafeToDownload()) {
+                log.warn("Attempted download of unsafe file: {}", attachmentId);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            // Get file from MinIO
+            InputStream stream = minioClient.getObject(
+                GetObjectArgs.builder()
+                    .bucket(messagingBucket)
+                    .object(attachment.getStoragePath())
+                    .build()
+            );
+
+            // Set proper headers for download
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType(attachment.getMimeType()));
+            headers.setContentLength(attachment.getFileSize());
+            headers.setContentDispositionFormData("attachment", attachment.getFilename());
+
+            log.info("✅ Attachment downloaded: {} by user {}", attachmentId, currentUserId);
+
+            return ResponseEntity.ok()
+                .headers(headers)
+                .body(new InputStreamResource(stream));
+
+        } catch (Exception e) {
+            log.error("❌ Error downloading attachment {}: {}", attachmentId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     /**
