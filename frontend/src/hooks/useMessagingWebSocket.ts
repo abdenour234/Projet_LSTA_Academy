@@ -61,7 +61,12 @@ export function useMessagingWebSocket({
       // Create STOMP client with SockJS
       const apiBaseUrl = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').trim();
       const envWsBaseUrl = ((import.meta.env.VITE_WS_URL as string | undefined) ?? '').trim();
-      const wsBaseUrl = envWsBaseUrl || apiBaseUrl.replace(/\/api\/?$/, '') || 'http://localhost:8080';
+      let wsBaseUrl = envWsBaseUrl || apiBaseUrl.replace(/\/api\/?$/, '') || 'http://localhost:8080';
+      
+      // Use secure WebSocket (wss://) if page is loaded over HTTPS
+      if (window.location.protocol === 'https:') {
+        wsBaseUrl = wsBaseUrl.replace(/^http:/, 'https:');
+      }
 
       const wsUrl = `${wsBaseUrl.replace(/\/$/, '')}/ws`;
 
