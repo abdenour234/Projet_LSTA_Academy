@@ -119,21 +119,16 @@ export default function MessagingDashboard({ embedded = false, className }: Mess
   const handleDownloadAttachment = useCallback(
     async (attachmentId: string) => {
       try {
-        const presigned = await messagingService.generateDownloadUrl(attachmentId, schoolId!);
-        
-        // ✅ Convert relative URLs to absolute URLs if needed
-        let downloadUrl = presigned.url;
-        if (downloadUrl.startsWith('/api/')) {
-          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-          downloadUrl = `${API_URL.replace('/api', '')}${downloadUrl}`;
-        }
-        
-        console.log('[MESSAGING] Opening download URL:', downloadUrl);
-        window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+        toast({
+          title: 'Téléchargement en cours...',
+          description: 'Veuillez patienter',
+        });
+
+        await messagingService.downloadAttachment(attachmentId, schoolId!);
         
         toast({
-          title: '✓ Téléchargement',
-          description: 'Le fichier s\'ouvre dans un nouvel onglet',
+          title: '✓ Téléchargement réussi',
+          description: 'Le fichier a été téléchargé',
         });
       } catch (error) {
         console.error('[MESSAGING] Failed to download attachment:', error);

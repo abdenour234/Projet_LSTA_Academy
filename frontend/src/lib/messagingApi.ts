@@ -3,7 +3,7 @@
  * Handles conversations, messages, and file attachments
  */
 
-import api from './api';
+import api, { auth } from './api';
 import { validateUUID, assertValidUUID } from './uuidValidation';
 
 export interface Conversation {
@@ -239,13 +239,48 @@ class MessagingService {
   }
 
   /**
-   * Generate presigned URL for download
+   * Download attachment with authentication
    */
-  async generateDownloadUrl(attachmentId: string, schoolId: number): Promise<PresignedUrl> {
-    const response = await api.get<PresignedUrl>(
-      `/messaging/attachments/${attachmentId}/download-url?schoolId=${schoolId}`
-    );
-    return response;
+  async downloadAttachment(attachmentId: string, schoolId: number): Promise<void> {
+    const token = auth.getToken();
+    if (!token) {
+      throw new Error('No authentication token');
+    }
+
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+    const url = `${API_BASE_URL}/messaging/enhanced/attachments/${attachmentId}/download?schoolId=${schoolId}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Download failed: ${response.status}`);
+    }
+
+    // Get filename from Content-Disposition header
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'download';
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="?(.+?)"?$/);
+      if (match) {
+        filename = match[1];
+      }
+    }
+
+    // Create blob and download
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
   }
 
   /**
@@ -253,24 +288,6 @@ class MessagingService {
    */
   async deleteAttachment(attachmentId: string, schoolId: number): Promise<void> {
     await api.delete(`/messaging/attachments/${attachmentId}?schoolId=${schoolId}`);
-  }
-
-  /**
-   * Download a file using presigned URL
-   */
-  async downloadFile(attachment: Attachment): Promise<void> {
-    if (!attachment.downloadUrl) {
-      throw new Error('Download URL not available');
-    }
-
-    // Open download URL in new window
-    const link = document.createElement('a');
-    link.href = attachment.downloadUrl;
-    link.download = attachment.filename;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   }
 }
 
