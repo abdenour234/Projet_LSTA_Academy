@@ -120,7 +120,16 @@ export default function MessagingDashboard({ embedded = false, className }: Mess
     async (attachmentId: string) => {
       try {
         const presigned = await messagingService.generateDownloadUrl(attachmentId, schoolId!);
-        window.open(presigned.url, '_blank', 'noopener,noreferrer');
+        
+        // ✅ Convert relative URLs to absolute URLs if needed
+        let downloadUrl = presigned.url;
+        if (downloadUrl.startsWith('/api/')) {
+          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+          downloadUrl = `${API_URL.replace('/api', '')}${downloadUrl}`;
+        }
+        
+        console.log('[MESSAGING] Opening download URL:', downloadUrl);
+        window.open(downloadUrl, '_blank', 'noopener,noreferrer');
         
         toast({
           title: '✓ Téléchargement',

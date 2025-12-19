@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { API_CONFIG } from '@/lib/api';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
@@ -32,9 +33,14 @@ export const PDFViewer = ({ fileUrl, width = '100%', height = '600px' }: PDFView
 
       console.log('[PDF_VIEWER] Loading PDF from URL:', fileUrl);
 
-      // ✅ FIXED: Use the URL directly - backend streams the file
-      // URLs are now in format: /api/activity-files/download/{id}
-      setSignedUrl(fileUrl);
+      // ✅ Convert relative URLs to absolute URLs
+      // If URL starts with /api/, prepend the base URL
+      const absoluteUrl = fileUrl.startsWith('/api/') 
+        ? `${API_CONFIG.BASE_URL.replace('/api', '')}${fileUrl}`
+        : fileUrl;
+      
+      console.log('[PDF_VIEWER] Absolute URL:', absoluteUrl);
+      setSignedUrl(absoluteUrl);
       
     } catch (err) {
       console.error('Erreur lors du chargement du PDF:', err);

@@ -5,6 +5,7 @@ import { VideoViewer } from './VideoViewer';
 import { FullscreenViewer } from './FullscreenViewer';
 import { Button } from '@/components/ui/button';
 import { Maximize2 } from 'lucide-react';
+import { API_CONFIG } from '@/lib/api';
 
 interface ActivityViewerProps {
   title: string;
@@ -14,6 +15,16 @@ interface ActivityViewerProps {
 
 export const ActivityViewer = ({ title, description, elements }: ActivityViewerProps) => {
   const [fullscreenElement, setFullscreenElement] = useState<{ type: 'pdf' | 'video', url: string } | null>(null);
+
+  // Helper function to convert relative URLs to absolute URLs
+  const getAbsoluteUrl = (url: string): string => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/api/')) {
+      return `${API_CONFIG.BASE_URL.replace('/api', '')}${url}`;
+    }
+    return url;
+  };
 
   return (
     <div className="space-y-6">
@@ -52,7 +63,7 @@ export const ActivityViewer = ({ title, description, elements }: ActivityViewerP
             
             {element.type === 'image' && element.content && (
               <img 
-                src={element.content} 
+                src={getAbsoluteUrl(element.content)} 
                 alt="" 
                 className="w-full h-full object-cover rounded" 
               />

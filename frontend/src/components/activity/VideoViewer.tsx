@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Loader2, AlertCircle, Maximize2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { API_CONFIG } from '@/lib/api';
 
 interface VideoViewerProps {
   fileUrl: string;
@@ -26,9 +27,14 @@ export const VideoViewer = ({ fileUrl, width = '100%', height = '400px', onFulls
 
       console.log('[VIDEO_VIEWER] Loading video from URL:', fileUrl);
 
-      // ✅ FIXED: Use the URL directly - backend streams the file
-      // URLs are now in format: /api/activity-files/download/{id}
-      setSignedUrl(fileUrl);
+      // ✅ Convert relative URLs to absolute URLs
+      // If URL starts with /api/, prepend the base URL
+      const absoluteUrl = fileUrl.startsWith('/api/') 
+        ? `${API_CONFIG.BASE_URL.replace('/api', '')}${fileUrl}`
+        : fileUrl;
+      
+      console.log('[VIDEO_VIEWER] Absolute URL:', absoluteUrl);
+      setSignedUrl(absoluteUrl);
       
     } catch (err) {
       console.error('Erreur lors du chargement de la vidéo:', err);

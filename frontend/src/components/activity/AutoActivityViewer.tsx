@@ -5,6 +5,7 @@ import { VideoViewer } from './VideoViewer';
 import { FullscreenViewer } from './FullscreenViewer';
 import { Button } from '@/components/ui/button';
 import { Maximize2, FileText, Video, Image as ImageIcon } from 'lucide-react';
+import { API_CONFIG } from '@/lib/api';
 
 interface AutoActivityViewerProps {
   title: string;
@@ -15,6 +16,16 @@ interface AutoActivityViewerProps {
 export const AutoActivityViewer = ({ title, description, elements }: AutoActivityViewerProps) => {
   const [fullscreenElement, setFullscreenElement] = useState<{ type: 'pdf' | 'video', url: string } | null>(null);
   const [layout, setLayout] = useState<'auto' | 'manual'>('auto');
+
+  // Helper function to convert relative URLs to absolute URLs
+  const getAbsoluteUrl = (url: string): string => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/api/')) {
+      return `${API_CONFIG.BASE_URL.replace('/api', '')}${url}`;
+    }
+    return url;
+  };
 
   // Detect content types
   const contentTypes = elements.reduce((acc, el) => {
@@ -97,16 +108,19 @@ export const AutoActivityViewer = ({ title, description, elements }: AutoActivit
             <h3 className="text-lg font-semibold text-slate-900">Images pédagogiques</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {elements.filter(el => el.type === 'image').map((element) => (
-              <div key={element.id} className="aspect-video bg-muted rounded-lg overflow-hidden">
-                <img 
-                  src={element.content} 
-                  alt="" 
-                  className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform" 
-                  onClick={() => window.open(element.content, '_blank')}
-                />
-              </div>
-            ))}
+            {elements.filter(el => el.type === 'image').map((element) => {
+              const imageUrl = getAbsoluteUrl(element.content);
+              return (
+                <div key={element.id} className="aspect-video bg-muted rounded-lg overflow-hidden">
+                  <img 
+                    src={imageUrl} 
+                    alt="" 
+                    className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform" 
+                    onClick={() => window.open(imageUrl, '_blank')}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       );
@@ -126,7 +140,7 @@ export const AutoActivityViewer = ({ title, description, elements }: AutoActivit
             {element.type === 'image' && element.content && (
               <div className="max-w-3xl mx-auto">
                 <img 
-                  src={element.content} 
+                  src={getAbsoluteUrl(element.content)} 
                   alt="" 
                   className="w-full rounded-lg shadow-md" 
                 />
